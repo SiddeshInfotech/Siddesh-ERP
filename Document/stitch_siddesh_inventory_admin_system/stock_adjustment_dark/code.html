@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin - Stock Adjustment</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .inner-border {
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(208, 188, 255, 0.2);
+            border-radius: 4px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#e6ecff",
+                      "surface-tint": "#d0bcff",
+                      "tertiary-container": "#ca801e",
+                      "on-tertiary-container": "#3f2300",
+                      "on-tertiary-fixed": "#2c1700",
+                      "on-secondary-fixed": "#001a42",
+                      "on-surface-variant": "#cbc3d7",
+                      "on-secondary-fixed-variant": "#004395",
+                      "on-error-container": "#ffdad6",
+                      "on-tertiary": "#482900",
+                      "primary-fixed": "#e9ddff",
+                      "primary": "#d0bcff",
+                      "secondary-fixed-dim": "#adc6ff",
+                      "on-surface": "#e5e1e4",
+                      "on-tertiary-fixed-variant": "#673d00",
+                      "error-container": "#93000a",
+                      "surface-bright": "#39393b",
+                      "inverse-on-surface": "#313032",
+                      "background": "#09090b",
+                      "secondary": "#adc6ff",
+                      "tertiary": "#ffb869",
+                      "surface-dim": "#131315",
+                      "secondary-fixed": "#d8e2ff",
+                      "surface-variant": "#353437",
+                      "primary-container": "#a078ff",
+                      "error": "#ffb4ab",
+                      "surface-container-high": "#2a2a2c",
+                      "surface-container": "#201f22",
+                      "surface": "#131315",
+                      "outline-variant": "#494454",
+                      "on-background": "#e5e1e4",
+                      "surface-container-highest": "#353437",
+                      "inverse-primary": "#6d3bd7",
+                      "on-secondary": "#002e6a",
+                      "surface-container-lowest": "#0e0e10",
+                      "tertiary-fixed": "#ffdcbb",
+                      "surface-container-low": "#1c1b1d",
+                      "on-primary-fixed": "#23005c",
+                      "on-primary": "#3c0091",
+                      "outline": "#958ea0",
+                      "inverse-surface": "#e5e1e4",
+                      "primary-fixed-dim": "#d0bcff",
+                      "on-error": "#690005",
+                      "on-primary-container": "#340080",
+                      "on-primary-fixed-variant": "#5516be",
+                      "secondary-container": "#0566d9",
+                      "tertiary-fixed-dim": "#ffb869"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container_padding": "24px",
+                      "base_grid": "8px",
+                      "sidebar_width": "208px",
+                      "table_row_height": "40px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "h1": ["Roboto Flex"],
+                      "mono-id": ["JetBrains Mono"],
+                      "table-cell": ["Roboto Flex"],
+                      "label-caps": ["Roboto Flex"],
+                      "body-md": ["Roboto Flex"],
+                      "h2": ["Roboto Flex"],
+                      "body-sm": ["Roboto Flex"]
+              },
+              "fontSize": {
+                      "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary/30">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] flex flex-col py-6 border-r border-dashed border-outline-variant z-50 bg-surface">
+<div class="px-6 mb-8">
+<h1 class="font-h2 text-h2 text-on-surface tracking-tight">OmniStock Admin</h1>
+<p class="text-[10px] text-outline uppercase tracking-widest mt-1">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1 px-3">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-primary border-l-2 border-primary font-semibold transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-body-md">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">local_shipping</span>
+<span class="font-body-md">Shipments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">domain</span>
+<span class="font-body-md">Warehouses</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">monitoring</span>
+<span class="font-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-3 pt-6 border-t border-outline-variant/30">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+<span class="font-body-md">Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+<span class="font-body-md">Log Out</span>
+</a>
+<div class="mt-6 flex items-center gap-3 px-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio headshot of a female logistics operator in a dark sleek uniform. High-end lighting, minimalist dark background, professional and sharp focus, dark glassmorphism aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvhgDpITkcmGmGbNr0g7CDXRVAfF6_Eu_uemRYx87GzYNZv3UOw-XJGZu6stHGOy_7PF9TT_zX4jFr_XPpS-4HYnmqqfJQO4aMl4ZULzBf7na48wXsmlTL6-VbptMMygVky91P6vUt1DVyOJR5hjrlvcRPcIv45iB3cvlrL9N7wbnK73vI5w57Z7VHizF8cy3Y-WgHCb3RfJFoFXZXKvcz2me77t4WkzQ0ttFWy1uN5nnAArDbExXsiPkw9B9MS5a3qLj0ZP9eXvM"/>
+</div>
+<div class="flex flex-col">
+<span class="text-body-sm font-semibold">Operator 702</span>
+<span class="text-[10px] text-outline">Level 4 Admin</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] flex items-center justify-between px-6 bg-surface/80 backdrop-blur-md border-b border-outline-variant z-40">
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="bg-black/20 border border-outline-variant rounded-lg pl-10 pr-4 py-1.5 text-body-md w-64 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="Search product or SKU..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">history</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">apps</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] mt-[56px] min-h-[calc(100vh-56px)] p-12 flex flex-col items-center">
+<!-- Header Section -->
+<div class="w-full max-w-[720px] mb-8 text-center">
+<h2 class="font-h1 text-h1 text-on-surface mb-6">Stock Adjustment</h2>
+<!-- Warning Banner -->
+<div class="flex items-start gap-4 p-4 rounded-xl bg-tertiary-container/10 border border-tertiary-container/30 text-left">
+<span class="material-symbols-outlined text-tertiary text-[24px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+<p class="text-body-md text-tertiary font-medium">
+                    Adjustments are permanent and audited. They post a correcting entry — they do not edit history.
+                </p>
+</div>
+</div>
+<!-- Adjustment Form Card -->
+<div class="w-full max-w-[720px] glass-panel rounded-2xl p-8 inner-border shadow-2xl">
+<form class="space-y-8" id="adjustmentForm">
+<!-- Product Selector & Barcode -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label-caps text-outline uppercase">Product Selector</label>
+<div class="relative">
+<select class="w-full bg-black/20 border border-outline-variant rounded-lg px-4 py-3 appearance-none focus:ring-2 focus:ring-primary/50 outline-none">
+<option value="SKU-4921">Quantum Core Processor V2</option>
+<option value="SKU-8832">Neural Link Interface</option>
+<option value="SKU-1029">Void Storage Unit (1TB)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-caps text-outline uppercase">Barcode Scan</label>
+<div class="relative group">
+<input class="w-full bg-black/20 border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 outline-none font-mono-id" type="text" value="SKU-4921-X90"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-primary group-hover:scale-110 transition-transform cursor-pointer">barcode_scanner</span>
+</div>
+</div>
+</div>
+<!-- Current Stock & Adjustment Type -->
+<div class="flex flex-col md:flex-row items-center gap-12 bg-surface-container-low/40 p-6 rounded-xl border border-outline-variant/30">
+<div class="flex flex-col items-center md:items-start min-w-[120px]">
+<label class="font-label-caps text-outline uppercase mb-2">Current Stock</label>
+<span class="text-[32px] font-bold text-on-surface" id="currentStock">45</span>
+<span class="text-body-sm text-outline">Units in WH-1</span>
+</div>
+<div class="h-12 w-[1px] bg-outline-variant hidden md:block"></div>
+<div class="flex-1 space-y-3 w-full">
+<label class="font-label-caps text-outline uppercase">Adjustment Type</label>
+<div class="flex p-1 bg-black/30 rounded-full border border-outline-variant">
+<button class="flex-1 py-2 px-4 rounded-full text-body-md font-semibold transition-all bg-primary text-on-primary shadow-lg" id="typeIncrease" onclick="setType('increase')" type="button">
+                                Increase
+                            </button>
+<button class="flex-1 py-2 px-4 rounded-full text-body-md font-semibold text-outline hover:text-on-surface transition-all" id="typeDecrease" onclick="setType('decrease')" type="button">
+                                Decrease
+                            </button>
+</div>
+</div>
+</div>
+<!-- Quantity & Preview -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+<div class="space-y-2">
+<label class="font-label-caps text-outline uppercase">Adjustment Quantity</label>
+<div class="flex items-center gap-3">
+<button class="w-12 h-12 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-variant transition-colors" onclick="adjustQty(-1)" type="button">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<input class="flex-1 bg-black/20 border border-outline-variant rounded-lg px-4 py-3 text-center text-h2 focus:ring-2 focus:ring-primary/50 outline-none" id="qtyInput" type="number" value="5"/>
+<button class="w-12 h-12 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-variant transition-colors" onclick="adjustQty(1)" type="button">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<div class="p-6 rounded-xl bg-surface-container-high/60 border border-outline-variant flex flex-col justify-center items-center">
+<span class="font-label-caps text-outline uppercase mb-2">New Balance Preview</span>
+<div class="flex items-center gap-3">
+<span class="text-h2 font-medium opacity-50">45</span>
+<span class="material-symbols-outlined text-outline">trending_flat</span>
+<span class="text-h1 text-primary" id="previewValue">50</span>
+</div>
+<span class="text-body-sm font-semibold text-primary mt-1" id="deltaValue">+5 Adjustment</span>
+</div>
+</div>
+<!-- Reason Textarea -->
+<div class="space-y-2">
+<label class="font-label-caps text-outline uppercase">Adjustment Reason <span class="text-error">*</span></label>
+<textarea class="w-full bg-black/20 border border-outline-variant rounded-lg px-4 py-3 min-h-[100px] focus:ring-2 focus:ring-primary/50 outline-none transition-all resize-none" placeholder="e.g. Discovered during annual audit, damaged in transit, or inventory restock..." required=""></textarea>
+</div>
+<!-- Muted Note -->
+<p class="text-center text-body-sm text-outline italic">
+                    Note: Adjustments are restricted to Office Admin and above roles only.
+                </p>
+<!-- Footer Actions -->
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/30">
+<button class="px-6 py-2.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-all rounded-lg font-semibold" type="button">
+                        Cancel
+                    </button>
+<button class="px-10 py-3 bg-tertiary text-on-tertiary font-bold rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl shadow-tertiary/10 flex items-center gap-2" type="submit">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+                        Post Adjustment
+                    </button>
+</div>
+</form>
+</div>
+</main>
+<script>
+        let currentQty = 5;
+        let baseStock = 45;
+        let adjustmentType = 'increase';
+
+        const qtyInput = document.getElementById('qtyInput');
+        const previewValue = document.getElementById('previewValue');
+        const deltaValue = document.getElementById('deltaValue');
+        const typeInc = document.getElementById('typeIncrease');
+        const typeDec = document.getElementById('typeDecrease');
+
+        function updateUI() {
+            const val = parseInt(qtyInput.value) || 0;
+            const multiplier = adjustmentType === 'increase' ? 1 : -1;
+            const newTotal = baseStock + (val * multiplier);
+            
+            previewValue.textContent = newTotal;
+            deltaValue.textContent = `${multiplier > 0 ? '+' : '-'}${val} Adjustment`;
+            
+            if (multiplier > 0) {
+                previewValue.classList.remove('text-error');
+                previewValue.classList.add('text-primary');
+                deltaValue.classList.remove('text-error');
+                deltaValue.classList.add('text-primary');
+            } else {
+                previewValue.classList.remove('text-primary');
+                previewValue.classList.add('text-error');
+                deltaValue.classList.remove('text-primary');
+                deltaValue.classList.add('text-error');
+            }
+        }
+
+        function setType(type) {
+            adjustmentType = type;
+            if (type === 'increase') {
+                typeInc.className = 'flex-1 py-2 px-4 rounded-full text-body-md font-semibold transition-all bg-primary text-on-primary shadow-lg';
+                typeDec.className = 'flex-1 py-2 px-4 rounded-full text-body-md font-semibold text-outline hover:text-on-surface transition-all';
+            } else {
+                typeDec.className = 'flex-1 py-2 px-4 rounded-full text-body-md font-semibold transition-all bg-error text-white shadow-lg';
+                typeInc.className = 'flex-1 py-2 px-4 rounded-full text-body-md font-semibold text-outline hover:text-on-surface transition-all';
+            }
+            updateUI();
+        }
+
+        function adjustQty(amount) {
+            let current = parseInt(qtyInput.value) || 0;
+            qtyInput.value = Math.max(0, current + amount);
+            updateUI();
+        }
+
+        qtyInput.addEventListener('input', updateUI);
+
+        document.getElementById('adjustmentForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Stock adjustment posted successfully. Generating ledger entry...');
+        });
+    </script>
+</body></html>

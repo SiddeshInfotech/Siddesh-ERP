@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin - New Inward</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#353437",
+                        "inverse-on-surface": "#313032",
+                        "secondary": "#adc6ff",
+                        "primary-container": "#a078ff",
+                        "outline-variant": "#494454",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "inverse-primary": "#6d3bd7",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#002e6a",
+                        "on-secondary-container": "#e6ecff",
+                        "surface": "#131315",
+                        "surface-container-lowest": "#0e0e10",
+                        "surface-container": "#201f22",
+                        "on-background": "#e5e1e4",
+                        "secondary-fixed": "#d8e2ff",
+                        "surface-variant": "#353437",
+                        "on-tertiary": "#482900",
+                        "on-primary-fixed-variant": "#5516be",
+                        "on-tertiary-container": "#3f2300",
+                        "on-primary-fixed": "#23005c",
+                        "tertiary": "#ffb869",
+                        "surface-container-high": "#2a2a2c",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface-bright": "#39393b",
+                        "on-error": "#690005",
+                        "secondary-container": "#0566d9",
+                        "outline": "#958ea0",
+                        "surface-tint": "#d0bcff",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-primary-container": "#340080",
+                        "surface-container-low": "#1c1b1d",
+                        "inverse-surface": "#e5e1e4",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-surface": "#e5e1e4",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#e9ddff",
+                        "primary-fixed-dim": "#d0bcff",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "error-container": "#93000a",
+                        "primary": "#d0bcff",
+                        "surface-dim": "#131315",
+                        "on-secondary-fixed": "#001a42",
+                        "on-primary": "#3c0091",
+                        "background": "#131315",
+                        "on-secondary-fixed-variant": "#004395",
+                        "tertiary-container": "#ca801e",
+                        "tertiary-fixed": "#ffdcbb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container_padding": "24px",
+                        "base_grid": "8px",
+                        "table_row_height": "40px",
+                        "gutter": "16px",
+                        "sidebar_width": "208px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Roboto Flex"],
+                        "body-md": ["Roboto Flex"],
+                        "label-caps": ["Roboto Flex"],
+                        "body-sm": ["Roboto Flex"],
+                        "table-cell": ["Roboto Flex"],
+                        "h1": ["Roboto Flex"],
+                        "mono-id": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #09090b;
+            color: #e5e1e4;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-panel-emerald {
+            background: rgba(16, 185, 129, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        input:focus {
+            outline: none;
+            border-color: #a078ff !important;
+            box-shadow: 0 0 0 2px rgba(160, 120, 255, 0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(208, 188, 255, 0.2);
+            border-radius: 3px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-hidden">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant flex flex-col py-container_padding bg-surface">
+<div class="px-6 mb-8">
+<h1 class="font-h2 text-h2 text-on-surface">OmniStock</h1>
+<p class="text-[10px] uppercase tracking-widest text-outline">Global Logistics</p>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center px-3 py-2 text-primary dark:text-primary border-l-2 border-primary font-semibold group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">local_shipping</span>
+<span>Shipments</span>
+</a>
+<a class="flex items-center px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">domain</span>
+<span>Warehouses</span>
+</a>
+<a class="flex items-center px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">monitoring</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-3 space-y-1 border-t border-outline-variant pt-4">
+<a class="flex items-center px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">help</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">logout</span>
+<span>Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[208px] h-screen flex flex-col relative">
+<!-- TopNavBar -->
+<header class="h-[56px] flex items-center justify-between px-gutter border-b border-outline-variant bg-surface/80 backdrop-blur-md z-10">
+<div class="flex items-center gap-4">
+<h2 class="font-h2 text-h2">New Inward</h2>
+<div class="px-2 py-0.5 bg-surface-container-highest rounded text-[10px] font-bold text-outline">ENTRY MODE</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary">history</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary">apps</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a professional system operator in a modern tech office setting, soft professional lighting, dark obsidian aesthetic background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkeqajmeZMeMK39Dkn-7tRk7dJT5e-BzxmVYT205xt7xKn4KVqVkOxxDAi-BU-wkjiXDqhDdP945628NApC4GuOkWd-gPltq2LSrTrjGvNE2aWSc7EA9ztU9kZYZz0j8VVTE4rPKn9C4sKTRsMNYvFYbIgj32bTC1sRqwMPPBYm_Goho-bmAZ8_jrIdKqV7ZrgmUZhL9ghTRfSTcemnNNh_YyVd7-8kWvP6ObZQAHKrYtCHkWMr5cCwLK_2AaNsGB1vMyfjz86WI0"/>
+</div>
+</div>
+</header>
+<!-- Scrollable Form Container -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-surface-dim">
+<div class="max-w-4xl mx-auto space-y-6 pb-24">
+<!-- Barcode Scanner Field -->
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary-container">barcode_scanner</span>
+<input autofocus="" class="w-full h-[56px] pl-12 pr-4 bg-black/40 border border-outline-variant rounded-xl text-lg font-mono-id focus:ring-2 focus:ring-primary-container/20 transition-all" placeholder="Scan or type barcode…" type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono-id text-outline-variant">AUTO-RESOLVE ON</div>
+</div>
+<!-- Product Resolution Card (Emerald) -->
+<div class="glass-panel-emerald rounded-xl p-4 flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+<div class="flex gap-4 items-center">
+<div class="w-12 h-12 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-emerald-400">inventory</span>
+</div>
+<div>
+<div class="text-xs font-label-caps text-emerald-400/70 mb-1">IDENTIFIED PRODUCT</div>
+<h3 class="font-h2 text-on-surface">Hyperion Server Rack X9</h3>
+<div class="font-mono-id text-on-surface-variant text-[11px]">SKU: OS-HYP-9920-X9</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-xs font-label-caps text-emerald-400/70 mb-1">CURRENT STOCK</div>
+<div class="text-[32px] font-bold leading-none text-emerald-400">421 <span class="text-sm font-medium text-emerald-400/50">units</span></div>
+</div>
+</div>
+<!-- Main Form Grid -->
+<div class="glass-panel rounded-xl p-6 space-y-8">
+<!-- Primary Input: Quantity -->
+<div class="flex items-end gap-6 border-b border-outline-variant/30 pb-8">
+<div class="flex-1">
+<label class="block font-label-caps text-outline mb-2">QUANTITY RECEIVED</label>
+<input class="w-full h-[56px] bg-black/20 border border-outline-variant rounded-lg text-[32px] font-bold px-4 focus:bg-black/40" type="number" value="1"/>
+</div>
+<div class="w-1/3">
+<label class="block font-label-caps text-outline mb-2">UNIT TYPE</label>
+<div class="h-[56px] flex items-center px-4 bg-surface-container rounded-lg border border-outline-variant font-medium">Standard Box (12pcs)</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Left Column: Supplier & Received -->
+<div class="space-y-6">
+<section>
+<h4 class="font-label-caps text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">factory</span> SUPPLIER DETAILS
+                                </h4>
+<div class="space-y-4">
+<div class="relative">
+<label class="text-[10px] font-label-caps text-outline absolute left-3 top-2">SUPPLIER NAME</label>
+<input class="w-full h-[52px] pt-5 pb-1 px-3 bg-black/20 border border-outline-variant rounded-lg" type="text" value="Apex Industrial Components"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant">expand_more</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="relative">
+<label class="text-[10px] font-label-caps text-outline absolute left-3 top-2">MOBILE</label>
+<input class="w-full h-[52px] pt-5 pb-1 px-3 bg-black/20 border border-outline-variant rounded-lg" placeholder="+1 (555) 000-0000" type="text"/>
+</div>
+<div class="relative">
+<label class="text-[10px] font-label-caps text-outline absolute left-3 top-2">GST NUMBER</label>
+<input class="w-full h-[52px] pt-5 pb-1 px-3 bg-black/20 border border-outline-variant rounded-lg" placeholder="22AAAAA0000A1Z5" type="text"/>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h4 class="font-label-caps text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">person</span> HANDOVER
+                                </h4>
+<div class="relative">
+<label class="text-[10px] font-label-caps text-outline absolute left-3 top-2">BROUGHT BY</label>
+<input class="w-full h-[52px] pt-5 pb-1 px-3 bg-black/20 border border-outline-variant rounded-lg" type="text" value="Logistics Partner #4 (John Doe)"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant">expand_more</span>
+</div>
+</section>
+</div>
+<!-- Right Column: Invoice & Attachments -->
+<div class="space-y-6">
+<section>
+<h4 class="font-label-caps text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">description</span> INVOICE INFO
+                                </h4>
+<div class="space-y-4">
+<div class="relative">
+<label class="text-[10px] font-label-caps text-outline absolute left-3 top-2">INVOICE NO.</label>
+<input class="w-full h-[52px] pt-5 pb-1 px-3 bg-black/20 border border-outline-variant rounded-lg" placeholder="INV-2024-889" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="relative">
+<label class="text-[10px] font-label-caps text-outline absolute left-3 top-2">DATE</label>
+<input class="w-full h-[52px] pt-5 pb-1 px-3 bg-black/20 border border-outline-variant rounded-lg" type="date" value="2024-05-20"/>
+</div>
+<div class="relative">
+<label class="text-[10px] font-label-caps text-outline absolute left-3 top-2">PO NO.</label>
+<input class="w-full h-[52px] pt-5 pb-1 px-3 bg-black/20 border border-outline-variant rounded-lg" placeholder="PO-5521" type="text"/>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h4 class="font-label-caps text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">attachment</span> ATTACHMENTS
+                                </h4>
+<div class="w-full h-24 border-2 border-dashed border-outline-variant rounded-lg flex flex-col items-center justify-center hover:bg-white/5 transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary mb-1">cloud_upload</span>
+<p class="text-[11px] text-outline">Drop invoice PDF or click to scan</p>
+</div>
+</section>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Footer -->
+<footer class="absolute bottom-0 left-0 right-0 h-16 bg-surface-container border-t border-outline-variant/30 flex items-center justify-between px-8 z-20">
+<div class="flex items-center gap-4 text-outline-variant">
+<div class="flex items-center gap-1">
+<kbd class="px-1.5 py-0.5 rounded bg-surface-container-highest text-[10px] font-mono-id border border-outline-variant">F1</kbd>
+<span class="text-[11px]">Help</span>
+</div>
+<div class="flex items-center gap-1">
+<kbd class="px-1.5 py-0.5 rounded bg-surface-container-highest text-[10px] font-mono-id border border-outline-variant">ESC</kbd>
+<span class="text-[11px]">Discard</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-6 h-10 text-on-surface-variant hover:text-on-surface transition-colors font-medium">Cancel</button>
+<button class="px-8 h-10 bg-primary-container hover:bg-opacity-90 text-white rounded-full font-semibold flex items-center gap-3 transition-transform active:scale-95">
+                    Save Inward
+                    <div class="flex items-center gap-0.5 opacity-60">
+<kbd class="text-[10px] font-mono-id">⌘</kbd>
+<kbd class="text-[10px] font-mono-id">↵</kbd>
+</div>
+</button>
+</div>
+</footer>
+</main>
+<script>
+        // Keyboard Interaction Simulation
+        document.addEventListener('keydown', (e) => {
+            // Command/Ctrl + Enter to Save
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                const btn = document.querySelector('button.bg-primary-container');
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    btn.style.transform = 'scale(1)';
+                    alert('Inward Entry Saved Successfully');
+                }, 150);
+            }
+            
+            // Esc to Cancel/Clear
+            if (e.key === 'Escape') {
+                if(confirm('Discard changes?')) {
+                    location.reload();
+                }
+            }
+        });
+
+        // Focus first input on load
+        window.onload = () => {
+            document.querySelector('input[type="text"]').focus();
+        };
+    </script>
+</body></html>

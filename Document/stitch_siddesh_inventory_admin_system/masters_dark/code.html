@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin | Category &amp; Brand Master</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#353437",
+                    "inverse-on-surface": "#313032",
+                    "secondary": "#adc6ff",
+                    "primary-container": "#a078ff",
+                    "outline-variant": "#494454",
+                    "on-tertiary-fixed-variant": "#673d00",
+                    "inverse-primary": "#6d3bd7",
+                    "error": "#ffb4ab",
+                    "on-secondary": "#002e6a",
+                    "on-secondary-container": "#e6ecff",
+                    "surface": "#131315",
+                    "surface-container-lowest": "#0e0e10",
+                    "surface-container": "#201f22",
+                    "on-background": "#e5e1e4",
+                    "secondary-fixed": "#d8e2ff",
+                    "surface-variant": "#353437",
+                    "on-tertiary": "#482900",
+                    "on-primary-fixed-variant": "#5516be",
+                    "on-tertiary-container": "#3f2300",
+                    "on-primary-fixed": "#23005c",
+                    "tertiary": "#ffb869",
+                    "surface-container-high": "#2a2a2c",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "surface-bright": "#39393b",
+                    "on-error": "#690005",
+                    "secondary-container": "#0566d9",
+                    "outline": "#958ea0",
+                    "surface-tint": "#d0bcff",
+                    "on-tertiary-fixed": "#2c1700",
+                    "on-primary-container": "#340080",
+                    "surface-container-low": "#1c1b1d",
+                    "inverse-surface": "#e5e1e4",
+                    "on-surface-variant": "#cbc3d7",
+                    "on-surface": "#e5e1e4",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed": "#e9ddff",
+                    "primary-fixed-dim": "#d0bcff",
+                    "tertiary-fixed-dim": "#ffb869",
+                    "error-container": "#93000a",
+                    "primary": "#d0bcff",
+                    "surface-dim": "#131315",
+                    "on-secondary-fixed": "#001a42",
+                    "on-primary": "#3c0091",
+                    "background": "#131315",
+                    "on-secondary-fixed-variant": "#004395",
+                    "tertiary-container": "#ca801e",
+                    "tertiary-fixed": "#ffdcbb"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container_padding": "24px",
+                    "base_grid": "8px",
+                    "table_row_height": "40px",
+                    "gutter": "16px",
+                    "sidebar_width": "208px"
+            },
+            "fontFamily": {
+                    "h2": ["Roboto Flex"],
+                    "body-md": ["Roboto Flex"],
+                    "label-caps": ["Roboto Flex"],
+                    "body-sm": ["Roboto Flex"],
+                    "table-cell": ["Roboto Flex"],
+                    "h1": ["Roboto Flex"],
+                    "mono-id": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #09090b;
+            color: #e5e1e4;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(160, 120, 255, 0.2);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(160, 120, 255, 0.4);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-hidden">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] bg-surface flex flex-col py-container_padding border-r border-dashed border-outline-variant z-50">
+<div class="px-6 mb-10">
+<h1 class="font-h2 text-h2 text-on-surface">OmniStock Admin</h1>
+<p class="text-[10px] text-outline font-label-caps uppercase tracking-widest mt-1">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Nav Item -->
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<!-- Active Nav Item (Inventory as context for Category Management) -->
+<a class="flex items-center gap-3 px-6 py-2 text-primary border-l-2 border-primary font-semibold transition-colors group" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span>Shipments</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined">domain</span>
+<span>Warehouses</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-6 space-y-1">
+<button class="w-full mb-6 bg-primary-container text-on-primary-container py-2 rounded-full font-semibold text-body-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                New Entry
+            </button>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Log Out</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-gutter z-40">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-black/20 border border-outline-variant rounded-lg pl-10 pr-4 py-1.5 text-body-sm focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all" placeholder="Search masters, categories, SKU..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95 duration-150">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95 duration-150">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95 duration-150">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<div class="h-8 w-8 rounded-full border border-outline-variant overflow-hidden bg-surface-container-highest cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="Close-up portrait of a professional system administrator in a dark tech environment, lit by soft violet ambient light from multiple monitors, ultra-sharp detail, cinematic photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDr5VCwmWroeze3SNfJD-LaaVxTr9GxgTQMx0EOVA_R1K20TmJ6Tao2wMxu_Sw5-ejJjnbMJFFDxDZUZamJ73VRe6hO6ah0xHVZqeqnPrtzuGkSe4r-NMuAOdOK7HnDFL9fgnwpzRpRyso0Zl_nZPn425QvHjv0mrHBOqfk8ZER1rzwTa9o6uN1KOlpYFpqsxa64lyZr7UnPPOs-FINPGhjes6YFzADeMx5gnWPcIbAEbpKCGmrwbwETKjXQa0ar2RaRk2EAtBVOn4"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] mt-[56px] p-container_padding h-[calc(100vh-56px)] overflow-hidden flex flex-col gap-6">
+<!-- Title & Tab Bar -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h2 class="font-h1 text-h1 text-on-surface tracking-tight">Masters</h2>
+<div class="flex gap-2">
+<button class="px-4 py-1.5 bg-surface-container-high border border-outline-variant text-on-surface text-body-sm rounded-lg hover:bg-surface-container-highest transition-colors">Export Data</button>
+<button class="px-4 py-1.5 bg-primary-container text-on-primary-container font-semibold text-body-sm rounded-full hover:opacity-90 active:scale-95 transition-all">New Category</button>
+</div>
+</div>
+<!-- Custom Tab Bar -->
+<div class="flex border-b border-outline-variant gap-8">
+<button class="pb-3 px-1 text-primary border-b-2 border-primary font-semibold text-body-md">Categories</button>
+<button class="pb-3 px-1 text-on-surface-variant hover:text-on-surface transition-colors text-body-md">Brands</button>
+<button class="pb-3 px-1 text-on-surface-variant hover:text-on-surface transition-colors text-body-md">Units</button>
+</div>
+</div>
+<!-- Two-Pane Layout -->
+<div class="flex-1 flex gap-gutter overflow-hidden">
+<!-- Left Pane: Nested Tree (40%) -->
+<section class="w-[40%] flex flex-col glass-panel rounded-xl overflow-hidden">
+<div class="p-4 border-b border-outline-variant flex items-center justify-between bg-white/[0.02]">
+<span class="font-label-caps text-outline uppercase tracking-wider">Category Hierarchy</span>
+<span class="text-[10px] bg-primary-container/20 text-primary-container px-2 py-0.5 rounded-full font-bold">128 Total SKU</span>
+</div>
+<div class="flex-1 overflow-y-auto p-2 space-y-1">
+<!-- Tree Item (Parent) -->
+<div class="group">
+<div class="flex items-center gap-2 p-2 hover:bg-white/[0.05] rounded-lg cursor-pointer transition-colors border border-transparent hover:border-white/10">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">keyboard_arrow_down</span>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">folder</span>
+<span class="flex-1 text-body-md text-on-surface">Electronics</span>
+<span class="text-mono-id text-outline-variant text-[11px] bg-black/40 px-2 rounded">42</span>
+</div>
+<!-- Child Items -->
+<div class="ml-8 mt-1 space-y-1">
+<div class="flex items-center gap-2 p-2 bg-primary/10 border border-primary/20 rounded-lg cursor-pointer">
+<span class="material-symbols-outlined text-primary text-[16px]">subdirectory_arrow_right</span>
+<span class="flex-1 text-body-sm text-primary font-medium">Smartphones</span>
+<span class="text-mono-id text-primary text-[10px]">18</span>
+</div>
+<div class="flex items-center gap-2 p-2 hover:bg-white/[0.05] rounded-lg cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-outline text-[16px]">subdirectory_arrow_right</span>
+<span class="flex-1 text-body-sm text-on-surface-variant">Laptops</span>
+<span class="text-mono-id text-outline-variant text-[10px]">12</span>
+</div>
+<div class="flex items-center gap-2 p-2 hover:bg-white/[0.05] rounded-lg cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-outline text-[16px]">subdirectory_arrow_right</span>
+<span class="flex-1 text-body-sm text-on-surface-variant">Wearables</span>
+<span class="text-mono-id text-outline-variant text-[10px]">12</span>
+</div>
+</div>
+</div>
+<!-- Another Parent -->
+<div class="group mt-2">
+<div class="flex items-center gap-2 p-2 hover:bg-white/[0.05] rounded-lg cursor-pointer transition-colors border border-transparent hover:border-white/10">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">keyboard_arrow_right</span>
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 1;">folder</span>
+<span class="flex-1 text-body-md text-on-surface">Apparel</span>
+<span class="text-mono-id text-outline-variant text-[11px] bg-black/40 px-2 rounded">86</span>
+</div>
+</div>
+<!-- Another Parent -->
+<div class="group">
+<div class="flex items-center gap-2 p-2 hover:bg-white/[0.05] rounded-lg cursor-pointer transition-colors border border-transparent hover:border-white/10">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">keyboard_arrow_right</span>
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 1;">folder</span>
+<span class="flex-1 text-body-md text-on-surface">Storage</span>
+<span class="text-mono-id text-outline-variant text-[11px] bg-black/40 px-2 rounded">24</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Pane: Detail Card (60%) -->
+<section class="flex-1 glass-panel rounded-xl overflow-hidden flex flex-col relative">
+<!-- Background Decoration -->
+
+<div class="p-6 border-b border-outline-variant bg-white/[0.01] relative z-10">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-h2 text-h2 text-on-surface">Category Detail</h3>
+<p class="text-body-sm text-outline">Manage properties and view active product inventory</p>
+</div>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">delete</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">share</span>
+</button>
+</div>
+</div>
+<!-- Form Grid -->
+<div class="grid grid-cols-2 gap-6">
+<div class="space-y-4">
+<div>
+<label class="block text-label-caps text-outline uppercase mb-2">Category Name</label>
+<input class="w-full bg-black/30 border border-outline-variant rounded-lg px-4 py-2 text-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="text" value="Smartphones"/>
+</div>
+<div>
+<label class="block text-label-caps text-outline uppercase mb-2">Parent Category</label>
+<div class="relative">
+<select class="w-full appearance-none bg-black/30 border border-outline-variant rounded-lg px-4 py-2 text-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-all pr-10">
+<option>Electronics</option>
+<option>Appliances</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-label-caps text-outline uppercase mb-2">Status</label>
+<div class="flex items-center gap-3 h-10">
+<div class="relative inline-block w-10 h-5 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 checked:border-primary-container" id="toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-outline-variant cursor-pointer" for="toggle"></label>
+</div>
+<span class="text-body-sm font-semibold text-tertiary">Active Status</span>
+</div>
+<style>
+                                    .toggle-checkbox:checked { right: 0; border-color: #a078ff; }
+                                    .toggle-checkbox:checked + .toggle-label { background-color: #a078ff; }
+                                    .toggle-checkbox { right: 50%; transition: all 0.3s; }
+                                </style>
+</div>
+<!-- Quick Stats -->
+<div class="grid grid-cols-2 gap-3">
+<div class="p-3 bg-white/[0.03] border border-white/5 rounded-lg">
+<p class="text-[10px] text-outline uppercase font-label-caps mb-1">Total Items</p>
+<p class="text-h2 text-on-surface font-mono-id">1,240</p>
+</div>
+<div class="p-3 bg-white/[0.03] border border-white/5 rounded-lg">
+<p class="text-[10px] text-outline uppercase font-label-caps mb-1">Growth</p>
+<p class="text-h2 text-secondary font-mono-id">+12%</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Product List Section -->
+<div class="flex-1 flex flex-col overflow-hidden relative z-10">
+<div class="px-6 py-4 flex items-center justify-between bg-white/[0.01]">
+<h4 class="font-label-caps text-outline uppercase tracking-wider">Associated Products</h4>
+<button class="text-primary text-body-sm hover:underline">View All</button>
+</div>
+<div class="flex-1 overflow-y-auto px-6 pb-6">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/[0.03] border-b border-white/5">
+<th class="px-4 py-2 font-label-caps text-outline uppercase">Product Name</th>
+<th class="px-4 py-2 font-label-caps text-outline uppercase text-right">Stock</th>
+<th class="px-4 py-2 font-label-caps text-outline uppercase text-center">SKU</th>
+<th class="px-4 py-2 font-label-caps text-outline uppercase">Vendor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="h-[40px] border-b border-white/[0.03] hover:bg-white/[0.05] transition-colors group">
+<td class="px-4 py-2">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">smartphone</span>
+</div>
+<span class="text-table-cell text-on-surface">iPhone 15 Pro Max</span>
+</div>
+</td>
+<td class="px-4 py-2 text-right font-mono-id text-secondary">420</td>
+<td class="px-4 py-2 text-center text-mono-id text-outline-variant">APL-15PM-256</td>
+<td class="px-4 py-2">
+<span class="text-body-sm text-on-surface-variant">Apple Inc.</span>
+</td>
+</tr>
+<tr class="h-[40px] border-b border-white/[0.03] hover:bg-white/[0.05] transition-colors">
+<td class="px-4 py-2">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">smartphone</span>
+</div>
+<span class="text-table-cell text-on-surface">Samsung Galaxy S24 Ultra</span>
+</div>
+</td>
+<td class="px-4 py-2 text-right font-mono-id text-secondary">385</td>
+<td class="px-4 py-2 text-center text-mono-id text-outline-variant">SAM-S24U-512</td>
+<td class="px-4 py-2">
+<span class="text-body-sm text-on-surface-variant">Samsung Electronics</span>
+</td>
+</tr>
+<tr class="h-[40px] border-b border-white/[0.03] hover:bg-white/[0.05] transition-colors">
+<td class="px-4 py-2">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">smartphone</span>
+</div>
+<span class="text-table-cell text-on-surface">Google Pixel 8 Pro</span>
+</div>
+</td>
+<td class="px-4 py-2 text-right font-mono-id text-secondary">156</td>
+<td class="px-4 py-2 text-center text-mono-id text-outline-variant">GOO-PX8P-128</td>
+<td class="px-4 py-2">
+<span class="text-body-sm text-on-surface-variant">Google Store</span>
+</td>
+</tr>
+<tr class="h-[40px] border-b border-white/[0.03] hover:bg-white/[0.05] transition-colors">
+<td class="px-4 py-2">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">smartphone</span>
+</div>
+<span class="text-table-cell text-on-surface">Xiaomi 13 Ultra</span>
+</div>
+</td>
+<td class="px-4 py-2 text-right font-mono-id text-error">12</td>
+<td class="px-4 py-2 text-center text-mono-id text-outline-variant">XIA-13U-BLK</td>
+<td class="px-4 py-2">
+<span class="text-body-sm text-on-surface-variant">Xiaomi Global</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="p-4 bg-white/[0.02] border-t border-outline-variant flex justify-end gap-3 relative z-10">
+<button class="px-6 py-2 border border-outline-variant text-on-surface rounded-lg hover:bg-surface-container-high transition-colors text-body-sm">Cancel</button>
+<button class="px-6 py-2 bg-primary text-on-primary font-semibold rounded-lg hover:opacity-90 active:scale-95 transition-all text-body-sm shadow-lg shadow-primary/20">Save Changes</button>
+</div>
+</section>
+</div>
+</main>
+<!-- Background Atmospheric Effect -->
+<div class="fixed inset-0 -z-10 bg-[#09090b] pointer-events-none">
+<div class="absolute top-[-10%] right-[-5%] w-[40%] h-[50%] bg-primary-container/5 blur-[120px] rounded-full"></div>
+<div class="absolute bottom-[-10%] left-[-5%] w-[30%] h-[40%] bg-secondary/5 blur-[100px] rounded-full"></div>
+</div>
+<script>
+        // Simple tree expand/collapse logic
+        document.querySelectorAll('.group > div').forEach(item => {
+            item.addEventListener('click', () => {
+                const icon = item.querySelector('span:first-child');
+                if(icon && icon.textContent.includes('keyboard_arrow')) {
+                    icon.textContent = icon.textContent === 'keyboard_arrow_down' ? 'keyboard_arrow_right' : 'keyboard_arrow_down';
+                    const list = item.nextElementSibling;
+                    if(list) list.classList.toggle('hidden');
+                }
+            });
+        });
+
+        // Tab Switching Logic
+        const tabs = document.querySelectorAll('.border-b button');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('text-primary', 'border-primary', 'font-semibold');
+                    t.classList.add('text-on-surface-variant');
+                });
+                tab.classList.add('text-primary', 'border-primary', 'font-semibold');
+                tab.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock | OUT-2026-00311</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#353437",
+                    "inverse-on-surface": "#313032",
+                    "secondary": "#adc6ff",
+                    "primary-container": "#a078ff",
+                    "outline-variant": "#494454",
+                    "on-tertiary-fixed-variant": "#673d00",
+                    "inverse-primary": "#6d3bd7",
+                    "error": "#ffb4ab",
+                    "on-secondary": "#002e6a",
+                    "on-secondary-container": "#e6ecff",
+                    "surface": "#131315",
+                    "surface-container-lowest": "#0e0e10",
+                    "surface-container": "#201f22",
+                    "on-background": "#e5e1e4",
+                    "secondary-fixed": "#d8e2ff",
+                    "surface-variant": "#353437",
+                    "on-tertiary": "#482900",
+                    "on-primary-fixed-variant": "#5516be",
+                    "on-tertiary-container": "#3f2300",
+                    "on-primary-fixed": "#23005c",
+                    "tertiary": "#ffb869",
+                    "surface-container-high": "#2a2a2c",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "surface-bright": "#39393b",
+                    "on-error": "#690005",
+                    "secondary-container": "#0566d9",
+                    "outline": "#958ea0",
+                    "surface-tint": "#d0bcff",
+                    "on-tertiary-fixed": "#2c1700",
+                    "on-primary-container": "#340080",
+                    "surface-container-low": "#1c1b1d",
+                    "inverse-surface": "#e5e1e4",
+                    "on-surface-variant": "#cbc3d7",
+                    "on-surface": "#e5e1e4",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed": "#e9ddff",
+                    "primary-fixed-dim": "#d0bcff",
+                    "tertiary-fixed-dim": "#ffb869",
+                    "error-container": "#93000a",
+                    "primary": "#d0bcff",
+                    "surface-dim": "#131315",
+                    "on-secondary-fixed": "#001a42",
+                    "on-primary": "#3c0091",
+                    "background": "#131315",
+                    "on-secondary-fixed-variant": "#004395",
+                    "tertiary-container": "#ca801e",
+                    "tertiary-fixed": "#ffdcbb"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container_padding": "24px",
+                    "base_grid": "8px",
+                    "table_row_height": "40px",
+                    "gutter": "16px",
+                    "sidebar_width": "208px"
+            },
+            "fontFamily": {
+                    "h2": ["Roboto Flex"],
+                    "body-md": ["Roboto Flex"],
+                    "label-caps": ["Roboto Flex"],
+                    "body-sm": ["Roboto Flex"],
+                    "table-cell": ["Roboto Flex"],
+                    "h1": ["Roboto Flex"],
+                    "mono-id": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #131315;
+            color: #e5e1e4;
+            font-family: 'Roboto Flex', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        /* Custom Scrollbar per design system */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(208, 188, 255, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(208, 188, 255, 0.4);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .inner-border {
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        .status-pill {
+            background: rgba(208, 188, 255, 0.1);
+            color: #d0bcff;
+            border: 1px solid rgba(208, 188, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-background">
+<!-- Navigation Shell: SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant flex flex-col py-container_padding bg-surface">
+<div class="px-6 mb-8">
+<h1 class="font-h2 text-h2 text-on-surface">OmniStock</h1>
+<p class="text-[10px] text-on-surface-variant font-label-caps tracking-widest mt-1 opacity-60">ADMIN PANEL</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 transition-colors hover:text-primary-container text-primary border-l-2 border-primary font-semibold font-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">local_shipping</span>
+<span>Shipments</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">domain</span>
+<span>Warehouses</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">monitoring</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-6 space-y-1 border-t border-outline-variant pt-6">
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+<span>Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] border-b border-outline-variant bg-surface/80 backdrop-blur-md z-40 flex items-center justify-between px-gutter">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">arrow_back</span>
+</button>
+<div class="flex flex-col">
+<h2 class="font-h2 text-h2 text-on-surface leading-none">OUT-2026-00311</h2>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-tighter opacity-50">Outward Dispatch Detail</span>
+</div>
+<div class="px-2.5 py-0.5 rounded-full status-pill font-label-caps text-[10px]">
+                COMPLETED
+            </div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all text-on-surface-variant">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all text-on-surface-variant">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<div class="w-8 h-8 rounded-full ml-2 border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a professional system operator avatar in a high-tech logistics environment, dark lighting, violet and blue color scheme, sleek digital aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuMn0ZFDr3GM59IVyCabjjhE30A9UzySwLhYimOGh7IWTSM_vppELOflq-P-V71lPIn4UdmgRebp4v1Z5waBnK8ebij2miM1gDgUkJtQXAz6CwP9mmg2bxq-paRcNbuK79VRIU678JJef7cIAYusawAaKfHEC8ywJPGv5inLaPHVnU0s9PC_VlcK9dSGtF5m0lnIBi7pSOlwK-cfti_15_Vxq_NRVFSTHMnKylODH5gldaU4d8iIM5WTSTLwnNMPucxThS5Uv79BQ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] mt-[56px] p-container_padding space-y-gutter">
+<!-- Top Bento Grid Section -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- School Card -->
+<div class="col-span-12 md:col-span-4 glass-panel rounded-xl p-5 inner-border flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-label-caps text-[10px]">RECIPIENT ENTITY</span>
+<span class="material-symbols-outlined text-primary text-[18px]">school</span>
+</div>
+<div>
+<h3 class="font-h1 text-h1 text-on-surface">St. Jude’s International Academy</h3>
+<div class="mt-4 space-y-3">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] opacity-60">person</span>
+<span class="font-body-md">Marcus Thorne (Principal)</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] opacity-60">location_on</span>
+<span class="font-body-md">1204 Academic Circle, North Wing, Seattle WA</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Handover Card -->
+<div class="col-span-12 md:col-span-3 glass-panel rounded-xl p-5 inner-border flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-label-caps text-[10px]">HANDOVER DETAILS</span>
+<span class="material-symbols-outlined text-tertiary text-[18px]">handshake</span>
+</div>
+<div class="flex-1 flex flex-col justify-end">
+<div class="mb-6">
+<p class="text-on-surface font-body-md font-semibold">David Vance</p>
+<p class="text-on-surface-variant text-body-sm">Logistics Liaison</p>
+</div>
+<div class="pt-4 border-t border-outline-variant/30">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant text-[11px] font-label-caps">DATE</span>
+<span class="text-on-surface font-mono-id">OCT 14, 2026</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Signature Card -->
+<div class="col-span-12 md:col-span-5 glass-panel rounded-xl p-5 inner-border flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-label-caps text-[10px]">E-SIGNATURE CAPTURED</span>
+<span class="material-symbols-outlined text-secondary text-[18px]">verified</span>
+</div>
+<div class="flex-1 bg-white rounded-lg p-4 flex items-center justify-center overflow-hidden">
+<img class="max-h-full object-contain opacity-80" data-alt="A clean, minimalist digital handwritten signature on a plain white background. The signature is smooth, professional, and captures the look of a stylus-drawn electronic proof of delivery. The stroke is dark charcoal grey against the stark white, creating a high-contrast clinical look for an admin dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjtHbOFSZRA6YSyGcmLbaduZtxmnYKUyCgPopjqJ240k44X3YNAKq2xTfsTMpevUdaEPD3wnnUSqGaaZS2p9iLrFXHnZ4PMdRBBe1-Vw1EsaIOMFo_VtU5bHUNvRewlYekd18Ns2rpaeim_3emVOIm6dy3Dig8F7QN4DDANiKyGwYvCBSi9RZkcis8p6DTI5Q7PwHVqE4M201jEd8vu4cSoi2Hs0mMsP17nCc0o_0GFO6PI9aeHFbfKJj7yz7xhhz7CIhwThgPw14"/>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-mono-id text-on-surface-variant/40">DIGITAL_CERT_ID: OS-SIG-99823-X</p>
+</div>
+</div>
+</div>
+<!-- Items Table -->
+<div class="glass-panel rounded-xl overflow-hidden inner-border">
+<div class="px-gutter py-3 bg-white/5 border-b border-outline-variant/30 flex items-center justify-between">
+<h3 class="font-label-caps text-[11px] text-on-surface">ITEMIZED DISPATCH LIST</h3>
+<span class="font-mono-id text-[11px] text-on-surface-variant">04 ITEMS</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/[0.03] border-b border-outline-variant/20">
+<th class="px-gutter h-[40px] font-label-caps text-[11px] text-outline">REF ID</th>
+<th class="px-gutter h-[40px] font-label-caps text-[11px] text-outline">DESCRIPTION</th>
+<th class="px-gutter h-[40px] font-label-caps text-[11px] text-outline text-right">QUANTITY</th>
+<th class="px-gutter h-[40px] font-label-caps text-[11px] text-outline text-right">UNIT PRICE</th>
+<th class="px-gutter h-[40px] font-label-caps text-[11px] text-outline text-right">TOTAL</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="hover:bg-white/[0.05] transition-colors group">
+<td class="px-gutter h-[40px] font-mono-id text-on-surface">SKU-882-P</td>
+<td class="px-gutter h-[40px] font-table-cell text-on-surface">A4 Bound Notebooks (Case of 24)</td>
+<td class="px-gutter h-[40px] font-mono-id text-rose-400 text-right">-15.00</td>
+<td class="px-gutter h-[40px] font-mono-id text-on-surface-variant text-right">$42.00</td>
+<td class="px-gutter h-[40px] font-mono-id text-on-surface text-right">$630.00</td>
+</tr>
+<tr class="hover:bg-white/[0.05] transition-colors group">
+<td class="px-gutter h-[40px] font-mono-id text-on-surface">SKU-109-A</td>
+<td class="px-gutter h-[40px] font-table-cell text-on-surface">Architectural Pencil Sets (HB-4B)</td>
+<td class="px-gutter h-[40px] font-mono-id text-rose-400 text-right">-120.00</td>
+<td class="px-gutter h-[40px] font-mono-id text-on-surface-variant text-right">$5.50</td>
+<td class="px-gutter h-[40px] font-mono-id text-on-surface text-right">$660.00</td>
+</tr>
+<tr class="hover:bg-white/[0.05] transition-colors group">
+<td class="px-gutter h-[40px] font-mono-id text-on-surface">SKU-441-L</td>
+<td class="px-gutter h-[40px] font-table-cell text-on-surface">LED Desk Lamps - Precision Series</td>
+<td class="px-gutter h-[40px] font-mono-id text-rose-400 text-right">-08.00</td>
+<td class="px-gutter h-[40px] font-mono-id text-on-surface-variant text-right">$128.00</td>
+<td class="px-gutter h-[40px] font-mono-id text-on-surface text-right">$1,024.00</td>
+</tr>
+<tr class="hover:bg-white/[0.05] transition-colors group">
+<td class="px-gutter h-[40px] font-mono-id text-on-surface">SKU-902-S</td>
+<td class="px-gutter h-[40px] font-table-cell text-on-surface">Scientific Calculators (Solar)</td>
+<td class="px-gutter h-[40px] font-mono-id text-rose-400 text-right">-50.00</td>
+<td class="px-gutter h-[40px] font-mono-id text-on-surface-variant text-right">$19.99</td>
+<td class="px-gutter h-[40px] font-mono-id text-on-surface text-right">$999.50</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-gutter py-4 bg-white/5 border-t border-outline-variant/30 flex justify-end">
+<div class="w-64 space-y-2">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant font-label-caps text-[10px]">SUBTOTAL</span>
+<span class="text-on-surface font-mono-id">$3,313.50</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant font-label-caps text-[10px]">LOGISTICS TAX (2%)</span>
+<span class="text-on-surface font-mono-id">$66.27</span>
+</div>
+<div class="flex justify-between items-center pt-2 border-t border-outline-variant/30">
+<span class="text-primary font-label-caps text-[11px]">GRAND TOTAL</span>
+<span class="text-primary font-h2">$3,379.77</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Stock Effect Card -->
+<div class="glass-panel rounded-xl p-6 inner-border bg-gradient-to-br from-surface-container-low to-surface">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+<span class="material-symbols-outlined text-primary text-[28px]">trending_down</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-3">
+<h4 class="font-h2 text-h2 text-on-surface">Inventory Delta Analysis</h4>
+<span class="text-[10px] font-mono-id bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded border border-rose-400/20">POST-OUTWARD ADJUSTMENT</span>
+</div>
+<p class="text-on-surface-variant font-body-md mt-1">This transaction has triggered a localized depletion across 4 stock categories. Predicted warehouse capacity has increased by <span class="text-primary font-semibold">1.2m³</span>. Automated restock triggers for scientific calculators (SKU-902-S) are now active.</p>
+<div class="grid grid-cols-4 gap-gutter mt-6">
+<div class="bg-white/5 p-3 rounded-lg border border-outline-variant/30">
+<p class="text-on-surface-variant text-[10px] font-label-caps">W-04 STOCK LEVEL</p>
+<p class="text-h2 font-mono-id mt-1">84.2%</p>
+<div class="w-full bg-outline-variant/20 h-1 mt-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[84%]"></div>
+</div>
+</div>
+<div class="bg-white/5 p-3 rounded-lg border border-outline-variant/30">
+<p class="text-on-surface-variant text-[10px] font-label-caps">TURNOVER VELOCITY</p>
+<p class="text-h2 font-mono-id mt-1">+12.4</p>
+<div class="w-full bg-outline-variant/20 h-1 mt-2 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[65%]"></div>
+</div>
+</div>
+<div class="bg-white/5 p-3 rounded-lg border border-outline-variant/30">
+<p class="text-on-surface-variant text-[10px] font-label-caps">FULFILLMENT RISK</p>
+<p class="text-h2 font-mono-id mt-1">LOW</p>
+<div class="w-full bg-outline-variant/20 h-1 mt-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[15%]"></div>
+</div>
+</div>
+<div class="bg-white/5 p-3 rounded-lg border border-outline-variant/30">
+<p class="text-on-surface-variant text-[10px] font-label-caps">NEXT SHIPMENT</p>
+<p class="text-h2 font-mono-id mt-1">2D 4H</p>
+<div class="w-full bg-outline-variant/20 h-1 mt-2 rounded-full overflow-hidden">
+<div class="bg-outline h-full w-[40%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Micro-interaction script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                row.addEventListener('mouseenter', () => {
+                    row.style.background = 'rgba(255, 255, 255, 0.08)';
+                });
+                row.addEventListener('mouseleave', () => {
+                    row.style.background = 'transparent';
+                });
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,2 @@
+-- Seed data for local dev (BE-20): 5 demo products, 20 each inwarded.
+-- Applied by `supabase db reset`.

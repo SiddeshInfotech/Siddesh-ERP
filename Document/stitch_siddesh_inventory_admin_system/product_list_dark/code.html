@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin - Products</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #09090b;
+            color: #e5e1e4;
+            font-family: 'Roboto Flex', sans-serif;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(208, 188, 255, 0.2);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(208, 188, 255, 0.4);
+        }
+        .table-row-hover:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "primary-container": "#a078ff",
+                "surface-variant": "#353437",
+                "on-primary": "#3c0091",
+                "on-primary-fixed-variant": "#5516be",
+                "surface-tint": "#d0bcff",
+                "primary-fixed": "#e9ddff",
+                "tertiary-container": "#ca801e",
+                "surface-container-high": "#2a2a2c",
+                "inverse-primary": "#6d3bd7",
+                "outline-variant": "#494454",
+                "secondary-fixed": "#d8e2ff",
+                "on-tertiary-fixed-variant": "#673d00",
+                "surface-container-highest": "#353437",
+                "on-primary-fixed": "#23005c",
+                "on-tertiary-container": "#3f2300",
+                "surface-container-low": "#1c1b1d",
+                "tertiary-fixed-dim": "#ffb869",
+                "on-secondary-fixed": "#001a42",
+                "on-error-container": "#ffdad6",
+                "inverse-surface": "#e5e1e4",
+                "primary-fixed-dim": "#d0bcff",
+                "secondary": "#adc6ff",
+                "on-tertiary-fixed": "#2c1700",
+                "on-secondary-container": "#e6ecff",
+                "outline": "#958ea0",
+                "tertiary": "#ffb869",
+                "on-primary-container": "#340080",
+                "surface-bright": "#39393b",
+                "surface": "#131315",
+                "inverse-on-surface": "#313032",
+                "background": "#131315",
+                "on-tertiary": "#482900",
+                "on-surface": "#e5e1e4",
+                "on-surface-variant": "#cbc3d7",
+                "surface-container": "#201f22",
+                "on-secondary": "#002e6a",
+                "primary": "#d0bcff",
+                "tertiary-fixed": "#ffdcbb",
+                "on-secondary-fixed-variant": "#004395",
+                "secondary-container": "#0566d9",
+                "on-error": "#690005",
+                "surface-container-lowest": "#0e0e10",
+                "secondary-fixed-dim": "#adc6ff",
+                "error": "#ffb4ab",
+                "error-container": "#93000a",
+                "on-background": "#e5e1e4",
+                "surface-dim": "#131315"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+              },
+              "spacing": {
+                "base_grid": "8px",
+                "container_padding": "24px",
+                "table_row_height": "40px",
+                "sidebar_width": "208px",
+                "gutter": "16px"
+              },
+              "fontFamily": {
+                "h1": ["Roboto Flex"],
+                "mono-id": ["JetBrains Mono"],
+                "table-cell": ["Roboto Flex"],
+                "h2": ["Roboto Flex"],
+                "label-caps": ["Roboto Flex"],
+                "body-sm": ["Roboto Flex"],
+                "body-md": ["Roboto Flex"]
+              },
+              "fontSize": {
+                "h1": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                "mono-id": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                "table-cell": ["13px", { "lineHeight": "16px", "fontWeight": "400" }],
+                "h2": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant bg-surface flex flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<h1 class="font-h2 text-h2 text-on-surface">OmniStock</h1>
+<p class="text-[10px] uppercase tracking-widest text-outline">Global Logistics</p>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-primary border-l-2 border-primary font-semibold group bg-white/5" href="#">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+<span class="font-body-md text-body-md">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">local_shipping</span>
+<span class="font-body-md text-body-md">Shipments</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">domain</span>
+<span class="font-body-md text-body-md">Warehouses</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">monitoring</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="px-6 mt-auto flex flex-col gap-4">
+<button class="bg-primary text-on-primary font-semibold py-2 rounded-lg flex items-center justify-center gap-2 text-body-md hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>New Entry</span>
+</button>
+<div class="flex flex-col gap-1 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+<span class="font-body-md text-body-md">Help Center</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+<span class="font-body-md text-body-md">Log Out</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-6 z-40">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="bg-black/20 border border-outline-variant text-on-surface text-body-sm rounded-lg pl-10 pr-4 py-1.5 w-full focus:outline-none focus:border-primary transition-all" placeholder="Search product database..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4 ml-6">
+<button class="text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Close up professional portrait of a tech operations manager, wearing modern smart casual clothing, neutral studio background with soft cinematic lighting, premium and focused business atmosphere, high fidelity photography style matching dark ui." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCY8mAulsf_T8O21W1ORB6E5fhIBv9prdpgkoq_F6Q8X25peAsJskQvE_pG6PBuA05LqHF6q3gFCWFEk9Len1qtukAxIIC7Edz8-RJ38cGkvF_95XSaxjOxUkUfvQu5hZnlbXi_CyaIbCRSz0mp354uyz_zDb7yIY88O5r2iviyhy7N0DQ0RTpnlYrudCZl_HjHJGli6w4wV-rhjRo9QIigd6vCpinSBBUbx_xWKYTDIK79M-QgiG5pJwxGtsK2RdCSS4dOp7W9kUI"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] mt-[56px] p-6 min-h-screen">
+<!-- Header Section -->
+<div class="flex items-end justify-between mb-8">
+<div class="flex flex-col gap-1">
+<h2 class="font-semibold text-[28px] text-on-surface leading-tight">Products</h2>
+<span class="text-on-surface-variant font-body-sm text-body-sm flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    247 items in global inventory
+                </span>
+</div>
+<button class="bg-primary text-on-primary font-bold px-6 py-2.5 rounded-full flex items-center gap-2 hover:bg-primary-container transition-all active:scale-95 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">add_circle</span>
+<span>New Product</span>
+</button>
+</div>
+<!-- Filter Bar -->
+<div class="glass-panel p-3 rounded-xl mb-6 flex flex-wrap items-center gap-4">
+<div class="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-1.5 flex-1 min-w-[200px]">
+<span class="material-symbols-outlined text-outline text-[18px]">filter_list</span>
+<input class="bg-transparent border-none text-body-sm focus:ring-0 w-full" placeholder="Quick filter by name..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-label-caps font-label-caps text-outline uppercase">Category</span>
+<select class="bg-surface-container-low border border-outline-variant text-body-sm rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-primary">
+<option>All Categories</option>
+<option>Electronics</option>
+<option>Industrial</option>
+<option>Mechanical</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-label-caps font-label-caps text-outline uppercase">Brand</span>
+<select class="bg-surface-container-low border border-outline-variant text-body-sm rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-primary">
+<option>All Brands</option>
+<option>ApexCore</option>
+<option>Luminary</option>
+<option>Titan</option>
+</select>
+</div>
+<div class="bg-surface-container-highest p-1 rounded-lg flex items-center gap-1 ml-auto">
+<button class="px-3 py-1 rounded-md text-body-sm bg-primary text-on-primary font-semibold transition-all">Manual</button>
+<button class="px-3 py-1 rounded-md text-body-sm text-on-surface-variant hover:text-on-surface transition-all">RFID</button>
+<button class="px-3 py-1 rounded-md text-body-sm text-on-surface-variant hover:text-on-surface transition-all">GPS</button>
+</div>
+</div>
+<!-- Data Table Section -->
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/[0.03] border-b border-outline-variant h-[40px]">
+<th class="px-4 w-10">
+<input class="w-4 h-4 rounded border-outline bg-transparent checked:bg-primary" type="checkbox"/>
+</th>
+<th class="px-3 font-label-caps text-label-caps text-outline uppercase tracking-wider">Barcode</th>
+<th class="px-3 font-label-caps text-label-caps text-outline uppercase tracking-wider">Product Name</th>
+<th class="px-3 font-label-caps text-label-caps text-outline uppercase tracking-wider">Category</th>
+<th class="px-3 font-label-caps text-label-caps text-outline uppercase tracking-wider">Brand</th>
+<th class="px-3 font-label-caps text-label-caps text-outline uppercase tracking-wider">Model</th>
+<th class="px-3 font-label-caps text-label-caps text-outline uppercase tracking-wider text-right">Stock</th>
+<th class="px-3 font-label-caps text-label-caps text-outline uppercase tracking-wider text-right">Min</th>
+<th class="px-4 font-label-caps text-label-caps text-outline uppercase tracking-wider text-center">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/[0.05]">
+<!-- Product Row Macro -->
+<script>
+                            const data = [
+                                { id: '742-019-X', name: 'Neural Link Hub V2', cat: 'Network', brand: 'Cortex', model: 'NL-200', stock: 124, min: 40, status: 'emerald' },
+                                { id: '312-984-A', name: 'Optic Fiber Array', cat: 'Optical', brand: 'LightPath', model: 'OPA-9', stock: 12, min: 25, status: 'rose' },
+                                { id: '556-321-K', name: 'Thermal Regulator', cat: 'HVAC', brand: 'FrostFlow', model: 'TR-101', stock: 48, min: 45, status: 'amber' },
+                                { id: '889-441-S', name: 'Quantum Sensor G3', cat: 'Sensors', brand: 'Quantix', model: 'QS-G3', stock: 210, min: 50, status: 'emerald' },
+                                { id: '102-334-B', name: 'Lithium Core Cell', cat: 'Power', brand: 'VoltScale', model: 'LC-8', stock: 85, min: 20, status: 'emerald' },
+                                { id: '674-211-P', name: 'Titanium Shell Case', cat: 'Exterior', brand: 'ArmorX', model: 'TS-4', stock: 3, min: 10, status: 'rose' },
+                                { id: '901-223-D', name: 'Hydraulic Actuator', cat: 'Mechanical', brand: 'ApexDrive', model: 'HA-X1', stock: 34, min: 30, status: 'amber' },
+                                { id: '445-887-L', name: 'Signal Amplifier', cat: 'RF Components', brand: 'WaveTek', model: 'SA-400', stock: 112, min: 50, status: 'emerald' },
+                                { id: '223-110-C', name: 'Logic Board 12nm', cat: 'Compute', brand: 'NanoLogic', model: 'LB-12', stock: 67, min: 20, status: 'emerald' },
+                                { id: '782-990-W', name: 'Pressure Valve 44', cat: 'Fluidics', brand: 'FlowMaster', model: 'PV-44', stock: 19, min: 15, status: 'amber' },
+                                { id: '543-221-M', name: 'Solid State Relay', cat: 'Electric', brand: 'SwitchCo', model: 'SR-2', stock: 304, min: 100, status: 'emerald' },
+                                { id: '119-004-F', name: 'OLED Display Panel', cat: 'Visual', brand: 'VisionPro', model: 'DP-6', stock: 0, min: 5, status: 'rose' },
+                                { id: '338-776-G', name: 'Encrypted Key Card', cat: 'Security', brand: 'ShieldSys', model: 'KC-1', stock: 500, min: 200, status: 'emerald' },
+                                { id: '992-443-R', name: 'Fusion Connector', cat: 'High Voltage', brand: 'OmniVolt', model: 'FC-99', stock: 42, min: 40, status: 'amber' },
+                                { id: '665-112-Q', name: 'Ceramic Bearing Set', cat: 'Hardware', brand: 'Rotation', model: 'CB-X', stock: 89, min: 30, status: 'emerald' }
+                            ];
+
+                            const tbody = document.currentScript.parentElement;
+                            data.forEach(item => {
+                                const row = `
+                                    <tr class="table-row-hover h-[40px] transition-colors group">
+                                        <td class="px-4">
+                                            <input type="checkbox" class="w-4 h-4 rounded border-outline-variant bg-transparent">
+                                        </td>
+                                        <td class="px-3 font-mono-id text-mono-id text-primary">${item.id}</td>
+                                        <td class="px-3 font-table-cell text-table-cell text-on-surface font-medium">${item.name}</td>
+                                        <td class="px-3">
+                                            <span class="px-2 py-0.5 rounded-full bg-surface-container-high border border-outline-variant text-[10px] font-semibold text-on-surface-variant uppercase">${item.cat}</span>
+                                        </td>
+                                        <td class="px-3 font-table-cell text-table-cell text-on-surface-variant">${item.brand}</td>
+                                        <td class="px-3 font-table-cell text-table-cell text-on-surface-variant">${item.model}</td>
+                                        <td class="px-3 font-table-cell text-table-cell text-right font-bold text-${item.status === 'emerald' ? 'emerald-400' : item.status === 'amber' ? 'amber-400' : 'rose-400'}">${item.stock}</td>
+                                        <td class="px-3 font-table-cell text-table-cell text-right text-outline">${item.min}</td>
+                                        <td class="px-4 text-center">
+                                            <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button class="p-1 text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+                                                <button class="p-1 text-outline hover:text-error transition-colors"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+                                                <button class="p-1 text-outline hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                                tbody.insertAdjacentHTML('beforeend', row);
+                            });
+                        </script>
+</tbody>
+</table>
+</div>
+<!-- Footer Pagination -->
+<div class="bg-white/[0.03] p-3 flex items-center justify-between border-t border-outline-variant">
+<span class="text-body-sm text-outline">Showing 1 to 15 of 247 entries</span>
+<div class="flex items-center gap-1">
+<button class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-all disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-on-primary font-semibold text-body-sm">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-on-surface-variant text-body-sm transition-all">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-on-surface-variant text-body-sm transition-all">3</button>
+<span class="text-outline px-1">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-on-surface-variant text-body-sm transition-all">17</button>
+<button class="p-1.5 rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Floating Decorative Element -->
+<div class="fixed bottom-8 right-8 pointer-events-none opacity-20 hidden lg:block">
+<div class="w-64 h-64 bg-primary/20 blur-[120px] rounded-full"></div>
+</div>
+</main>
+<script>
+        // Micro-interaction for table rows
+        document.querySelectorAll('tr.table-row-hover').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (e.target.type !== 'checkbox' && !e.target.closest('button')) {
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                }
+            });
+        });
+    </script>
+</body></html>

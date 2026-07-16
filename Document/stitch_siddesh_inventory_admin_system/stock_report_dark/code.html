@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stock Report | OmniStock Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #131315;
+            color: #e5e1e4;
+            font-family: 'Roboto Flex', sans-serif;
+            overflow: hidden; /* Main app layout handles scrolling */
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(208, 188, 255, 0.2);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(208, 188, 255, 0.4);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav-indicator {
+            position: absolute;
+            left: 0;
+            width: 2px;
+            height: 24px;
+            background-color: #d0bcff;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#a078ff",
+                        "surface-variant": "#353437",
+                        "on-primary": "#3c0091",
+                        "on-primary-fixed-variant": "#5516be",
+                        "surface-tint": "#d0bcff",
+                        "primary-fixed": "#e9ddff",
+                        "tertiary-container": "#ca801e",
+                        "surface-container-high": "#2a2a2c",
+                        "inverse-primary": "#6d3bd7",
+                        "outline-variant": "#494454",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "surface-container-highest": "#353437",
+                        "on-primary-fixed": "#23005c",
+                        "on-tertiary-container": "#3f2300",
+                        "surface-container-low": "#1c1b1d",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "on-secondary-fixed": "#001a42",
+                        "on-error-container": "#ffdad6",
+                        "inverse-surface": "#e5e1e4",
+                        "primary-fixed-dim": "#d0bcff",
+                        "secondary": "#adc6ff",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-secondary-container": "#e6ecff",
+                        "outline": "#958ea0",
+                        "tertiary": "#ffb869",
+                        "on-primary-container": "#340080",
+                        "surface-bright": "#39393b",
+                        "surface": "#131315",
+                        "inverse-on-surface": "#313032",
+                        "background": "#131315",
+                        "on-tertiary": "#482900",
+                        "on-surface": "#e5e1e4",
+                        "on-surface-variant": "#cbc3d7",
+                        "surface-container": "#201f22",
+                        "on-secondary": "#002e6a",
+                        "primary": "#d0bcff",
+                        "tertiary-fixed": "#ffdcbb",
+                        "on-secondary-fixed-variant": "#004395",
+                        "secondary-container": "#0566d9",
+                        "on-error": "#690005",
+                        "surface-container-lowest": "#0e0e10",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "on-background": "#e5e1e4",
+                        "surface-dim": "#131315"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base_grid": "8px",
+                        "container_padding": "24px",
+                        "table_row_height": "40px",
+                        "sidebar_width": "208px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Roboto Flex"],
+                        "mono-id": ["JetBrains Mono"],
+                        "table-cell": ["Roboto Flex"],
+                        "h2": ["Roboto Flex"],
+                        "label-caps": ["Roboto Flex"],
+                        "body-sm": ["Roboto Flex"],
+                        "body-md": ["Roboto Flex"]
+                    },
+                    "fontSize": {
+                        "h1": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant flex flex-col py-6 bg-surface z-50">
+<div class="px-6 mb-8">
+<h2 class="font-h2 text-h2 text-on-surface">OmniStock</h2>
+<p class="text-[10px] text-on-surface-variant tracking-widest uppercase">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="relative flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">dashboard</span>
+                Dashboard
+            </a>
+<a class="relative flex items-center px-6 py-2 transition-colors hover:text-primary-container text-primary border-l-2 border-primary font-semibold font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">inventory_2</span>
+                Inventory
+            </a>
+<a class="relative flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">local_shipping</span>
+                Shipments
+            </a>
+<a class="relative flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">domain</span>
+                Warehouses
+            </a>
+<a class="relative flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">monitoring</span>
+                Analytics
+            </a>
+<a class="relative flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">settings</span>
+                Settings
+            </a>
+</nav>
+<div class="px-6 mt-auto pt-6 space-y-1">
+<a class="flex items-center py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">help</span>
+                Help Center
+            </a>
+<a class="flex items-center py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">logout</span>
+                Log Out
+            </a>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] border-b border-outline-variant bg-surface/80 backdrop-blur-md flex items-center justify-between px-6 z-40">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full bg-black/20 border border-outline-variant rounded-full py-1.5 pl-10 pr-4 text-body-sm focus:border-primary focus:ring-0 transition-all" placeholder="Search Inventory..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">history</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-all active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">apps</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-1"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right">
+<p class="text-body-sm font-semibold">Sarah Jenkins</p>
+<p class="text-[10px] text-on-surface-variant leading-none">Ops Lead</p>
+</div>
+<img class="w-8 h-8 rounded-full border border-primary/20" data-alt="A professional headshot of a female logistics manager in a modern office, wearing a dark navy blazer, soft warm indoor lighting, high-end professional photography style, dark color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvMR-dqe3UPYaVNd3nrVybw5XnzD4ub3nub18QQM-Tp0_HWI0luJax6ij80BMV4mthnNFt87Whq0wrZsMvAUnaUkc-J4RDUBt51Nt_UBIN1vbyGim0dKjB9SYGxuH5QO-7l0oJKOq04ymtlX6Gi88dfjbLmVDq_vntROBbFvcPK0l_C3lJKM3htlj7mqv5y1JpgaYo682XJDoB81P0bJVzYRrttQHPM-23WBook4cPVwOXlN0VU06cOMIqHaUSg252SjuyOtjBi4M"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] mt-[56px] h-[calc(100vh-56px)] overflow-y-auto custom-scrollbar p-6">
+<!-- Header & Tabs -->
+<div class="flex flex-col gap-6 mb-6">
+<div class="flex justify-between items-center">
+<h1 class="font-h1 text-h1 text-on-surface">Stock Report</h1>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-black/30 border border-outline-variant rounded-lg text-body-sm hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-[18px]">file_download</span>
+                        Export PDF
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-full text-body-sm font-semibold hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Entry
+                    </button>
+</div>
+</div>
+<!-- Tab Bar -->
+<div class="flex gap-8 border-b border-outline-variant/30">
+<button class="pb-3 border-b-2 border-primary text-primary font-semibold text-body-md flex items-center gap-2">
+                    Current Stock
+                    <span class="bg-primary/20 text-primary px-2 py-0.5 rounded text-[10px] font-bold">1,248</span>
+</button>
+<button class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all text-body-md flex items-center gap-2">
+                    Low Stock
+                    <span class="bg-tertiary-container/20 text-tertiary px-2 py-0.5 rounded text-[10px] font-bold">42</span>
+</button>
+<button class="pb-3 border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all text-body-md flex items-center gap-2">
+                    Out of Stock
+                    <span class="bg-error-container/20 text-error px-2 py-0.5 rounded text-[10px] font-bold">12</span>
+</button>
+</div>
+</div>
+<!-- Summary Strip -->
+<div class="grid grid-cols-4 gap-4 mb-6">
+<div class="glass-panel p-4 rounded-xl">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">TOTAL VALUATION</p>
+<div class="flex items-end gap-2">
+<span class="text-h2 font-h2">$4.2M</span>
+<span class="text-[10px] text-primary mb-1.5">+2.4%</span>
+</div>
+</div>
+<div class="glass-panel p-4 rounded-xl">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">SKU DIVERSITY</p>
+<div class="flex items-end gap-2">
+<span class="text-h2 font-h2">856</span>
+<span class="text-[10px] text-on-surface-variant mb-1.5">Across 12 Categories</span>
+</div>
+</div>
+<div class="glass-panel p-4 rounded-xl border-l-4 border-l-tertiary">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">URGENT REORDERS</p>
+<div class="flex items-end gap-2">
+<span class="text-h2 font-h2">18</span>
+<span class="text-[10px] text-tertiary mb-1.5">Avg. 4d delay</span>
+</div>
+</div>
+<div class="glass-panel p-4 rounded-xl border-l-4 border-l-primary">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">INBOUND FLOW</p>
+<div class="flex items-end gap-2">
+<span class="text-h2 font-h2">4,102</span>
+<span class="text-[10px] text-primary mb-1.5">Units / week</span>
+</div>
+</div>
+</div>
+<!-- Collapsible Filter Panel -->
+<div class="mb-6" id="filter-container">
+<button class="glass-panel w-full p-3 rounded-xl flex items-center justify-between hover:bg-white/5 transition-all" onclick="toggleFilters()">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">filter_list</span>
+<span class="font-body-md font-semibold">Active Filters: <span class="text-on-surface-variant font-normal">Warehouse: Berlin-01, Category: Electronics</span></span>
+</div>
+<span class="material-symbols-outlined transition-transform duration-300" id="filter-chevron">expand_more</span>
+</button>
+<div class="hidden overflow-hidden transition-all duration-300" id="filter-content">
+<div class="glass-panel mt-2 p-6 rounded-xl grid grid-cols-4 gap-6">
+<div class="flex flex-col gap-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant">WAREHOUSE</label>
+<select class="bg-black/20 border border-outline-variant rounded-lg text-body-sm p-2 outline-none focus:border-primary">
+<option>All Locations</option>
+<option selected="">Berlin-01 (Primary)</option>
+<option>Munich-04</option>
+<option>London-North</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant">CATEGORY</label>
+<select class="bg-black/20 border border-outline-variant rounded-lg text-body-sm p-2 outline-none focus:border-primary">
+<option>All Categories</option>
+<option selected="">Electronics</option>
+<option>Furniture</option>
+<option>Perishables</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant">STOCK LEVEL</label>
+<div class="flex gap-2">
+<input class="w-full bg-black/20 border border-outline-variant rounded-lg text-body-sm p-2" placeholder="Min" type="number"/>
+<input class="w-full bg-black/20 border border-outline-variant rounded-lg text-body-sm p-2" placeholder="Max" type="number"/>
+</div>
+</div>
+<div class="flex flex-col gap-2 justify-end">
+<button class="w-full py-2 border border-primary text-primary rounded-lg font-semibold text-body-sm hover:bg-primary/10 transition-all">
+                            Apply Changes
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- High Density Table -->
+<div class="glass-panel rounded-xl flex flex-col overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/5 h-[40px]">
+<th class="px-4 text-label-caps font-label-caps text-on-surface-variant border-b border-outline-variant">SKU ID</th>
+<th class="px-4 text-label-caps font-label-caps text-on-surface-variant border-b border-outline-variant">PRODUCT NAME</th>
+<th class="px-4 text-label-caps font-label-caps text-on-surface-variant border-b border-outline-variant">CATEGORY</th>
+<th class="px-4 text-label-caps font-label-caps text-on-surface-variant border-b border-outline-variant">WAREHOUSE</th>
+<th class="px-4 text-label-caps font-label-caps text-on-surface-variant border-b border-outline-variant text-right">ON HAND</th>
+<th class="px-4 text-label-caps font-label-caps text-on-surface-variant border-b border-outline-variant text-right">REORDER</th>
+<th class="px-4 text-label-caps font-label-caps text-on-surface-variant border-b border-outline-variant text-right">VALUATION</th>
+<th class="px-4 text-label-caps font-label-caps text-on-surface-variant border-b border-outline-variant text-center">STATUS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Data Rows -->
+<script>
+                            const data = [
+                                { sku: 'SKU-0921-A', name: 'MacBook Pro M3 14"', cat: 'Electronics', loc: 'Berlin-01', hand: 42, reorder: 5, val: '$84,000', status: 'Healthy', statusColor: 'primary' },
+                                { sku: 'SKU-8822-B', name: 'Dell UltraSharp 27"', cat: 'Electronics', loc: 'Berlin-01', hand: 12, reorder: 15, val: '$7,200', status: 'Low', statusColor: 'tertiary' },
+                                { sku: 'SKU-4122-C', name: 'ErgoChair Pro v2', cat: 'Furniture', loc: 'Berlin-01', hand: 85, reorder: 20, val: '$33,150', status: 'Healthy', statusColor: 'primary' },
+                                { sku: 'SKU-1004-D', name: 'Logitech MX Master 3', cat: 'Electronics', loc: 'Berlin-01', hand: 0, reorder: 50, val: '$0', status: 'Out', statusColor: 'error' },
+                                { sku: 'SKU-9921-E', name: 'USB-C Charging Dock', cat: 'Electronics', loc: 'Berlin-01', hand: 215, reorder: 50, val: '$10,750', status: 'Healthy', statusColor: 'primary' },
+                                { sku: 'SKU-3122-F', name: 'Mechanical Keyboard k2', cat: 'Electronics', loc: 'Munich-04', hand: 18, reorder: 20, val: '$1,800', status: 'Low', statusColor: 'tertiary' },
+                                { sku: 'SKU-5521-G', name: 'Webcam 4K Pro', cat: 'Electronics', loc: 'Berlin-01', hand: 56, reorder: 15, val: '$11,200', status: 'Healthy', statusColor: 'primary' },
+                                { sku: 'SKU-2022-H', name: 'Smart Power Strip', cat: 'Electronics', loc: 'London-North', hand: 340, reorder: 100, val: '$6,800', status: 'Healthy', statusColor: 'primary' },
+                                { sku: 'SKU-6622-I', name: 'Noise Cancel Headset', cat: 'Electronics', loc: 'Berlin-01', hand: 8, reorder: 10, val: '$2,400', status: 'Low', statusColor: 'tertiary' },
+                                { sku: 'SKU-1122-J', name: 'Vertical Mouse Pad', cat: 'Furniture', loc: 'Berlin-01', hand: 92, reorder: 30, val: '$1,840', status: 'Healthy', statusColor: 'primary' },
+                                { sku: 'SKU-7722-K', name: 'Standing Desk Frame', cat: 'Furniture', loc: 'Berlin-01', hand: 24, reorder: 10, val: '$9,600', status: 'Healthy', statusColor: 'primary' },
+                                { sku: 'SKU-4422-L', name: 'Type-C Cable 2m', cat: 'Electronics', loc: 'Munich-04', hand: 1050, reorder: 200, val: '$5,250', status: 'Healthy', statusColor: 'primary' }
+                            ];
+
+                            document.write(data.map((row, index) => `
+                                <tr class="h-[40px] hover:bg-white/5 transition-all ${index % 2 === 1 ? 'bg-white/[0.02]' : ''}">
+                                    <td class="px-4 font-mono-id text-mono-id text-primary-container">${row.sku}</td>
+                                    <td class="px-4 font-table-cell text-table-cell font-semibold">${row.name}</td>
+                                    <td class="px-4 font-table-cell text-table-cell text-on-surface-variant">${row.cat}</td>
+                                    <td class="px-4 font-table-cell text-table-cell text-on-surface-variant">${row.loc}</td>
+                                    <td class="px-4 font-table-cell text-table-cell text-right font-semibold">${row.hand}</td>
+                                    <td class="px-4 font-table-cell text-table-cell text-right text-on-surface-variant">${row.reorder}</td>
+                                    <td class="px-4 font-table-cell text-table-cell text-right font-semibold">${row.val}</td>
+                                    <td class="px-4 text-center">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-${row.statusColor}/10 text-${row.statusColor} border border-${row.statusColor}/30">
+                                            ${row.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join(''));
+                        </script>
+</tbody>
+</table>
+</div>
+<!-- Pinned Totals Row -->
+<div class="bg-surface-container-high border-t border-outline-variant p-4 flex items-center justify-between sticky bottom-0">
+<div class="flex items-center gap-6">
+<div class="flex flex-col">
+<span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">PAGE TOTALS</span>
+<span class="text-body-sm">12 Items Displayed</span>
+</div>
+</div>
+<div class="flex items-center gap-12">
+<div class="text-right">
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest leading-none mb-1">TOTAL QTY</p>
+<p class="text-body-md font-bold text-primary">1,947 Units</p>
+</div>
+<div class="text-right">
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest leading-none mb-1">VALUATION SUM</p>
+<p class="text-body-md font-bold text-primary">$173,990.00</p>
+</div>
+</div>
+</div>
+</div>
+<!-- FAB (Conditional - Home/Dashboard context check would go here) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-[28px]">add_business</span>
+</button>
+</main>
+<script>
+        function toggleFilters() {
+            const content = document.getElementById('filter-content');
+            const chevron = document.getElementById('filter-chevron');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Simple animation for the stat tiles on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const panels = document.querySelectorAll('.glass-panel');
+            panels.forEach((p, i) => {
+                p.style.opacity = '0';
+                p.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    p.style.transition = 'all 0.4s ease-out';
+                    p.style.opacity = '1';
+                    p.style.transform = 'translateY(0)';
+                }, i * 50);
+            });
+        });
+    </script>
+</body></html>

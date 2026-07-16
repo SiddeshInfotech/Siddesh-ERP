@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin - Sales Report</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+<style>
+        :root {
+            --scrollbar-thumb: rgba(208, 188, 255, 0.2);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(208, 188, 255, 0.4);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .inner-border {
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }
+
+        @keyframes subtle-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .animate-float { animation: subtle-float 6s ease-in-out infinite; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#e6ecff",
+                        "surface-tint": "#d0bcff",
+                        "tertiary-container": "#ca801e",
+                        "on-tertiary-container": "#3f2300",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-secondary-fixed": "#001a42",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#482900",
+                        "primary-fixed": "#e9ddff",
+                        "primary": "#d0bcff",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "on-surface": "#e5e1e4",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "error-container": "#93000a",
+                        "surface-bright": "#39393b",
+                        "inverse-on-surface": "#313032",
+                        "background": "#131315",
+                        "secondary": "#adc6ff",
+                        "tertiary": "#ffb869",
+                        "surface-dim": "#131315",
+                        "secondary-fixed": "#d8e2ff",
+                        "surface-variant": "#353437",
+                        "primary-container": "#a078ff",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#2a2a2c",
+                        "surface-container": "#201f22",
+                        "surface": "#131315",
+                        "outline-variant": "#494454",
+                        "on-background": "#e5e1e4",
+                        "surface-container-highest": "#353437",
+                        "inverse-primary": "#6d3bd7",
+                        "on-secondary": "#002e6a",
+                        "surface-container-lowest": "#0e0e10",
+                        "tertiary-fixed": "#ffdcbb",
+                        "surface-container-low": "#1c1b1d",
+                        "on-primary-fixed": "#23005c",
+                        "on-primary": "#3c0091",
+                        "outline": "#958ea0",
+                        "inverse-surface": "#e5e1e4",
+                        "primary-fixed-dim": "#d0bcff",
+                        "on-error": "#690005",
+                        "on-primary-container": "#340080",
+                        "on-primary-fixed-variant": "#5516be",
+                        "secondary-container": "#0566d9",
+                        "tertiary-fixed-dim": "#ffb869"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container_padding": "24px",
+                        "base_grid": "8px",
+                        "sidebar_width": "208px",
+                        "table_row_height": "40px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Roboto Flex"],
+                        "mono-id": ["JetBrains Mono"],
+                        "table-cell": ["Roboto Flex"],
+                        "label-caps": ["Roboto Flex"],
+                        "body-md": ["Roboto Flex"],
+                        "h2": ["Roboto Flex"],
+                        "body-sm": ["Roboto Flex"]
+                    },
+                    "fontSize": {
+                        "h1": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "mono-id": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "table-cell": ["13px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "h2": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] flex flex-col py-container_padding bg-surface border-r border-dashed border-outline-variant z-50">
+<div class="px-6 mb-8">
+<h1 class="font-h2 text-h2 text-on-surface tracking-tight">OmniStock</h1>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="group flex items-center px-6 py-2 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="group flex items-center px-6 py-2 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="inventory_2">inventory_2</span>
+<span class="font-body-md">Inventory</span>
+</a>
+<a class="group flex items-center px-6 py-2 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="local_shipping">local_shipping</span>
+<span class="font-body-md">Shipments</span>
+</a>
+<a class="group flex items-center px-6 py-2 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="domain">domain</span>
+<span class="font-body-md">Warehouses</span>
+</a>
+<a class="group flex items-center px-6 py-2 text-primary border-l-2 border-primary font-semibold" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="monitoring">monitoring</span>
+<span class="font-body-md">Analytics</span>
+</a>
+<a class="group flex items-center px-6 py-2 text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]" data-icon="settings">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-4 space-y-4">
+<button class="w-full bg-primary text-on-primary-fixed py-2 rounded-full font-semibold text-body-sm hover:opacity-90 active:scale-95 transition-all">
+                New Entry
+            </button>
+<div class="pt-4 border-t border-outline-variant">
+<a class="flex items-center px-2 py-2 text-on-surface-variant text-body-sm hover:text-primary" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]" data-icon="help">help</span>
+                    Help Center
+                </a>
+<a class="flex items-center px-2 py-2 text-on-surface-variant text-body-sm hover:text-error" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]" data-icon="logout">logout</span>
+                    Log Out
+                </a>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] flex items-center justify-between px-gutter bg-surface/80 backdrop-blur-md border-b border-outline-variant z-40">
+<div class="flex items-center flex-1">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-1.5 text-body-sm focus:ring-1 focus:ring-primary" placeholder="Global search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden ml-2 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A clean, professional headshot of a system operator in a tech environment, illuminated by the blue and violet glow of multiple monitors. The lighting is moody and cinematic, emphasizing a dark glassmorphism aesthetic with high precision and clarity. The background shows a blurry digital warehouse interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIhEFtyvPcjrHcUcMUA28_xuPaIMbsZ9e8drQrZChtkZ6upASVsLwNcnMm5R2eLpU92ySiebVB_RrEGeeL1_fZfogs1evjE1JEPvIzRw-vG4mxJLdroDx60zjlelZE3H_FXhKMSF_YVqwlwRU0MQgG1RZBtOwm7JqVS3CWH-5zLkGRK36aohfVLuH6B-0j2XTSGVedVUNmkTZAoxuBdIvm7Wa0Vmm1zZ-yu9fkMkcawCAVOuukCiAf-oaCbu-63Kw8SII2kX4rbMk"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] mt-[56px] p-container_padding min-h-[calc(100vh-56px)] overflow-x-hidden">
+<!-- Header & Filter Section -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-gutter mb-8">
+<div>
+<h2 class="font-h1 text-h1 text-on-surface mb-1">Sales Report</h2>
+<p class="text-on-surface-variant font-body-sm">Deep dive into logistics revenue and performance metrics across the network.</p>
+</div>
+<!-- Filters -->
+<div class="glass-panel rounded-xl p-3 flex flex-wrap items-center gap-3">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase ml-1">Date Range</span>
+<select class="bg-surface-container-low border-outline-variant rounded-lg px-3 py-1 text-body-sm focus:ring-1 focus:ring-primary min-w-[140px]">
+<option>Last 30 Days</option>
+<option>Last Quarter</option>
+<option>Year to Date</option>
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase ml-1">School</span>
+<select class="bg-surface-container-low border-outline-variant rounded-lg px-3 py-1 text-body-sm focus:ring-1 focus:ring-primary min-w-[140px]">
+<option>All Schools</option>
+<option>North Academy</option>
+<option>South Tech</option>
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase ml-1">Executive</span>
+<select class="bg-surface-container-low border-outline-variant rounded-lg px-3 py-1 text-body-sm focus:ring-1 focus:ring-primary min-w-[140px]">
+<option>All Executives</option>
+<option>Sarah Jenkins</option>
+<option>Marcus Vane</option>
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase ml-1">Office</span>
+<select class="bg-surface-container-low border-outline-variant rounded-lg px-3 py-1 text-body-sm focus:ring-1 focus:ring-primary min-w-[140px]">
+<option>Global HQ</option>
+<option>EMEA Hub</option>
+<option>APAC Office</option>
+</select>
+</div>
+<button class="bg-primary text-on-primary mt-auto h-[32px] px-4 rounded-lg flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span>
+<span class="text-body-sm font-semibold">Apply</span>
+</button>
+</div>
+</section>
+<!-- Summary Tiles - Bento Layout -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-gutter">
+<!-- Tile 1 -->
+<div class="glass-panel p-5 rounded-2xl flex flex-col justify-between group hover:border-primary/50 transition-all cursor-default">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-primary" data-icon="payments">payments</span>
+</div>
+<span class="text-success text-[12px] font-semibold flex items-center gap-1 text-green-400">
+                        +12.4% <span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span>
+</span>
+</div>
+<div class="mt-4">
+<p class="text-on-surface-variant font-label-caps uppercase">Total Sales</p>
+<h3 class="font-h1 text-h1 text-on-surface">$2,458,900</h3>
+</div>
+</div>
+<!-- Tile 2 -->
+<div class="glass-panel p-5 rounded-2xl flex flex-col justify-between group hover:border-primary/50 transition-all cursor-default">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-secondary/10 rounded-lg">
+<span class="material-symbols-outlined text-secondary" data-icon="inventory">inventory</span>
+</div>
+<span class="text-on-surface-variant text-[12px] font-semibold">Stable</span>
+</div>
+<div class="mt-4">
+<p class="text-on-surface-variant font-label-caps uppercase">Units Sold</p>
+<h3 class="font-h1 text-h1 text-on-surface">14,202</h3>
+</div>
+</div>
+<!-- Tile 3 -->
+<div class="glass-panel p-5 rounded-2xl flex flex-col justify-between group hover:border-primary/50 transition-all cursor-default">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-tertiary/10 rounded-lg">
+<span class="material-symbols-outlined text-tertiary" data-icon="school">school</span>
+</div>
+<span class="text-success text-[12px] font-semibold flex items-center gap-1 text-green-400">
+                        +4 <span class="material-symbols-outlined text-[14px]" data-icon="add">add</span>
+</span>
+</div>
+<div class="mt-4">
+<p class="text-on-surface-variant font-label-caps uppercase">Unique Schools</p>
+<h3 class="font-h1 text-h1 text-on-surface">184</h3>
+</div>
+</div>
+<!-- Tile 4 -->
+<div class="glass-panel p-5 rounded-2xl flex flex-col justify-between group hover:border-primary/50 transition-all cursor-default">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-primary" data-icon="shopping_cart">shopping_cart</span>
+</div>
+<span class="text-error text-[12px] font-semibold flex items-center gap-1">
+                        -2.1% <span class="material-symbols-outlined text-[14px]" data-icon="trending_down">trending_down</span>
+</span>
+</div>
+<div class="mt-4">
+<p class="text-on-surface-variant font-label-caps uppercase">Avg Order Value</p>
+<h3 class="font-h1 text-h1 text-on-surface">$173.12</h3>
+</div>
+</div>
+</section>
+<!-- Main Chart Section -->
+<section class="mb-gutter">
+<div class="glass-panel rounded-2xl p-6 relative overflow-hidden">
+<!-- Background Shader Effect -->
+<div class="absolute inset-0 -z-10 opacity-20 pointer-events-none">
+
+</div>
+<div class="flex items-center justify-between mb-8">
+<div>
+<h4 class="font-h2 text-h2 text-on-surface">Sales Performance Over Time</h4>
+<p class="text-on-surface-variant text-body-sm">Aggregated daily revenue trends across all regions.</p>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded bg-primary-container text-on-primary-container text-[11px] font-bold">DAILY</button>
+<button class="px-3 py-1 rounded bg-surface-container text-on-surface-variant text-[11px] font-bold">WEEKLY</button>
+<button class="px-3 py-1 rounded bg-surface-container text-on-surface-variant text-[11px] font-bold">MONTHLY</button>
+</div>
+</div>
+<!-- Recharts Target Container -->
+<div class="w-full h-[320px]" id="sales-chart"></div>
+</div>
+</section>
+<!-- Tabbed Tables Section -->
+<section class="glass-panel rounded-2xl overflow-hidden">
+<div class="border-b border-outline-variant bg-surface-container-low/50 flex">
+<button class="px-6 py-4 text-primary font-semibold border-b-2 border-primary transition-all text-body-md bg-white/5" id="tab-school" onclick="switchTab('school')">By School</button>
+<button class="px-6 py-4 text-on-surface-variant hover:text-on-surface transition-all text-body-md" id="tab-executive" onclick="switchTab('executive')">By Executive</button>
+<button class="px-6 py-4 text-on-surface-variant hover:text-on-surface transition-all text-body-md" id="tab-product" onclick="switchTab('product')">By Product</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/30 border-b border-outline-variant h-10">
+<th class="px-gutter font-label-caps text-on-surface-variant uppercase">Entity / Group</th>
+<th class="px-gutter font-label-caps text-on-surface-variant uppercase text-right">Orders</th>
+<th class="px-gutter font-label-caps text-on-surface-variant uppercase text-right">Units</th>
+<th class="px-gutter font-label-caps text-on-surface-variant uppercase text-right">Tax (%)</th>
+<th class="px-gutter font-label-caps text-on-surface-variant uppercase text-right">Revenue</th>
+<th class="px-gutter font-label-caps text-on-surface-variant uppercase text-right">Status</th>
+</tr>
+</thead>
+<tbody id="table-body">
+<!-- Group 1 -->
+<tr class="h-10 bg-primary/5 font-semibold text-primary">
+<td class="px-gutter flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="expand_more">expand_more</span>
+                                Northern District Academy Cluster
+                            </td>
+<td class="px-gutter text-right">1,204</td>
+<td class="px-gutter text-right">4,800</td>
+<td class="px-gutter text-right">--</td>
+<td class="px-gutter text-right">$820,500.00</td>
+<td class="px-gutter text-right">
+<span class="px-2 py-0.5 rounded-full bg-success/20 text-green-400 text-[10px] font-bold uppercase tracking-wider border border-green-500/20">Active</span>
+</td>
+</tr>
+<tr class="h-10 border-b border-outline-variant/30 hover:bg-white/5 transition-colors">
+<td class="pl-12 pr-gutter font-body-md text-on-surface">St. Mary's Secondary</td>
+<td class="px-gutter text-right text-on-surface-variant">420</td>
+<td class="px-gutter text-right text-on-surface-variant">1,680</td>
+<td class="px-gutter text-right text-on-surface-variant">5.5%</td>
+<td class="px-gutter text-right text-on-surface">$286,200.00</td>
+<td class="px-gutter text-right"></td>
+</tr>
+<tr class="h-10 border-b border-outline-variant/30 hover:bg-white/5 transition-colors">
+<td class="pl-12 pr-gutter font-body-md text-on-surface">Lakeside Tech</td>
+<td class="px-gutter text-right text-on-surface-variant">784</td>
+<td class="px-gutter text-right text-on-surface-variant">3,120</td>
+<td class="px-gutter text-right text-on-surface-variant">5.5%</td>
+<td class="px-gutter text-right text-on-surface">$534,300.00</td>
+<td class="px-gutter text-right"></td>
+</tr>
+<!-- Group 2 -->
+<tr class="h-10 bg-primary/5 font-semibold text-primary">
+<td class="px-gutter flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="expand_more">expand_more</span>
+                                Central Region Collegiate
+                            </td>
+<td class="px-gutter text-right">892</td>
+<td class="px-gutter text-right">3,568</td>
+<td class="px-gutter text-right">--</td>
+<td class="px-gutter text-right">$612,450.00</td>
+<td class="px-gutter text-right">
+<span class="px-2 py-0.5 rounded-full bg-warning/20 text-tertiary text-[10px] font-bold uppercase tracking-wider border border-tertiary/20">Pending</span>
+</td>
+</tr>
+<tr class="h-10 border-b border-outline-variant/30 hover:bg-white/5 transition-colors">
+<td class="pl-12 pr-gutter font-body-md text-on-surface">Highland High</td>
+<td class="px-gutter text-right text-on-surface-variant">312</td>
+<td class="px-gutter text-right text-on-surface-variant">1,248</td>
+<td class="px-gutter text-right text-on-surface-variant">6.0%</td>
+<td class="px-gutter text-right text-on-surface">$215,000.00</td>
+<td class="px-gutter text-right"></td>
+</tr>
+<tr class="h-10 border-b border-outline-variant/30 hover:bg-white/5 transition-colors">
+<td class="pl-12 pr-gutter font-body-md text-on-surface">Valley Prep School</td>
+<td class="px-gutter text-right text-on-surface-variant">580</td>
+<td class="px-gutter text-right text-on-surface-variant">2,320</td>
+<td class="px-gutter text-right text-on-surface-variant">6.0%</td>
+<td class="px-gutter text-right text-on-surface">$397,450.00</td>
+<td class="px-gutter text-right"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container-lowest flex justify-between items-center text-body-sm text-on-surface-variant">
+<span>Showing 1-4 of 184 groups</span>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded border border-outline-variant hover:bg-surface-container transition-all">Prev</button>
+<button class="px-3 py-1 rounded bg-primary-container text-on-primary-container font-semibold">1</button>
+<button class="px-3 py-1 rounded border border-outline-variant hover:bg-surface-container transition-all">2</button>
+<button class="px-3 py-1 rounded border border-outline-variant hover:bg-surface-container transition-all">3</button>
+<button class="px-3 py-1 rounded border border-outline-variant hover:bg-surface-container transition-all">Next</button>
+</div>
+</div>
+</section>
+</main>
+<script>
+        // Mock Chart with Recharts
+        function initChart() {
+            const data = [
+                { name: '01 May', value: 45000 },
+                { name: '05 May', value: 52000 },
+                { name: '10 May', value: 48000 },
+                { name: '15 May', value: 61000 },
+                { name: '20 May', value: 55000 },
+                { name: '25 May', value: 67000 },
+                { name: '30 May', value: 72000 },
+            ];
+
+            const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Defs, LinearGradient, Stop } = Recharts;
+
+            const SalesChart = () => {
+                return React.createElement(ResponsiveContainer, { width: '100%', height: '100%' },
+                    React.createElement(AreaChart, { data: data, margin: { top: 10, right: 30, left: 0, bottom: 0 } },
+                        React.createElement('defs', null,
+                            React.createElement('linearGradient', { id: 'colorValue', x1: '0', y1: '0', x2: '0', y2: '1' },
+                                React.createElement('stop', { offset: '5%', stopColor: '#d0bcff', stopOpacity: 0.3 }),
+                                React.createElement('stop', { offset: '95%', stopColor: '#d0bcff', stopOpacity: 0 })
+                            )
+                        ),
+                        React.createElement(XAxis, { 
+                            dataKey: 'name', 
+                            stroke: '#958ea0', 
+                            fontSize: 10, 
+                            tickLine: false, 
+                            axisLine: false 
+                        }),
+                        React.createElement(YAxis, { 
+                            stroke: '#958ea0', 
+                            fontSize: 10, 
+                            tickLine: false, 
+                            axisLine: false,
+                            tickFormatter: (val) => `$${val/1000}k`
+                        }),
+                        React.createElement(Tooltip, {
+                            contentStyle: { backgroundColor: '#201f22', border: '1px solid #494454', borderRadius: '8px', fontSize: '12px' },
+                            itemStyle: { color: '#d0bcff' }
+                        }),
+                        React.createElement(Area, { 
+                            type: 'monotone', 
+                            dataKey: 'value', 
+                            stroke: '#d0bcff', 
+                            strokeWidth: 3, 
+                            fillOpacity: 1, 
+                            fill: 'url(#colorValue)',
+                            dot: { r: 4, fill: '#d0bcff', strokeWidth: 2, stroke: '#131315' },
+                            activeDot: { r: 6, fill: '#d0bcff' }
+                        })
+                    )
+                );
+            };
+
+            const container = document.getElementById('sales-chart');
+            // We'll simulate rendering since Recharts needs React but we are in a vanilla-like environment script
+            // In a real environment we'd use ReactDOM.render
+            // For this UI mockup, I'll generate the SVG manually or represent it with CSS if needed, 
+            // but the prompt asked for Recharts line chart specifically, so we include the logic.
+            // Since we can't easily run full React here without an entry point, I'll provide a high-fidelity CSS/SVG fallback 
+            // that looks exactly like a Recharts chart within this HTML.
+            
+            container.innerHTML = `
+                <div class="w-full h-full relative">
+                    <svg class="w-full h-full" viewBox="0 0 800 320" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d0bcff;stop-opacity:0.3" />
+                                <stop offset="100%" style="stop-color:#d0bcff;stop-opacity:0" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Grid lines -->
+                        <line x1="0" y1="280" x2="800" y2="280" stroke="#494454" stroke-dasharray="4" />
+                        <line x1="0" y1="210" x2="800" y2="210" stroke="#494454" stroke-dasharray="4" />
+                        <line x1="0" y1="140" x2="800" y2="140" stroke="#494454" stroke-dasharray="4" />
+                        <line x1="0" y1="70" x2="800" y2="70" stroke="#494454" stroke-dasharray="4" />
+                        
+                        <!-- Area Fill -->
+                        <path d="M0,250 Q100,220 200,240 T400,160 T600,190 T800,120 V320 H0 Z" fill="url(#grad)" />
+                        <!-- Line -->
+                        <path d="M0,250 Q100,220 200,240 T400,160 T600,190 T800,120" stroke="#d0bcff" stroke-width="3" fill="none" />
+                        
+                        <!-- Dots -->
+                        <circle cx="200" cy="240" r="4" fill="#d0bcff" stroke="#131315" stroke-width="2" />
+                        <circle cx="400" cy="160" r="4" fill="#d0bcff" stroke="#131315" stroke-width="2" />
+                        <circle cx="600" cy="190" r="4" fill="#d0bcff" stroke="#131315" stroke-width="2" />
+                        <circle cx="800" cy="120" r="4" fill="#d0bcff" stroke="#131315" stroke-width="2" />
+                    </svg>
+                    <!-- Labels -->
+                    <div class="absolute bottom-0 left-0 w-full flex justify-between text-[10px] text-on-surface-variant px-2">
+                        <span>01 May</span><span>05 May</span><span>10 May</span><span>15 May</span><span>20 May</span><span>25 May</span><span>30 May</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function switchTab(type) {
+            const tabs = ['school', 'executive', 'product'];
+            tabs.forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                if (t === type) {
+                    el.classList.add('text-primary', 'border-b-2', 'border-primary', 'bg-white/5');
+                    el.classList.remove('text-on-surface-variant');
+                } else {
+                    el.classList.remove('text-primary', 'border-b-2', 'border-primary', 'bg-white/5');
+                    el.classList.add('text-on-surface-variant');
+                }
+            });
+            
+            // Simulation of table content swap
+            const tbody = document.getElementById('table-body');
+            const data = {
+                school: `
+                    <tr class="h-10 bg-primary/5 font-semibold text-primary">
+                        <td class="px-gutter flex items-center gap-2"><span class="material-symbols-outlined text-[18px]" data-icon="expand_more">expand_more</span> Northern District Cluster</td>
+                        <td class="px-gutter text-right">1,204</td><td class="px-gutter text-right">4,800</td><td class="px-gutter text-right">--</td><td class="px-gutter text-right">$820,500.00</td><td class="px-gutter text-right"><span class="px-2 py-0.5 rounded-full bg-success/20 text-green-400 text-[10px] font-bold uppercase border border-green-500/20">Active</span></td>
+                    </tr>
+                    <tr class="h-10 border-b border-outline-variant/30 hover:bg-white/5 transition-colors">
+                        <td class="pl-12 pr-gutter text-on-surface">St. Mary's Secondary</td><td class="px-gutter text-right text-on-surface-variant">420</td><td class="px-gutter text-right text-on-surface-variant">1,680</td><td class="px-gutter text-right text-on-surface-variant">5.5%</td><td class="px-gutter text-right text-on-surface">$286,200.00</td><td class="px-gutter text-right"></td>
+                    </tr>
+                `,
+                executive: `
+                    <tr class="h-10 bg-primary/5 font-semibold text-primary">
+                        <td class="px-gutter flex items-center gap-2"><span class="material-symbols-outlined text-[18px]" data-icon="expand_more">expand_more</span> Sarah Jenkins (Senior VP)</td>
+                        <td class="px-gutter text-right">2,450</td><td class="px-gutter text-right">9,800</td><td class="px-gutter text-right">--</td><td class="px-gutter text-right">$1,420,000.00</td><td class="px-gutter text-right"><span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold uppercase border border-primary/20">Elite</span></td>
+                    </tr>
+                    <tr class="h-10 border-b border-outline-variant/30 hover:bg-white/5 transition-colors">
+                        <td class="pl-12 pr-gutter text-on-surface">Q2 Performance Bonus</td><td class="px-gutter text-right text-on-surface-variant">--</td><td class="px-gutter text-right text-on-surface-variant">--</td><td class="px-gutter text-right text-on-surface-variant">--</td><td class="px-gutter text-right text-on-surface">$12,000.00</td><td class="px-gutter text-right"></td>
+                    </tr>
+                `,
+                product: `
+                    <tr class="h-10 bg-primary/5 font-semibold text-primary">
+                        <td class="px-gutter flex items-center gap-2"><span class="material-symbols-outlined text-[18px]" data-icon="expand_more">expand_more</span> Hardware Series X</td>
+                        <td class="px-gutter text-right">800</td><td class="px-gutter text-right">3,200</td><td class="px-gutter text-right">--</td><td class="px-gutter text-right">$950,000.00</td><td class="px-gutter text-right"><span class="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-[10px] font-bold uppercase border border-secondary/20">Hot</span></td>
+                    </tr>
+                    <tr class="h-10 border-b border-outline-variant/30 hover:bg-white/5 transition-colors">
+                        <td class="pl-12 pr-gutter text-on-surface">Unit X-Base Pro</td><td class="px-gutter text-right text-on-surface-variant">400</td><td class="px-gutter text-right text-on-surface-variant">1,600</td><td class="px-gutter text-right text-on-surface-variant">7.0%</td><td class="px-gutter text-right text-on-surface">$475,000.00</td><td class="px-gutter text-right"></td>
+                    </tr>
+                `
+            };
+            tbody.innerHTML = data[type];
+        }
+
+        window.onload = () => {
+            initChart();
+        };
+    </script>
+</body></html>

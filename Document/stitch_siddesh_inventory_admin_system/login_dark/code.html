@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin | Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#a078ff",
+                        "surface-variant": "#353437",
+                        "on-primary": "#3c0091",
+                        "on-primary-fixed-variant": "#5516be",
+                        "surface-tint": "#d0bcff",
+                        "primary-fixed": "#e9ddff",
+                        "tertiary-container": "#ca801e",
+                        "surface-container-high": "#2a2a2c",
+                        "inverse-primary": "#6d3bd7",
+                        "outline-variant": "#494454",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "surface-container-highest": "#353437",
+                        "on-primary-fixed": "#23005c",
+                        "on-tertiary-container": "#3f2300",
+                        "surface-container-low": "#1c1b1d",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "on-secondary-fixed": "#001a42",
+                        "on-error-container": "#ffdad6",
+                        "inverse-surface": "#e5e1e4",
+                        "primary-fixed-dim": "#d0bcff",
+                        "secondary": "#adc6ff",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-secondary-container": "#e6ecff",
+                        "outline": "#958ea0",
+                        "tertiary": "#ffb869",
+                        "on-primary-container": "#340080",
+                        "surface-bright": "#39393b",
+                        "surface": "#131315",
+                        "inverse-on-surface": "#313032",
+                        "background": "#131315",
+                        "on-tertiary": "#482900",
+                        "on-surface": "#e5e1e4",
+                        "on-surface-variant": "#cbc3d7",
+                        "surface-container": "#201f22",
+                        "on-secondary": "#002e6a",
+                        "primary": "#d0bcff",
+                        "tertiary-fixed": "#ffdcbb",
+                        "on-secondary-fixed-variant": "#004395",
+                        "secondary-container": "#0566d9",
+                        "on-error": "#690005",
+                        "surface-container-lowest": "#0e0e10",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "on-background": "#e5e1e4",
+                        "surface-dim": "#131315"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base_grid": "8px",
+                        "container_padding": "24px",
+                        "table_row_height": "40px",
+                        "sidebar_width": "208px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Roboto Flex"],
+                        "mono-id": ["JetBrains Mono"],
+                        "table-cell": ["Roboto Flex"],
+                        "h2": ["Roboto Flex"],
+                        "label-caps": ["Roboto Flex"],
+                        "body-sm": ["Roboto Flex"],
+                        "body-md": ["Roboto Flex"]
+                    },
+                    "fontSize": {
+                        "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #09090b;
+            color: #e5e1e4;
+            overflow: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .violet-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(160, 120, 255, 0.15) 0%, rgba(9, 9, 11, 0) 70%);
+            border-radius: 50%;
+            z-index: -1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        input::placeholder {
+            color: #494454;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(160, 120, 255, 0.4);
+        }
+
+        /* Custom Scrollbar for the brand */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #131315;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(160, 120, 255, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen relative font-body-md text-body-md">
+<!-- Atmospheric Glow -->
+<div class="violet-glow"></div>
+<main class="w-full max-w-[420px] px-container_padding flex flex-col items-center">
+<!-- Logo Branding -->
+<div class="mb-8 flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-primary-container rounded-xl flex items-center justify-center mb-2 shadow-lg shadow-on-primary-container/20">
+<span class="material-symbols-outlined text-on-primary-container !text-[32px]">inventory_2</span>
+</div>
+<h2 class="font-h2 text-h2 text-on-surface tracking-tight">Siddesh</h2>
+</div>
+<!-- Login Card -->
+<div class="glass-card w-full rounded-2xl p-8 transition-all duration-300" id="login-card">
+<div class="mb-8">
+<h1 class="text-[28px] font-semibold text-on-surface mb-1">Sign in</h1>
+<p class="text-on-surface-variant font-body-sm text-body-sm opacity-70">Inventory Management System</p>
+</div>
+<!-- Error State (Initially Hidden) -->
+<div class="hidden shake mb-6 p-3 bg-error-container/20 border border-error/30 rounded-lg flex items-center gap-3" id="error-message">
+<span class="material-symbols-outlined text-error text-[18px]">error</span>
+<span class="text-error font-body-sm text-body-sm font-semibold">Invalid email or password</span>
+</div>
+<form class="space-y-5" id="login-form" onsubmit="return handleLogin(event)">
+<div>
+<label class="block text-[11px] font-bold text-outline-variant uppercase tracking-widest mb-1.5 ml-1" for="email">Email Address</label>
+<input class="w-full h-10 bg-surface-container-lowest/50 border border-outline-variant rounded-xl px-4 text-on-surface focus:border-primary-container transition-all" id="email" placeholder="operator@sid-desh.com" required="" type="email"/>
+</div>
+<div>
+<div class="flex justify-between items-center mb-1.5 ml-1">
+<label class="block text-[11px] font-bold text-outline-variant uppercase tracking-widest" for="password">Password</label>
+<a class="text-[11px] font-bold text-primary hover:text-primary-fixed-dim transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<input class="w-full h-10 bg-surface-container-lowest/50 border border-outline-variant rounded-xl px-4 text-on-surface focus:border-primary-container transition-all" id="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant hover:text-on-surface-variant" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full h-12 bg-primary-container hover:bg-on-primary-fixed-variant text-on-primary-container font-semibold rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2" type="submit">
+<span>Sign in</span>
+<span class="material-symbols-outlined text-[18px]">login</span>
+</button>
+</div>
+</form>
+<!-- SSO / Alternative Options -->
+<div class="mt-8 pt-8 border-t border-dashed border-outline-variant/30 text-center">
+<p class="text-on-surface-variant text-[12px] mb-4">Or continue with</p>
+<div class="flex gap-4 justify-center">
+<button class="h-10 px-6 border border-outline-variant rounded-xl hover:bg-surface-variant/30 transition-all text-on-surface-variant hover:text-on-surface flex items-center gap-2 text-body-sm">
+<span class="material-symbols-outlined text-[18px]">key</span>
+                        SSO
+                    </button>
+<button class="h-10 px-6 border border-outline-variant rounded-xl hover:bg-surface-variant/30 transition-all text-on-surface-variant hover:text-on-surface flex items-center gap-2 text-body-sm">
+<span class="material-symbols-outlined text-[18px]">face_unlock</span>
+                        Passkey
+                    </button>
+</div>
+</div>
+</div>
+<footer class="mt-12 text-center text-outline-variant font-body-sm text-body-sm">
+<p>© 2024 OmniStock Global Logistics</p>
+<div class="flex justify-center gap-4 mt-2">
+<a class="hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms</a>
+<a class="hover:text-primary transition-colors" href="#">Support</a>
+</div>
+</footer>
+</main>
+<script>
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-message');
+            const loginCard = document.getElementById('login-card');
+
+            // Simulate logic - just show error for demo purposes
+            if (email && password) {
+                errorMsg.classList.remove('hidden');
+                loginCard.classList.add('shake');
+                
+                // Remove shake class after animation finishes so it can be re-triggered
+                setTimeout(() => {
+                    loginCard.classList.remove('shake');
+                }, 400);
+
+                // Add visual indicator of error to fields
+                document.getElementById('email').classList.add('border-error/50');
+                document.getElementById('password').classList.add('border-error/50');
+            }
+            return false;
+        }
+
+        // Add micro-interaction: remove error border on input
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.remove('border-error/50');
+                const errorMsg = document.getElementById('error-message');
+                if (!errorMsg.classList.contains('hidden')) {
+                    // Optionally hide on new input or leave until next submit
+                }
+            });
+        });
+
+        // Floating animation for the radial glow
+        const glow = document.querySelector('.violet-glow');
+        let mouseX = 0;
+        let mouseY = 0;
+        let currentX = 0;
+        let currentY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2) * 0.05;
+            mouseY = (e.clientY - window.innerHeight / 2) * 0.05;
+        });
+
+        function animateGlow() {
+            currentX += (mouseX - currentX) * 0.1;
+            currentY += (mouseY - currentY) * 0.1;
+            glow.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`;
+            requestAnimationFrame(animateGlow);
+        }
+        animateGlow();
+    </script>
+</body></html>

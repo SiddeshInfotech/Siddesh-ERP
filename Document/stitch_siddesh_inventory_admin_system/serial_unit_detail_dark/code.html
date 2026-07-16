@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock | Serial Unit Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    /* Custom Scrollbar as per Style Guidance */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(208, 188, 255, 0.2);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(208, 188, 255, 0.4);
+    }
+
+    /* Glassmorphism base */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-panel-elevated {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .inner-border {
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .timeline-line {
+      width: 1px;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(149, 142, 160, 0.3) 0,
+        rgba(149, 142, 160, 0.3) 4px,
+        transparent 4px,
+        transparent 8px
+      );
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "on-secondary-container": "#e6ecff",
+                  "surface-tint": "#d0bcff",
+                  "tertiary-container": "#ca801e",
+                  "on-tertiary-container": "#3f2300",
+                  "on-tertiary-fixed": "#2c1700",
+                  "on-secondary-fixed": "#001a42",
+                  "on-surface-variant": "#cbc3d7",
+                  "on-secondary-fixed-variant": "#004395",
+                  "on-error-container": "#ffdad6",
+                  "on-tertiary": "#482900",
+                  "primary-fixed": "#e9ddff",
+                  "primary": "#d0bcff",
+                  "secondary-fixed-dim": "#adc6ff",
+                  "on-surface": "#e5e1e4",
+                  "on-tertiary-fixed-variant": "#673d00",
+                  "error-container": "#93000a",
+                  "surface-bright": "#39393b",
+                  "inverse-on-surface": "#313032",
+                  "background": "#131315",
+                  "secondary": "#adc6ff",
+                  "tertiary": "#ffb869",
+                  "surface-dim": "#131315",
+                  "secondary-fixed": "#d8e2ff",
+                  "surface-variant": "#353437",
+                  "primary-container": "#a078ff",
+                  "error": "#ffb4ab",
+                  "surface-container-high": "#2a2a2c",
+                  "surface-container": "#201f22",
+                  "surface": "#131315",
+                  "outline-variant": "#494454",
+                  "on-background": "#e5e1e4",
+                  "surface-container-highest": "#353437",
+                  "inverse-primary": "#6d3bd7",
+                  "on-secondary": "#002e6a",
+                  "surface-container-lowest": "#0e0e10",
+                  "tertiary-fixed": "#ffdcbb",
+                  "surface-container-low": "#1c1b1d",
+                  "on-primary-fixed": "#23005c",
+                  "on-primary": "#3c0091",
+                  "outline": "#958ea0",
+                  "inverse-surface": "#e5e1e4",
+                  "primary-fixed-dim": "#d0bcff",
+                  "on-error": "#690005",
+                  "on-primary-container": "#340080",
+                  "on-primary-fixed-variant": "#5516be",
+                  "secondary-container": "#0566d9",
+                  "tertiary-fixed-dim": "#ffb869"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "container_padding": "24px",
+                  "base_grid": "8px",
+                  "sidebar_width": "208px",
+                  "table_row_height": "40px",
+                  "gutter": "16px"
+          },
+          "fontFamily": {
+                  "h1": ["Roboto Flex"],
+                  "mono-id": ["JetBrains Mono"],
+                  "table-cell": ["Roboto Flex"],
+                  "label-caps": ["Roboto Flex"],
+                  "body-md": ["Roboto Flex"],
+                  "h2": ["Roboto Flex"],
+                  "body-sm": ["Roboto Flex"]
+          },
+          "fontSize": {
+                  "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                  "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                  "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                  "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                  "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                  "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+<!-- Side Navigation Anchor -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant flex flex-col py-container_padding bg-surface">
+<div class="px-6 mb-10">
+<h1 class="font-h2 text-h2 text-on-surface">OmniStock Admin</h1>
+<p class="text-body-sm text-on-surface-variant">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center px-6 py-2 transition-colors hover:text-primary-container text-primary border-l-2 border-primary font-semibold" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">inventory_2</span>
+<span class="font-body-md">Inventory</span>
+</a>
+<a class="flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">local_shipping</span>
+<span class="font-body-md">Shipments</span>
+</a>
+<a class="flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">domain</span>
+<span class="font-body-md">Warehouses</span>
+</a>
+<a class="flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">monitoring</span>
+<span class="font-body-md">Analytics</span>
+</a>
+<a class="flex items-center px-6 py-2 transition-colors hover:text-primary-container text-on-surface-variant" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant border-dashed">
+<a class="flex items-center px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">help</span>
+<span class="font-body-md">Help Center</span>
+</a>
+<a class="flex items-center px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">logout</span>
+<span class="font-body-md">Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] flex items-center justify-between px-gutter bg-surface/80 backdrop-blur-md border-b border-outline-variant z-50">
+<div class="flex items-center space-x-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="bg-black/20 border border-outline-variant rounded-lg pl-10 pr-4 py-1.5 text-body-sm w-64 focus:ring-2 focus:ring-primary-container focus:outline-none transition-all" placeholder="Search serials, pallets..." type="text"/>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-95 duration-150">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-95 duration-150">
+<span class="material-symbols-outlined text-on-surface-variant">history</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-95 duration-150">
+<span class="material-symbols-outlined text-on-surface-variant">apps</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="h-full w-full object-cover" data-alt="Close up professional portrait of a tech operator in a dark, neon-lit control room, wearing a headset, with a high-key focus on their face and vibrant purple ambient lighting. Modern, high-detail digital aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmPc8US1j_Epf0if9N8PFtivrcWPVy5hm_C7Cm260CwvyN_6KSsAs0_1QUISLqo5QSaoaZKjI-7lkWvtmogVPozHXyulj8Sav9KGsuWyqetk659x_7AQP-Oh-V3lGEr9qjSkFlcq0xAxKJNxGWLBIDYapmTTsgfjJ-FKRmnPqiea2r69AU7wumhFxycdok_Gk6vy8PFqEgpM4NococQWcQPhu6b21pPlYZ7TS0jKhkRhd0Ny-_5M1td_IMPqFmigCk9jAjvL0HFOE"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="ml-[208px] mt-[56px] p-container_padding max-w-[1400px] mx-auto">
+<!-- Breadcrumb & Title Section -->
+<section class="mb-8">
+<nav class="flex items-center text-label-caps text-on-surface-variant mb-2">
+<a class="hover:text-primary" href="#">INVENTORY</a>
+<span class="mx-2">/</span>
+<a class="hover:text-primary" href="#">ELECTRONICS</a>
+<span class="mx-2">/</span>
+<span class="text-on-surface">UNIT DETAIL</span>
+</nav>
+<div class="flex items-center space-x-4">
+<h2 class="font-mono-id text-[28px] text-on-surface tracking-tight">SN-0024-X992-B8</h2>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-container/20 text-secondary text-body-sm font-semibold border border-secondary/30 flex items-center">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary mr-2"></span>
+          Active In-Transit
+        </span>
+</div>
+</section>
+<!-- Glass Stat Cards Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-gutter">
+<!-- Location Card -->
+<div class="glass-panel p-4 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<span class="text-label-caps text-on-surface-variant uppercase">Current Location</span>
+<span class="material-symbols-outlined text-on-surface-variant">location_on</span>
+</div>
+<div>
+<p class="font-h1 text-h1 text-on-surface">Berlin Hub A-42</p>
+<p class="text-body-sm text-on-surface-variant">Main Warehouse • Bin 1204</p>
+</div>
+<div class="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[100px]" style="font-variation-settings: 'FILL' 1;">domain</span>
+</div>
+</div>
+<!-- Status Card -->
+<div class="glass-panel p-4 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<span class="text-label-caps text-on-surface-variant uppercase">Compliance Status</span>
+<span class="material-symbols-outlined text-tertiary">verified_user</span>
+</div>
+<div>
+<p class="font-h1 text-h1 text-on-surface">Certified Safe</p>
+<p class="text-body-sm text-on-surface-variant">Last inspection: 4 hours ago</p>
+</div>
+<div class="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[100px]" style="font-variation-settings: 'FILL' 1;">security</span>
+</div>
+</div>
+<!-- Warranty Card -->
+<div class="glass-panel p-4 rounded-xl flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<span class="text-label-caps text-on-surface-variant uppercase">Warranty Countdown</span>
+<span class="material-symbols-outlined text-primary">timer</span>
+</div>
+<div>
+<p class="font-h1 text-h1 text-primary">184 Days</p>
+<p class="text-body-sm text-on-surface-variant">Expires Sep 14, 2024</p>
+</div>
+<div class="absolute -bottom-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[100px]" style="font-variation-settings: 'FILL' 1;">history_edu</span>
+</div>
+</div>
+</section>
+<!-- Main Content Cluster -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-gutter">
+<!-- Movement Timeline (3/4 width) -->
+<div class="lg:col-span-3 space-y-gutter">
+<div class="glass-panel rounded-xl p-6 relative overflow-hidden">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-h2 font-h2">Movement Timeline</h3>
+<div class="flex items-center space-x-2">
+<button class="px-3 py-1 bg-surface-container-high rounded border border-outline-variant text-label-caps hover:bg-surface-variant transition-all">Filter</button>
+<button class="px-3 py-1 bg-surface-container-high rounded border border-outline-variant text-label-caps hover:bg-surface-variant transition-all">Export</button>
+</div>
+</div>
+<!-- Timeline Container -->
+<div class="relative pl-8">
+<div class="timeline-line absolute left-[11.5px] top-2 bottom-2"></div>
+<!-- Timeline Item 1 -->
+<div class="relative mb-8 last:mb-0 group">
+<div class="absolute -left-8 top-1.5 w-6 h-6 rounded-full glass-panel-elevated flex items-center justify-center z-10">
+<div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(208,188,255,0.6)]"></div>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between bg-white/5 p-4 rounded-lg border border-white/5 group-hover:bg-white/[0.08] transition-all">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-1">
+<span class="font-mono-id text-on-surface">Mar 12, 14:30</span>
+<span class="px-2 py-0.5 rounded bg-primary-container/20 text-primary-fixed text-[10px] font-bold uppercase tracking-wider">Arrival</span>
+</div>
+<div class="flex items-center text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px] mr-1">flight_takeoff</span>
+<span>Frankfurt Global Logistics</span>
+<span class="material-symbols-outlined text-[14px] mx-2">arrow_forward</span>
+<span class="material-symbols-outlined text-[14px] mr-1 text-primary">home_pin</span>
+<span class="text-on-surface font-medium">Berlin Hub A-42</span>
+</div>
+</div>
+<div class="mt-3 md:mt-0 flex items-center">
+<div class="flex -space-x-2 mr-3">
+<div class="h-6 w-6 rounded-full border border-surface bg-surface-container-highest flex items-center justify-center text-[10px]">JD</div>
+</div>
+<span class="text-body-sm text-on-surface-variant">Operator: John Doe</span>
+</div>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative mb-8 last:mb-0 group">
+<div class="absolute -left-8 top-1.5 w-6 h-6 rounded-full glass-panel-elevated flex items-center justify-center z-10">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between bg-white/5 p-4 rounded-lg border border-white/5 group-hover:bg-white/[0.08] transition-all">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-1">
+<span class="font-mono-id text-on-surface">Mar 11, 09:15</span>
+<span class="px-2 py-0.5 rounded bg-tertiary-container/20 text-tertiary text-[10px] font-bold uppercase tracking-wider">Inspection</span>
+</div>
+<div class="flex items-center text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px] mr-1">fact_check</span>
+<span>Customs Clearance: PASSED</span>
+</div>
+</div>
+<div class="mt-3 md:mt-0 flex items-center">
+<span class="text-body-sm text-on-surface-variant">System: AutoAuth v2</span>
+</div>
+</div>
+</div>
+<!-- Timeline Item 3 -->
+<div class="relative mb-8 last:mb-0 group">
+<div class="absolute -left-8 top-1.5 w-6 h-6 rounded-full glass-panel-elevated flex items-center justify-center z-10">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between bg-white/5 p-4 rounded-lg border border-white/5 group-hover:bg-white/[0.08] transition-all">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-1">
+<span class="font-mono-id text-on-surface">Mar 10, 22:40</span>
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary text-[10px] font-bold uppercase tracking-wider">Departure</span>
+</div>
+<div class="flex items-center text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px] mr-1">hub</span>
+<span>Shenzhen Port 4</span>
+<span class="material-symbols-outlined text-[14px] mx-2">arrow_forward</span>
+<span class="material-symbols-outlined text-[14px] mr-1">flight_takeoff</span>
+<span class="text-on-surface font-medium">Frankfurt Global Logistics</span>
+</div>
+</div>
+<div class="mt-3 md:mt-0 flex items-center">
+<span class="text-body-sm text-on-surface-variant">Carrier: DHL Air Express</span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-2 border-t border-outline-variant border-dashed text-label-caps text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center group">
+            View Full History
+            <span class="material-symbols-outlined text-[14px] ml-2 group-hover:translate-y-0.5 transition-transform">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+<!-- Quick Actions (Right Rail) -->
+<aside class="space-y-gutter">
+<div class="glass-panel rounded-xl p-4 border border-primary/20">
+<h3 class="text-label-caps text-on-surface-variant mb-4 uppercase tracking-widest">Quick Actions</h3>
+<div class="space-y-2">
+<button class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-surface-container-high text-on-surface group transition-all">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-on-surface-variant mr-3 text-[18px]">edit</span>
+<span class="font-body-md">Modify Record</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-surface-container-high text-on-surface group transition-all">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-on-surface-variant mr-3 text-[18px]">local_shipping</span>
+<span class="font-body-md">Re-route Unit</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-surface-container-high text-on-surface group transition-all">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-on-surface-variant mr-3 text-[18px]">qr_code_2</span>
+<span class="font-body-md">Print New Tag</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-surface-container-high text-on-surface group transition-all">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-on-surface-variant mr-3 text-[18px]">report_problem</span>
+<span class="font-body-md">Flag Discrepancy</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</button>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant">
+<button class="w-full py-2.5 bg-primary text-on-primary font-semibold rounded-full hover:shadow-[0_0_15px_rgba(208,188,255,0.4)] transition-all active:scale-95">
+              Initiate Recall
+            </button>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-4 overflow-hidden relative">
+<h3 class="text-label-caps text-on-surface-variant mb-4 uppercase">Device Metadata</h3>
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Batch ID</span>
+<span class="font-mono-id text-on-surface">BT-990-21</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Weight</span>
+<span class="font-body-md text-on-surface">1.24 kg</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Condition</span>
+<span class="font-body-md text-on-surface">A+ (Pristine)</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Firmware</span>
+<span class="font-mono-id text-on-surface">v2.4.12-rc</span>
+</div>
+</div>
+<!-- Background decoration -->
+<div class="absolute top-0 right-0 p-2 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[60px]">info</span>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- Interactive script for row highlights -->
+<script>
+    document.querySelectorAll('.group').forEach(item => {
+      item.addEventListener('mouseenter', () => {
+        // Optional interaction logic
+      });
+    });
+  </script>
+</body></html>

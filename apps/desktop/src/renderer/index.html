@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      Fonts are self-hosted via @fontsource, so no font-src or style-src exception is
+      needed for Google. connect-src is limited to Supabase: a compromised renderer cannot
+      exfiltrate inventory data to an arbitrary host. Never widen this to * to "fix" a
+      failing request — fix the request.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:"
+    />
+    <title>Siddesh ERP</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "@siddesh/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Types and contract shapes shared by the desktop and mobile clients",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

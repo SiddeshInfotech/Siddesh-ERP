@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin - Office-wise Stock Matrix</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        :root {
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(20, 20, 22, 0.7);
+        }
+
+        body {
+            background-color: #09090b;
+            color: #e5e1e4;
+            font-family: 'Roboto Flex', sans-serif;
+            overflow: hidden;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(208, 188, 255, 0.2);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(208, 188, 255, 0.4);
+        }
+
+        .matrix-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .matrix-table th, .matrix-table td {
+            height: 40px;
+            padding: 0 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+        }
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: #131315;
+            border-right: 1px solid var(--glass-border);
+        }
+        .sticky-footer {
+            position: sticky;
+            bottom: 0;
+            z-index: 20;
+            background: #1c1b1d;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 18px;
+        }
+
+        /* Micro-interactions */
+        .row-hover:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#e6ecff",
+                        "surface-tint": "#d0bcff",
+                        "tertiary-container": "#ca801e",
+                        "on-tertiary-container": "#3f2300",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-secondary-fixed": "#001a42",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#482900",
+                        "primary-fixed": "#e9ddff",
+                        "primary": "#d0bcff",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "on-surface": "#e5e1e4",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "error-container": "#93000a",
+                        "surface-bright": "#39393b",
+                        "inverse-on-surface": "#313032",
+                        "background": "#131315",
+                        "secondary": "#adc6ff",
+                        "tertiary": "#ffb869",
+                        "surface-dim": "#131315",
+                        "secondary-fixed": "#d8e2ff",
+                        "surface-variant": "#353437",
+                        "primary-container": "#a078ff",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#2a2a2c",
+                        "surface-container": "#201f22",
+                        "surface": "#131315",
+                        "outline-variant": "#494454",
+                        "on-background": "#e5e1e4",
+                        "surface-container-highest": "#353437",
+                        "inverse-primary": "#6d3bd7",
+                        "on-secondary": "#002e6a",
+                        "surface-container-lowest": "#0e0e10",
+                        "tertiary-fixed": "#ffdcbb",
+                        "surface-container-low": "#1c1b1d",
+                        "on-primary-fixed": "#23005c",
+                        "on-primary": "#3c0091",
+                        "outline": "#958ea0",
+                        "inverse-surface": "#e5e1e4",
+                        "primary-fixed-dim": "#d0bcff",
+                        "on-error": "#690005",
+                        "on-primary-container": "#340080",
+                        "on-primary-fixed-variant": "#5516be",
+                        "secondary-container": "#0566d9",
+                        "tertiary-fixed-dim": "#ffb869"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container_padding": "24px",
+                        "base_grid": "8px",
+                        "sidebar_width": "208px",
+                        "table_row_height": "40px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Roboto Flex"],
+                        "mono-id": ["JetBrains Mono"],
+                        "table-cell": ["Roboto Flex"],
+                        "label-caps": ["Roboto Flex"],
+                        "body-md": ["Roboto Flex"],
+                        "h2": ["Roboto Flex"],
+                        "body-sm": ["Roboto Flex"]
+                    },
+                    "fontSize": {
+                        "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Side Navigation Shell -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant bg-surface flex flex-col py-container_padding z-50">
+<div class="px-6 mb-8">
+<h2 class="font-h2 text-h2 text-on-surface">OmniStock</h2>
+<p class="text-[10px] text-outline uppercase tracking-widest mt-1">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center px-6 py-2 text-primary border-l-2 border-primary font-semibold group" href="#">
+<span class="material-symbols-outlined mr-3">inventory_2</span>
+<span class="font-body-md text-body-md">Inventory</span>
+</a>
+<a class="flex items-center px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">local_shipping</span>
+<span class="font-body-md text-body-md">Shipments</span>
+</a>
+<a class="flex items-center px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">domain</span>
+<span class="font-body-md text-body-md">Warehouses</span>
+</a>
+<a class="flex items-center px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">monitoring</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1">
+<a class="flex items-center px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">help</span>
+<span class="font-body-md text-body-md">Help Center</span>
+</a>
+<a class="flex items-center px-6 py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3">logout</span>
+<span class="font-body-md text-body-md">Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] border-b border-outline-variant bg-surface/80 backdrop-blur-md flex items-center justify-between px-gutter z-40">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-full py-1.5 pl-10 pr-4 text-body-sm focus:ring-1 focus:ring-primary focus:outline-none transition-all" placeholder="Global Search Products, SKUs, Locations..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-primary/30">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a diverse system administrator in a high-tech control room with soft violet and blue neon lighting. The atmosphere is sophisticated and modern, echoing a high-density data management environment. Detailed facial features, shallow depth of field, premium corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFQD-p-Iq3ZHdPwSmWpENFLMFtAlNiG3n16DzssNHyBu2HOkF1tNgWZvouRNTYutUQ1-hauY3KHNI2nwITWceMiJrfa6-P-32tEPzJDsU25Zu3Y6M1KORrSsy0iB4K5nwe5MbZo22oK8TSVkHaOC5IHE5ZYebWf2q6u7x4Sy8-rz0ZGk3aMbJnxSv5UEODx1_wPP9D-bs3_Ri8QaLtEu7kmEJbPjNycWFFDJb2S4juDCSBSoNBmKfOZ0k4ujsyDsT2xXk5FFkLu4U"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] mt-[56px] p-container_padding h-[calc(100vh-56px)] overflow-hidden flex flex-col">
+<!-- Header & Title -->
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-4">
+<h1 class="font-h1 text-h1">Office-wise Stock</h1>
+<span class="px-3 py-0.5 bg-primary/20 text-primary border border-primary/30 rounded-full font-label-caps text-[10px]">SUPER ADMIN</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary-fixed rounded-full font-label-caps text-label-caps hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add</span>
+                    New Entry
+                </button>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="glass-panel rounded-xl p-3 flex items-center gap-4 mb-4">
+<div class="relative flex-1 max-w-xs">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant text-[16px]">filter_list</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg py-1.5 pl-9 pr-4 text-body-sm focus:border-primary focus:outline-none" placeholder="Quick find product..." type="text"/>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant"></div>
+<select class="bg-surface-container-lowest border border-outline-variant rounded-lg py-1.5 px-3 text-body-sm text-on-surface-variant focus:outline-none">
+<option>All Categories</option>
+<option>Electronics</option>
+<option>Office Supplies</option>
+<option>Networking</option>
+</select>
+<label class="flex items-center gap-2 cursor-pointer group">
+<div class="relative inline-block w-8 h-4 bg-surface-container-highest rounded-full transition-colors group-hover:bg-outline-variant">
+<div class="absolute left-1 top-1 w-2 h-2 bg-on-surface-variant rounded-full transition-transform transform translate-x-0"></div>
+</div>
+<span class="text-body-sm text-on-surface-variant">Show zero rows</span>
+</label>
+<div class="ml-auto flex items-center gap-2">
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">print</span>
+</button>
+</div>
+</div>
+<!-- Data Matrix Table -->
+<div class="flex-1 glass-panel rounded-xl overflow-hidden flex flex-col">
+<div class="flex-1 overflow-auto custom-scrollbar">
+<table class="matrix-table w-full text-left">
+<thead class="sticky top-0 z-30 bg-surface-container-high/90 backdrop-blur-sm shadow-sm">
+<tr>
+<th class="sticky-col font-label-caps text-label-caps text-outline bg-surface-container-high/90">Product Name &amp; SKU</th>
+<th class="font-label-caps text-label-caps text-outline text-right">Pune (PN-01)</th>
+<th class="font-label-caps text-label-caps text-outline text-right">Nashik (NK-04)</th>
+<th class="font-label-caps text-label-caps text-outline text-right">Mumbai (MB-02)</th>
+<th class="font-label-caps text-label-caps text-on-primary-container bg-primary/10 text-right">Total Stock</th>
+<th class="font-label-caps text-label-caps text-outline text-center">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Row 1 -->
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">MacBook Pro M3 Max 16"</span>
+<span class="font-mono-id text-mono-id text-primary">LAP-APPLE-M3-001</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-on-surface">24</td>
+<td class="text-right font-mono-id text-on-surface">12</td>
+<td class="text-right font-mono-id text-on-surface">8</td>
+<td class="text-right font-mono-id font-bold text-on-surface-variant bg-primary/5">44</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400">HEALTHY</span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">Dell UltraSharp 32" 4K Monitor</span>
+<span class="font-mono-id text-mono-id text-primary">MON-DELL-32-4K</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-tertiary">4</td>
+<td class="text-right font-mono-id text-on-surface">15</td>
+<td class="text-right font-mono-id text-tertiary">2</td>
+<td class="text-right font-mono-id font-bold text-on-surface-variant bg-primary/5">21</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400">LOW</span>
+</td>
+</tr>
+<!-- Row 3 (Zero health) -->
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">Logitech MX Master 3S</span>
+<span class="font-mono-id text-mono-id text-primary">PER-LOGI-MX3S</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-error">0</td>
+<td class="text-right font-mono-id text-error">0</td>
+<td class="text-right font-mono-id text-error">0</td>
+<td class="text-right font-mono-id font-bold text-error bg-error/5">0</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400">OUT OF STOCK</span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">Cisco Catalyst 9300 24-Port</span>
+<span class="font-mono-id text-mono-id text-primary">NET-CISCO-9300</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-on-surface">5</td>
+<td class="text-right font-mono-id text-on-surface">8</td>
+<td class="text-right font-mono-id text-on-surface">11</td>
+<td class="text-right font-mono-id font-bold text-on-surface-variant bg-primary/5">24</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400">HEALTHY</span>
+</td>
+</tr>
+<!-- Repeat Rows for visual density -->
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">Keychron Q6 Max Mech Keyboard</span>
+<span class="font-mono-id text-mono-id text-primary">PER-KEYCH-Q6M</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-on-surface">12</td>
+<td class="text-right font-mono-id text-on-surface">18</td>
+<td class="text-right font-mono-id text-on-surface">22</td>
+<td class="text-right font-mono-id font-bold text-on-surface-variant bg-primary/5">52</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400">HEALTHY</span>
+</td>
+</tr>
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">Ubiquiti UniFi 6 Enterprise AP</span>
+<span class="font-mono-id text-mono-id text-primary">NET-UBIQ-U6E</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-tertiary">1</td>
+<td class="text-right font-mono-id text-on-surface">30</td>
+<td class="text-right font-mono-id text-on-surface">4</td>
+<td class="text-right font-mono-id font-bold text-on-surface-variant bg-primary/5">35</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400">LOW</span>
+</td>
+</tr>
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">APC Smart-UPS 1500VA LCD</span>
+<span class="font-mono-id text-mono-id text-primary">PWR-APC-1500</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-on-surface">3</td>
+<td class="text-right font-mono-id text-on-surface">4</td>
+<td class="text-right font-mono-id text-on-surface">2</td>
+<td class="text-right font-mono-id font-bold text-on-surface-variant bg-primary/5">9</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400">LOW</span>
+</td>
+</tr>
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">ThinkPad X1 Carbon Gen 12</span>
+<span class="font-mono-id text-mono-id text-primary">LAP-LENO-X1G12</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-on-surface">15</td>
+<td class="text-right font-mono-id text-on-surface">9</td>
+<td class="text-right font-mono-id text-on-surface">21</td>
+<td class="text-right font-mono-id font-bold text-on-surface-variant bg-primary/5">45</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400">HEALTHY</span>
+</td>
+</tr>
+<!-- More filler rows -->
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">Poly Studio P15 Video Bar</span>
+<span class="font-mono-id text-mono-id text-primary">VC-POLY-P15</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-on-surface">20</td>
+<td class="text-right font-mono-id text-on-surface">15</td>
+<td class="text-right font-mono-id text-on-surface">10</td>
+<td class="text-right font-mono-id font-bold text-on-surface-variant bg-primary/5">45</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400">HEALTHY</span>
+</td>
+</tr>
+<tr class="row-hover group transition-colors">
+<td class="sticky-col bg-surface-container-low group-hover:bg-surface-container-high">
+<div class="flex flex-col">
+<span class="font-table-cell text-on-surface">iPad Pro 11" M2 256GB</span>
+<span class="font-mono-id text-mono-id text-primary">TAB-APPLE-IPD11</span>
+</div>
+</td>
+<td class="text-right font-mono-id text-error">0</td>
+<td class="text-right font-mono-id text-on-surface">4</td>
+<td class="text-right font-mono-id text-tertiary">1</td>
+<td class="text-right font-mono-id font-bold text-tertiary bg-primary/5">5</td>
+<td class="text-center">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400">LOW</span>
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="sticky-footer">
+<td class="sticky-col font-bold text-on-surface bg-surface-container-low border-r border-outline-variant">TOTAL OFFICE ASSETS</td>
+<td class="text-right font-mono-id font-bold text-primary">96 Units</td>
+<td class="text-right font-mono-id font-bold text-primary">127 Units</td>
+<td class="text-right font-mono-id font-bold text-primary">81 Units</td>
+<td class="text-right font-mono-id font-extrabold text-on-primary bg-primary-container px-3">304 TOTAL</td>
+<td class="bg-surface-container-low"></td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+<!-- Footer Stats Bar -->
+<div class="mt-4 flex items-center justify-between text-body-sm text-outline">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>142 Healthy SKUs</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+<span>38 Low Stock</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-rose-500"></span>
+<span>12 Critical/Zero</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">update</span>
+<span>Last updated: 2 mins ago (Real-time Sync Active)</span>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interaction for toggle switch
+        document.querySelector('.cursor-pointer.group').addEventListener('click', function() {
+            const circle = this.querySelector('div div');
+            const bg = this.querySelector('div');
+            if(circle.classList.contains('translate-x-0')) {
+                circle.classList.remove('translate-x-0');
+                circle.classList.add('translate-x-4');
+                bg.classList.add('bg-primary');
+            } else {
+                circle.classList.add('translate-x-0');
+                circle.classList.remove('translate-x-4');
+                bg.classList.remove('bg-primary');
+            }
+        });
+
+        // Add a subtle parallax to the background on mouse move
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            document.body.style.backgroundPosition = `${x * 10}px ${y * 10}px`;
+        });
+    </script>
+</body></html>

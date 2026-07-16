@@ -1,0 +1,81 @@
+Sprint Day	Date	Task ID	Assigned To	Module	Task	What it means (simple words)	Priority	Est. Hours	Status
+Day 1	16/07/2026	DSK-101	Ram	Setup	Confirm the app starts	Open the code and run the app on your own PC. Make sure a blank app window opens before building anything on top of it.	P0	0.5	To Do
+Day 1	16/07/2026	DSK-102	Ram	Setup	Check all tools work	Make sure Electron, React and the build tools are installed and a test build finishes with no errors.	P0	0.5	To Do
+Day 1	16/07/2026	DSK-103	Ram	Setup	Connect to the online database	Put the Supabase web address and key into the app so it can talk to the shared online database.	P0	0.5	To Do
+Day 1	16/07/2026	DSK-104	Ram	Setup	Prove the connection works	Run one small test to confirm the app can actually reach the database and read data.	P0	0.5	To Do
+Day 1	16/07/2026	DSK-105	Ram	Layout	Set up the app window	Give the window a title (Siddesh ERP), an icon, a sensible size, and make it open maximised.	P1	0.5	To Do
+Day 1	16/07/2026	DSK-106	Ram	Layout	Build the main screen frame	Create the outer shell: a menu strip on the left, a bar across the top, and the main working area in the middle.	P0	1	To Do
+Day 1	16/07/2026	DSK-107	Ram	Layout	Add the side menu	Add menu buttons: Dashboard, Products, Inward, Outward, Stock, Reports.	P0	0.5	To Do
+Day 1	16/07/2026	DSK-108	Ram	Layout	Make menu buttons open pages	Clicking a menu button should open the correct page inside the app.	P0	0.5	To Do
+Day 1	16/07/2026	DSK-109	Ram	Login	Design the login screen	Build the login page with a username box, a password box, and a Login button.	P0	0.75	To Do
+Day 1	16/07/2026	DSK-110	Ram	Login	Make login actually work	Connect login to the database so correct details let the user in and wrong details show a clear error.	P0	1	To Do
+Day 1	16/07/2026	DSK-111	Ram	Login	Stay logged in	Remember the user so they don't have to log in again every time they open the app.	P0	0.5	To Do
+Day 1	16/07/2026	DSK-112	Ram	Login	Add a logout button	Put a Logout button in the top bar that safely signs the user out.	P1	0.25	To Do
+Day 1	16/07/2026	DSK-113	Ram	Login	Show who is logged in	Display the logged-in person's name and role in the top bar.	P1	0.25	To Do
+Day 1	16/07/2026	DSK-114	Ram	Login	Lock pages when logged out	If nobody is logged in, always show the login screen first and hide the rest of the app.	P0	0.5	To Do
+Day 1	16/07/2026	DSK-115	Ram	UI Basics	Add a loading spinner	Show a spinner whenever the app is waiting on the database, so it never looks frozen.	P1	0.5	To Do
+Day 1	16/07/2026	DSK-116	Ram	UI Basics	Standard error message box	Build one reusable red message box to show problems politely everywhere in the app.	P1	0.5	To Do
+Day 1	16/07/2026	DSK-117	Ram	UI Basics	Standard success message	Build one reusable green "Saved!" popup used after every successful action.	P1	0.5	To Do
+Day 1	16/07/2026	DSK-118	Ram	UI Basics	Set app colours and fonts	Decide the standard colours, fonts and button styles so every screen looks the same.	P1	0.75	To Do
+Day 1	16/07/2026	DSK-119	Ram	UI Basics	Reusable table style	Build one table design used everywhere (products, reports, stock), so they all match.	P1	1	To Do
+Day 1	16/07/2026	DSK-120	Ram	UI Basics	Reusable form boxes	Build standard text boxes, dropdowns and a date picker used in every form.	P1	1	To Do
+Day 2	17/07/2026	DSK-201	Ram	Products	Product list page	Build a page that shows all products in a table: name, category, barcode and current stock.	P0	1	To Do
+Day 2	17/07/2026	DSK-202	Ram	Products	Load products from database	Fetch the real product list from the database and fill the table with it.	P0	0.75	To Do
+Day 2	17/07/2026	DSK-203	Ram	Products	Add Product button	A button that opens a blank New Product form.	P0	0.25	To Do
+Day 2	17/07/2026	DSK-204	Ram	Products	New Product form	A form with every field: name, category, brand, model, unit, description, minimum stock, HSN code, GST %.	P0	1.5	To Do
+Day 2	17/07/2026	DSK-205	Ram	Products	Save a new product	Save the form to the database so the new product appears in the list.	P0	1	To Do
+Day 2	17/07/2026	DSK-206	Ram	Products	Check required fields	Stop saving if name, category or unit are blank, and clearly point out the missing field.	P0	0.5	To Do
+Day 2	17/07/2026	DSK-207	Ram	Products	Edit an existing product	Click a product to open its form pre-filled, change details, and save the changes.	P0	1	To Do
+Day 2	17/07/2026	DSK-208	Ram	Barcode	Auto-generate a barcode	When a product needs a barcode, create one automatically like ST00000001.	P0	1	To Do
+Day 2	17/07/2026	DSK-209	Ram	Barcode	Use a manufacturer barcode	Allow pasting an existing barcode from the box instead of generating a new one.	P1	0.5	To Do
+Day 2	17/07/2026	DSK-210	Ram	Barcode	Block duplicate barcodes	Never allow two products to share the same barcode.	P0	0.5	To Do
+Day 2	17/07/2026	DSK-211	Ram	Barcode	Preview the label	Show on screen how the printed label (product name + barcode) will look.	P1	0.5	To Do
+Day 2	17/07/2026	DSK-212	Ram	Barcode	Turn number into scannable barcode	Convert the barcode number into a proper scannable Code 128 barcode image.	P0	1	To Do
+Day 2	17/07/2026	DSK-213	Ram	Barcode	Print one label	Send a single barcode label to the printer.	P1	1	To Do
+Day 2	17/07/2026	DSK-214	Ram	Barcode	Print many labels	Choose a quantity and print several labels in one go.	P1	0.75	To Do
+Day 2	17/07/2026	DSK-215	Ram	Products	Category dropdown	Provide a category picker (AI Lab, Digital Products, Office Items).	P1	0.5	To Do
+Day 2	17/07/2026	DSK-216	Ram	Products	Search products	A search box to instantly find products by name, barcode or category.	P0	0.75	To Do
+Day 2	17/07/2026	DSK-217	Ram	Products	Low-stock alert level	Save a "warn me below this number" level for each product.	P1	0.25	To Do
+Day 2	17/07/2026	DSK-218	Ram	Products	Deactivate old products	Hide products that are no longer used without deleting their history.	P1	0.5	To Do
+Day 2	17/07/2026	DSK-219	Ram	Products	Product detail view	A read-only page showing everything about one product plus its current stock.	P1	1	To Do
+Day 2	17/07/2026	DSK-220	Ram	Products	Sort and filter the list	Let the user sort by name or stock and filter the list by category.	P1	0.75	To Do
+Day 3	18/07/2026	DSK-301	Ram	Inward	Build the Inward page	Build the "receive stock into the store" screen.	P0	1	To Do
+Day 3	18/07/2026	DSK-302	Ram	Inward	Pick the product	Scan a barcode or search to choose which product is being received.	P0	0.75	To Do
+Day 3	18/07/2026	DSK-303	Ram	Inward	Auto-fill on scan	When a barcode is scanned, automatically show the product name and its current stock.	P0	0.75	To Do
+Day 3	18/07/2026	DSK-304	Ram	Inward	Enter quantity received	A box to type how many units arrived (must be more than zero).	P0	0.5	To Do
+Day 3	18/07/2026	DSK-305	Ram	Inward	Supplier details form	Fields for supplier name, mobile, GST, invoice number, invoice date and purchase order number.	P0	1	To Do
+Day 3	18/07/2026	DSK-306	Ram	Inward	Who brought the material	A field for who delivered it (own staff, or courier like Blue Dart / DTDC).	P1	0.25	To Do
+Day 3	18/07/2026	DSK-307	Ram	Inward	Attach the invoice file	Optional: attach a PDF or photo of the supplier's invoice.	P2	0.75	To Do
+Day 3	18/07/2026	DSK-308	Ram	Inward	Save Inward and add stock	Save the receipt and increase the product's stock through the safe database function.	P0	1	To Do
+Day 3	18/07/2026	DSK-309	Ram	Inward	Inward success screen	Confirm the receipt was saved and show the new stock total.	P1	0.5	To Do
+Day 3	18/07/2026	DSK-310	Ram	Outward	Build the Outward page	Build the "give out or sell stock" screen.	P0	1	To Do
+Day 3	18/07/2026	DSK-311	Ram	Outward	Pick the product	Scan or search to choose the product going out.	P0	0.5	To Do
+Day 3	18/07/2026	DSK-312	Ram	Outward	Show available stock	Display how many units are available before the user enters the outward.	P0	0.5	To Do
+Day 3	18/07/2026	DSK-313	Ram	Outward	Quantity with a warning	Enter the quantity and warn on screen if it is more than what's available.	P0	0.75	To Do
+Day 3	18/07/2026	DSK-314	Ram	Outward	Outward type dropdown	Choose the reason: Sale, Demo, Replacement, Internal Use, Service or Sample.	P0	0.5	To Do
+Day 3	18/07/2026	DSK-315	Ram	Outward	Party / school details	Fields for school name, contact person, mobile, GST, address, invoice and sales order number.	P0	1	To Do
+Day 3	18/07/2026	DSK-316	Ram	Outward	Handed over by and receiver	Record who handed over the material and who collected it.	P1	0.5	To Do
+Day 3	18/07/2026	DSK-317	Ram	Outward	Signature or photo proof	Optional proof of delivery: a signature or a photo.	P2	1	To Do
+Day 3	18/07/2026	DSK-318	Ram	Outward	Save Outward and reduce stock	Save the dispatch and reduce stock; the database blocks it if there isn't enough.	P0	1	To Do
+Day 3	18/07/2026	DSK-319	Ram	Outward	Friendly "not enough stock"	Show a clear "Only X left in stock" message instead of a confusing technical error.	P0	0.5	To Do
+Day 3	18/07/2026	DSK-320	Ram	Outward	Stop accidental double-save	Disable the Save button while saving so one click can never create two entries.	P0	0.5	To Do
+Day 4	19/07/2026	DSK-401	Ram	Dashboard	Build the Dashboard page	Build the home screen made of quick summary cards.	P0	1	To Do
+Day 4	19/07/2026	DSK-402	Ram	Dashboard	Current stock card	A card showing the total current stock at a glance.	P1	0.5	To Do
+Day 4	19/07/2026	DSK-403	Ram	Dashboard	Today's inward card	A card showing how much stock came in today.	P1	0.5	To Do
+Day 4	19/07/2026	DSK-404	Ram	Dashboard	Today's outward card	A card showing how much stock went out today.	P1	0.5	To Do
+Day 4	19/07/2026	DSK-405	Ram	Dashboard	Low stock card	A card showing how many products are below their minimum level.	P1	0.5	To Do
+Day 4	19/07/2026	DSK-406	Ram	Reports	Current stock report	A table of every product with its current, minimum and available stock.	P0	1	To Do
+Day 4	19/07/2026	DSK-407	Ram	Reports	Low stock report	A list of only the products at or below their minimum level.	P1	0.5	To Do
+Day 4	19/07/2026	DSK-408	Ram	Reports	Out of stock report	A list of products that have zero stock left.	P1	0.5	To Do
+Day 4	19/07/2026	DSK-409	Ram	Reports	Inward report	Show receipts, filtered by date, supplier or product.	P0	1	To Do
+Day 4	19/07/2026	DSK-410	Ram	Reports	Outward report	Show dispatches, filtered by date, school, invoice or sales person.	P0	1	To Do
+Day 4	19/07/2026	DSK-411	Ram	Reports	Product ledger	Show one product's full history: date, in or out, quantity, and balance after.	P0	1	To Do
+Day 4	19/07/2026	DSK-412	Ram	Reports	Date range filter	Add "from" and "to" date pickers to every report.	P1	0.5	To Do
+Day 4	19/07/2026	DSK-413	Ram	Reports	Export to Excel	Let the user download any report as an Excel file.	P1	1	To Do
+Day 4	19/07/2026	DSK-414	Ram	Reports	Export to PDF	Let the user download or print any report as a PDF.	P1	1	To Do
+Day 4	19/07/2026	DSK-415	Ram	Search	Global search page	One search that looks across barcodes, products, suppliers, invoices, schools and dates.	P1	1	To Do
+Day 4	19/07/2026	DSK-416	Ram	Backup	Daily automatic backup	Automatically save a copy of the data every day.	P1	1	To Do
+Day 4	19/07/2026	DSK-417	Ram	Backup	Restore from backup	The ability to load the data back from a saved backup copy.	P2	1	To Do
+Day 4	19/07/2026	DSK-418	Ram	Ship	Full end-to-end test	Walk through the whole flow: add product, receive stock, give out stock, check the report.	P0	1	To Do
+Day 4	19/07/2026	DSK-419	Ram	Ship	Build the .exe installer	Package everything into a Windows installer (.exe) that can be shared.	P0	1	To Do
+Day 4	19/07/2026	DSK-420	Ram	Ship	Install and verify	Install the .exe on a clean PC and confirm it opens, logs in and connects.	P0	1	To Do

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock | New Product</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#a078ff",
+                    "surface-variant": "#353437",
+                    "on-primary": "#3c0091",
+                    "on-primary-fixed-variant": "#5516be",
+                    "surface-tint": "#d0bcff",
+                    "primary-fixed": "#e9ddff",
+                    "tertiary-container": "#ca801e",
+                    "surface-container-high": "#2a2a2c",
+                    "inverse-primary": "#6d3bd7",
+                    "outline-variant": "#494454",
+                    "secondary-fixed": "#d8e2ff",
+                    "on-tertiary-fixed-variant": "#673d00",
+                    "surface-container-highest": "#353437",
+                    "on-primary-fixed": "#23005c",
+                    "on-tertiary-container": "#3f2300",
+                    "surface-container-low": "#1c1b1d",
+                    "tertiary-fixed-dim": "#ffb869",
+                    "on-secondary-fixed": "#001a42",
+                    "on-error-container": "#ffdad6",
+                    "inverse-surface": "#e5e1e4",
+                    "primary-fixed-dim": "#d0bcff",
+                    "secondary": "#adc6ff",
+                    "on-tertiary-fixed": "#2c1700",
+                    "on-secondary-container": "#e6ecff",
+                    "outline": "#958ea0",
+                    "tertiary": "#ffb869",
+                    "on-primary-container": "#340080",
+                    "surface-bright": "#39393b",
+                    "surface": "#131315",
+                    "inverse-on-surface": "#313032",
+                    "background": "#131315",
+                    "on-tertiary": "#482900",
+                    "on-surface": "#e5e1e4",
+                    "on-surface-variant": "#cbc3d7",
+                    "surface-container": "#201f22",
+                    "on-secondary": "#002e6a",
+                    "primary": "#d0bcff",
+                    "tertiary-fixed": "#ffdcbb",
+                    "on-secondary-fixed-variant": "#004395",
+                    "secondary-container": "#0566d9",
+                    "on-error": "#690005",
+                    "surface-container-lowest": "#0e0e10",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "error": "#ffb4ab",
+                    "error-container": "#93000a",
+                    "on-background": "#e5e1e4",
+                    "surface-dim": "#131315"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base_grid": "8px",
+                    "container_padding": "24px",
+                    "table_row_height": "40px",
+                    "sidebar_width": "208px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "h1": ["Roboto Flex"],
+                    "mono-id": ["JetBrains Mono"],
+                    "table-cell": ["Roboto Flex"],
+                    "h2": ["Roboto Flex"],
+                    "label-caps": ["Roboto Flex"],
+                    "body-sm": ["Roboto Flex"],
+                    "body-md": ["Roboto Flex"]
+            },
+            "fontSize": {
+                    "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #09090b;
+            color: #e5e1e4;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-field {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            border-color: #a078ff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(160, 120, 255, 0.2);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(160, 120, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        /* Material Symbols adjustment */
+        .material-symbols-outlined {
+            font-size: 18px;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant flex flex-col py-6 bg-surface z-50">
+<div class="px-6 mb-8">
+<h1 class="font-h2 text-h2 text-on-surface tracking-tight">OmniStock</h1>
+<p class="text-[10px] text-outline uppercase tracking-widest font-bold mt-1">Global Logistics</p>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors rounded" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-primary border-l-2 border-primary font-semibold transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span>Shipments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">domain</span>
+<span>Warehouses</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] border-b border-outline-variant bg-surface/80 backdrop-blur-md flex items-center justify-between px-6 z-40">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="bg-surface-container-low border border-outline-variant rounded-full pl-10 pr-4 py-1 text-sm w-64 focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Search inventory..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">history</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a system administrator in a dark, high-tech environment. The lighting is moody with soft blue and violet rim lights highlighting the subject against a background of blurred server racks. The aesthetic is clean, sharp, and corporate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiLSO2JxVMj2iNbesWsY-LwP5dytYU_iqx7TbTtwqqr_OrhgZ_ULO_iK4H7dhtf-aldDu_Qeo61eUxbuxEdrqEttS9fDkzacI_2_RM089O-l4RbL6U0XVGj84G2RkDzh_D0Pqy4PYHlR3yaX9qiuEBlpMYcsaqbpsHIz0dFnqQ-INKuIQHEMneRodIxdbLwIjg3GKVuR6l_ZqNVm-kTV0vbvdv8TN570Krh-6gOW8KxS2k-bb2ZZ6WxQTOJnDSznBe_bkxJ_y7d6g"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-[208px] pt-[56px] h-screen overflow-y-auto custom-scrollbar bg-background relative">
+<!-- Decorative Background Shader -->
+<div class="absolute inset-0 z-0 pointer-events-none opacity-20">
+
+</div>
+<div class="max-w-[800px] mx-auto py-10 px-6 relative z-10">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 mb-2 text-outline text-[11px] font-bold uppercase tracking-wider">
+<a class="hover:text-primary transition-colors" href="#">Products</a>
+<span class="material-symbols-outlined !text-[14px]">chevron_right</span>
+<span class="text-on-surface-variant">New Product</span>
+</nav>
+<!-- Title -->
+<h2 class="text-[28px] font-semibold text-on-surface mb-8 tracking-tight">New Product</h2>
+<!-- Form Card -->
+<form class="glass-card rounded-xl overflow-hidden flex flex-col">
+<!-- Section: Basic -->
+<div class="p-8 space-y-6">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-zinc-500 uppercase tracking-widest text-[11px]">Basic Information</span>
+</div>
+<div class="grid grid-cols-2 gap-6">
+<div class="col-span-2">
+<label class="block font-label-caps text-zinc-500 uppercase tracking-widest text-[11px] mb-2">Product Name</label>
+<input class="input-field w-full px-4 py-2.5 rounded-lg text-body-md text-on-surface" placeholder="e.g. Industrial Servo Motor X1" type="text"/>
+</div>
+<div>
+<label class="block font-label-caps text-zinc-500 uppercase tracking-widest text-[11px] mb-2">Category</label>
+<select class="input-field w-full px-4 py-2.5 rounded-lg text-body-md text-on-surface appearance-none bg-no-repeat bg-[right_1rem_center]" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%23958ea0%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27m6 8 4 4 4-4%27/%3E%3C/svg%3E')">
+<option>Electronics</option>
+<option>Machinery</option>
+<option>Raw Materials</option>
+<option>Safety Gear</option>
+</select>
+</div>
+<div>
+<label class="block font-label-caps text-zinc-500 uppercase tracking-widest text-[11px] mb-2">Brand</label>
+<input class="input-field w-full px-4 py-2.5 rounded-lg text-body-md text-on-surface" placeholder="OmniCorp" type="text"/>
+</div>
+<div class="col-span-2">
+<label class="block font-label-caps text-zinc-500 uppercase tracking-widest text-[11px] mb-2">Model Number</label>
+<input class="input-field w-full px-4 py-2.5 rounded-lg text-body-md text-on-surface font-mono-id" placeholder="OS-2024-XM-01" type="text"/>
+</div>
+</div>
+</div>
+<hr class="border-t border-white/5"/>
+<!-- Section: Description -->
+<div class="p-8 space-y-6">
+<span class="font-label-caps text-zinc-500 uppercase tracking-widest text-[11px]">Product Description</span>
+<div>
+<textarea class="input-field w-full px-4 py-3 rounded-lg text-body-md text-on-surface resize-none" placeholder="Detailed technical specifications and usage instructions..." rows="4"></textarea>
+</div>
+</div>
+<hr class="border-t border-white/5"/>
+<!-- Section: Stock -->
+<div class="p-8 space-y-6">
+<span class="font-label-caps text-zinc-500 uppercase tracking-widest text-[11px]">Stock Management</span>
+<div class="grid grid-cols-2 gap-8 items-start">
+<div>
+<label class="block font-label-caps text-zinc-500 uppercase tracking-widest text-[11px] mb-2">Minimum Stock Level</label>
+<input class="input-field w-full px-4 py-2.5 rounded-lg text-body-md text-on-surface" type="number" value="10"/>
+<p class="mt-2 text-[10px] text-outline italic">Alert will be triggered when stock falls below this.</p>
+</div>
+<div>
+<label class="block font-label-caps text-zinc-500 uppercase tracking-widest text-[11px] mb-2">Tracking Mode</label>
+<div class="flex p-1 bg-black/40 rounded-full border border-white/5">
+<button class="flex-1 py-1.5 px-4 rounded-full text-[11px] font-bold uppercase transition-all bg-primary text-on-primary" id="btn-quantity" onclick="setTracking('quantity')" type="button">Quantity</button>
+<button class="flex-1 py-1.5 px-4 rounded-full text-[11px] font-bold uppercase transition-all text-on-surface-variant hover:text-on-surface" id="btn-serial" onclick="setTracking('serial')" type="button">Serial</button>
+</div>
+</div>
+</div>
+</div>
+<hr class="border-t border-white/5"/>
+<!-- Section: Tax -->
+<div class="p-8 space-y-6 mb-16">
+<span class="font-label-caps text-zinc-500 uppercase tracking-widest text-[11px]">Taxation &amp; Compliance</span>
+<div class="grid grid-cols-2 gap-6">
+<div>
+<label class="block font-label-caps text-zinc-500 uppercase tracking-widest text-[11px] mb-2">HSN Code</label>
+<input class="input-field w-full px-4 py-2.5 rounded-lg text-body-md text-on-surface font-mono-id" placeholder="8471" type="text"/>
+</div>
+<div>
+<label class="block font-label-caps text-zinc-500 uppercase tracking-widest text-[11px] mb-2">GST Rate (%)</label>
+<select class="input-field w-full px-4 py-2.5 rounded-lg text-body-md text-on-surface appearance-none bg-no-repeat bg-[right_1rem_center]" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%23958ea0%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27m6 8 4 4 4-4%27/%3E%3C/svg%3E')">
+<option>5%</option>
+<option>12%</option>
+<option selected="">18%</option>
+<option>28%</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Sticky Footer inside Card -->
+<div class="sticky bottom-0 left-0 right-0 p-6 bg-surface-container/60 backdrop-blur-xl border-t border-white/10 flex items-center justify-end gap-4 mt-auto">
+<button class="px-6 py-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-all active:scale-95 text-sm font-semibold" type="button">
+                        Cancel
+                    </button>
+<button class="px-8 py-2.5 rounded-full bg-[#a078ff] hover:bg-[#8e65f0] text-white shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm font-semibold" type="submit">
+                        Save Product
+                    </button>
+</div>
+</form>
+<!-- Metadata Info -->
+<div class="mt-8 flex justify-between items-center px-2">
+<div class="flex items-center gap-2 text-outline text-[10px]">
+<span class="material-symbols-outlined !text-[14px]">info</span>
+<span>All changes are automatically synced to the primary warehouse node.</span>
+</div>
+<div class="text-outline text-[10px] font-mono-id">
+                    FORM_ID: OS_XP_291
+                </div>
+</div>
+</div>
+</main>
+<script>
+        function setTracking(mode) {
+            const btnQty = document.getElementById('btn-quantity');
+            const btnSer = document.getElementById('btn-serial');
+            
+            if (mode === 'quantity') {
+                btnQty.classList.add('bg-primary', 'text-on-primary');
+                btnQty.classList.remove('text-on-surface-variant');
+                btnSer.classList.remove('bg-primary', 'text-on-primary');
+                btnSer.classList.add('text-on-surface-variant');
+            } else {
+                btnSer.classList.add('bg-primary', 'text-on-primary');
+                btnSer.classList.remove('text-on-surface-variant');
+                btnQty.classList.remove('bg-primary', 'text-on-primary');
+                btnQty.classList.add('text-on-surface-variant');
+            }
+        }
+
+        // Simple interaction for input glow
+        document.querySelectorAll('.input-field').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.querySelector('label')?.classList.add('text-primary');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.querySelector('label')?.classList.remove('text-primary');
+            });
+        });
+    </script>
+</body></html>

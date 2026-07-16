@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin - Inward Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#353437",
+                        "inverse-on-surface": "#313032",
+                        "secondary": "#adc6ff",
+                        "primary-container": "#a078ff",
+                        "outline-variant": "#494454",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "inverse-primary": "#6d3bd7",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#002e6a",
+                        "on-secondary-container": "#e6ecff",
+                        "surface": "#131315",
+                        "surface-container-lowest": "#0e0e10",
+                        "surface-container": "#201f22",
+                        "on-background": "#e5e1e4",
+                        "secondary-fixed": "#d8e2ff",
+                        "surface-variant": "#353437",
+                        "on-tertiary": "#482900",
+                        "on-primary-fixed-variant": "#5516be",
+                        "on-tertiary-container": "#3f2300",
+                        "on-primary-fixed": "#23005c",
+                        "tertiary": "#ffb869",
+                        "surface-container-high": "#2a2a2c",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface-bright": "#39393b",
+                        "on-error": "#690005",
+                        "secondary-container": "#0566d9",
+                        "outline": "#958ea0",
+                        "surface-tint": "#d0bcff",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-primary-container": "#340080",
+                        "surface-container-low": "#1c1b1d",
+                        "inverse-surface": "#e5e1e4",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-surface": "#e5e1e4",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#e9ddff",
+                        "primary-fixed-dim": "#d0bcff",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "error-container": "#93000a",
+                        "primary": "#d0bcff",
+                        "surface-dim": "#131315",
+                        "on-secondary-fixed": "#001a42",
+                        "on-primary": "#3c0091",
+                        "background": "#131315",
+                        "on-secondary-fixed-variant": "#004395",
+                        "tertiary-container": "#ca801e",
+                        "tertiary-fixed": "#ffdcbb",
+                        "emerald-accent": "#10b981"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container_padding": "24px",
+                        "base_grid": "8px",
+                        "table_row_height": "40px",
+                        "gutter": "16px",
+                        "sidebar_width": "208px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Roboto Flex"],
+                        "body-md": ["Roboto Flex"],
+                        "label-caps": ["Roboto Flex"],
+                        "body-sm": ["Roboto Flex"],
+                        "table-cell": ["Roboto Flex"],
+                        "h1": ["Roboto Flex"],
+                        "mono-id": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #09090b;
+            color: #e5e1e4;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(160, 120, 255, 0.2);
+            border-radius: 3px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="font-body-md overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant flex flex-col py-container_padding bg-surface">
+<div class="px-gutter mb-8">
+<h2 class="font-h2 text-h2 text-on-surface">OmniStock Admin</h2>
+<p class="text-[10px] text-outline uppercase tracking-widest font-bold">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-gutter py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center px-gutter py-2 text-primary dark:text-primary border-l-2 border-primary font-semibold group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">inventory_2</span>
+<span class="font-body-md">Inventory</span>
+</a>
+<a class="flex items-center px-gutter py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">local_shipping</span>
+<span class="font-body-md">Shipments</span>
+</a>
+<a class="flex items-center px-gutter py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">domain</span>
+<span class="font-body-md">Warehouses</span>
+</a>
+<a class="flex items-center px-gutter py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">monitoring</span>
+<span class="font-body-md">Analytics</span>
+</a>
+<a class="flex items-center px-gutter py-2 text-on-surface-variant hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant/30 space-y-1">
+<a class="flex items-center px-gutter py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">help</span>
+<span class="font-body-md">Help Center</span>
+</a>
+<a class="flex items-center px-gutter py-2 text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">logout</span>
+<span class="font-body-md">Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] border-b border-outline-variant bg-surface/80 backdrop-blur-md flex items-center justify-between px-gutter z-10">
+<div class="flex items-center space-x-4">
+<button class="text-on-surface-variant hover:bg-surface-container-high p-1 rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex items-center space-x-3">
+<span class="font-mono-id text-mono-id px-2 py-0.5 bg-surface-container-highest rounded border border-outline-variant">IN-2026-00124</span>
+<div class="flex items-center px-2.5 py-0.5 rounded-full bg-emerald-accent/10 border border-emerald-accent/20 text-emerald-accent">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-accent mr-2 animate-pulse"></span>
+<span class="font-label-caps text-[10px]">POSTED</span>
+</div>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<div class="flex space-x-2">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-2 rounded transition-all">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-2 rounded transition-all">history</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-2 rounded transition-all">apps</button>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Close-up professional headshot of a system operator in a dark tech-focused environment. The lighting is dramatic with cool blue and violet highlights reflecting off their skin, mirroring the Obsidian Precision UI aesthetic. They look focused and calm, representing high-level logistics management expertise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfiHvGOvaPxBjWqP0E0KlgdlbJEciPc1epyEjpaXfKliV66qJYVBi5URjLfO3fVyTH8zwy11KF5-t8Ww7DYciGKxzJduUuYiEJhxzYYsozdYb5jYgXa8pgIYwn5sFW5_mG6ZYvTPC8hR0FlEqY62lHMMOfVem03jGro1pWzsdk3TRCHBJgFiKwFvGsgNJVC6F42-CNaiT6qNthV3r12FBa_i3ZX8Ti36N9r4dZsHRqoG8Pt39vge79--2AwFs5ZDBXLG5kvsbs_cg"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] mt-[56px] h-[calc(100vh-56px)] overflow-y-auto custom-scrollbar p-gutter bg-surface">
+<div class="max-w-[1400px] mx-auto space-y-6">
+<!-- Top Section: Two-column cards -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Left: Document Details -->
+<div class="lg:col-span-2 glass-panel p-gutter space-y-6">
+<div class="flex justify-between items-start border-b border-outline-variant/30 pb-4">
+<h3 class="font-label-caps text-outline">DOCUMENT SPECIFICATIONS</h3>
+<span class="font-body-sm text-outline">Entered Jan 14, 2026 · 14:32</span>
+</div>
+<div class="grid grid-cols-2 gap-y-6 gap-x-12">
+<div class="space-y-1">
+<label class="font-label-caps text-outline block">SUPPLIER</label>
+<p class="font-h2 text-h2 text-on-surface">Global Dynamics Inc.</p>
+<p class="font-body-sm text-on-surface-variant">ID: SUP-992384 | tax: V-22-192</p>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-outline block">PURCHASE ORDER</label>
+<p class="font-body-md font-semibold text-primary underline underline-offset-4 cursor-pointer">PO-8821-XQ</p>
+<p class="font-body-sm text-on-surface-variant">Released: Jan 02, 2026</p>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-outline block">INVOICE REFERENCE</label>
+<p class="font-mono-id text-on-surface">INV-GL-2026-0044</p>
+<p class="font-body-sm text-on-surface-variant">Due Date: Feb 14, 2026</p>
+</div>
+<div class="space-y-1">
+<label class="font-label-caps text-outline block">OPERATOR LOG</label>
+<div class="flex items-center space-x-2">
+<div class="w-5 h-5 rounded-full bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-primary">person</span>
+</div>
+<p class="font-body-md text-on-surface">Admin System (Internal)</p>
+</div>
+<p class="font-body-sm text-on-surface-variant">Validated by: R. Vance</p>
+</div>
+</div>
+</div>
+<!-- Right: Attachment Card -->
+<div class="lg:col-span-1 glass-panel p-gutter flex flex-col">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-label-caps text-outline">ATTACHMENT</h3>
+<button class="material-symbols-outlined text-primary text-[18px] hover:bg-primary/10 p-1 rounded transition-colors">open_in_new</button>
+</div>
+<div class="flex-1 relative group cursor-zoom-in overflow-hidden rounded bg-black/40 border border-outline-variant/30">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+<p class="text-[10px] text-white font-mono-id">invoice_scan_0044.pdf (2.4MB)</p>
+</div>
+<img class="w-full h-full object-cover grayscale opacity-60 group-hover:opacity-100 transition-all duration-500 scale-100 group-hover:scale-105" data-alt="A high-contrast, macro photography style scan of a modern corporate invoice. The image shows crisp typography and clean lines, with subtle dark glassmorphic transparency overlays in the design. The lighting is moody with purple and blue backlighting, giving it a technical and high-end data visualization aesthetic consistent with the Obsidian Precision brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjpuglx-PDTmmu09bFbIX9NXPsWEsygSbqPRYhi1xCgDzZ4JrOerr-qDOzTgphGKJbEsvrqkNhMUfGPWC19b7skqLLRdxRzoHETqxUKKuvYwbig4saEcpfedUcOwR_fiG0_-PwmAS0_Addh-KXOfnLbzCvEwxh0R-dWY01dKIiTAGWW3we162gJUKrbwHGAF-jwzEFdnRKjTBgq2ir33F99UfzK1_LD6R1BSTINQwnL9Knh8cIEeqgnNsrA3gs0v8HfLqTv5kTA38"/>
+</div>
+</div>
+</div>
+<!-- Middle Section: Items Table -->
+<div class="glass-panel overflow-hidden">
+<div class="px-gutter py-3 border-b border-outline-variant/30 flex justify-between items-center">
+<h3 class="font-label-caps text-outline">LINE ITEMS (4)</h3>
+<div class="flex items-center space-x-4">
+<span class="font-body-sm text-on-surface-variant">Currency: <b class="text-on-surface">USD</b></span>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<span class="font-body-sm text-on-surface-variant">Warehouse: <b class="text-on-surface">Central HUB-01</b></span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-white/[0.03] text-left">
+<th class="px-gutter h-[40px] font-label-caps text-outline border-b border-outline-variant/20">BARCODE</th>
+<th class="px-gutter h-[40px] font-label-caps text-outline border-b border-outline-variant/20">PRODUCT DESCRIPTION</th>
+<th class="px-gutter h-[40px] font-label-caps text-outline border-b border-outline-variant/20 text-right">QTY</th>
+<th class="px-gutter h-[40px] font-label-caps text-outline border-b border-outline-variant/20 text-right">UNIT COST</th>
+<th class="px-gutter h-[40px] font-label-caps text-outline border-b border-outline-variant/20 text-right">TOTAL</th>
+</tr>
+</thead>
+<tbody class="font-table-cell text-on-surface">
+<tr class="h-[40px] border-b border-outline-variant/10 hover:bg-white/[0.05] transition-colors group">
+<td class="px-gutter font-mono-id text-on-surface-variant">880192837</td>
+<td class="px-gutter font-semibold">Titan-X Cooling Unit (Gen 4)</td>
+<td class="px-gutter text-right">12</td>
+<td class="px-gutter text-right text-on-surface-variant">$450.00</td>
+<td class="px-gutter text-right font-semibold">$5,400.00</td>
+</tr>
+<tr class="h-[40px] border-b border-outline-variant/10 hover:bg-white/[0.05] transition-colors">
+<td class="px-gutter font-mono-id text-on-surface-variant">880192224</td>
+<td class="px-gutter font-semibold">Modular Power Cell 400W</td>
+<td class="px-gutter text-right">25</td>
+<td class="px-gutter text-right text-on-surface-variant">$120.00</td>
+<td class="px-gutter text-right font-semibold">$3,000.00</td>
+</tr>
+<tr class="h-[40px] border-b border-outline-variant/10 hover:bg-white/[0.05] transition-colors">
+<td class="px-gutter font-mono-id text-on-surface-variant">880191001</td>
+<td class="px-gutter font-semibold">Fiber Optic Interface 10G</td>
+<td class="px-gutter text-right">10</td>
+<td class="px-gutter text-right text-on-surface-variant">$85.50</td>
+<td class="px-gutter text-right font-semibold">$855.00</td>
+</tr>
+<tr class="h-[40px] border-b border-outline-variant/10 hover:bg-white/[0.05] transition-colors">
+<td class="px-gutter font-mono-id text-on-surface-variant">880193992</td>
+<td class="px-gutter font-semibold">Chassis Shielding Plate (Large)</td>
+<td class="px-gutter text-right">50</td>
+<td class="px-gutter text-right text-on-surface-variant">$42.00</td>
+<td class="px-gutter text-right font-semibold">$2,100.00</td>
+</tr>
+<!-- Totals Row -->
+<tr class="h-[48px] bg-white/[0.02]">
+<td class="px-gutter font-label-caps text-outline" colspan="2">AGGREGATE TOTALS</td>
+<td class="px-gutter text-right font-h2 text-on-surface">97</td>
+<td class="px-gutter"></td>
+<td class="px-gutter text-right font-h1 text-primary">$11,355.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Bottom Section: Stock Effect Ledger -->
+<div class="glass-panel p-gutter">
+<div class="flex items-center space-x-2 mb-6">
+<span class="material-symbols-outlined text-emerald-accent">account_balance_wallet</span>
+<h3 class="font-label-caps text-outline uppercase">STOCK EFFECT LEDGER</h3>
+</div>
+<div class="space-y-2">
+<div class="grid grid-cols-12 items-center h-10 px-4 rounded hover:bg-white/[0.02] border border-transparent hover:border-outline-variant/20 transition-all group">
+<div class="col-span-1 text-[10px] font-mono-id text-outline group-hover:text-on-surface">EFFECT-01</div>
+<div class="col-span-5 font-body-md text-on-surface-variant">Titan-X Cooling Unit (Gen 4)</div>
+<div class="col-span-3 text-on-surface-variant font-body-sm italic">Allocating to Hub-01 Primary Rack</div>
+<div class="col-span-2 text-right font-mono-id text-emerald-accent">+12 Units</div>
+<div class="col-span-1 text-right">
+<span class="material-symbols-outlined text-[16px] text-emerald-accent" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="grid grid-cols-12 items-center h-10 px-4 rounded hover:bg-white/[0.02] border border-transparent hover:border-outline-variant/20 transition-all group">
+<div class="col-span-1 text-[10px] font-mono-id text-outline group-hover:text-on-surface">EFFECT-02</div>
+<div class="col-span-5 font-body-md text-on-surface-variant">Modular Power Cell 400W</div>
+<div class="col-span-3 text-on-surface-variant font-body-sm italic">Direct intake to Maintenance Reserve</div>
+<div class="col-span-2 text-right font-mono-id text-emerald-accent">+25 Units</div>
+<div class="col-span-1 text-right">
+<span class="material-symbols-outlined text-[16px] text-emerald-accent" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="grid grid-cols-12 items-center h-10 px-4 rounded hover:bg-white/[0.02] border border-transparent hover:border-outline-variant/20 transition-all group">
+<div class="col-span-1 text-[10px] font-mono-id text-outline group-hover:text-on-surface">EFFECT-03</div>
+<div class="col-span-5 font-body-md text-on-surface-variant">Fiber Optic Interface 10G</div>
+<div class="col-span-3 text-on-surface-variant font-body-sm italic">Awaiting secondary QA check</div>
+<div class="col-span-2 text-right font-mono-id text-emerald-accent">+10 Units</div>
+<div class="col-span-1 text-right">
+<span class="material-symbols-outlined text-[16px] text-emerald-accent" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="grid grid-cols-12 items-center h-10 px-4 rounded hover:bg-white/[0.02] border border-transparent hover:border-outline-variant/20 transition-all group">
+<div class="col-span-1 text-[10px] font-mono-id text-outline group-hover:text-on-surface">EFFECT-04</div>
+<div class="col-span-5 font-body-md text-on-surface-variant">Chassis Shielding Plate (Large)</div>
+<div class="col-span-3 text-on-surface-variant font-body-sm italic">Overflow storage B-Row 14</div>
+<div class="col-span-2 text-right font-mono-id text-emerald-accent">+50 Units</div>
+<div class="col-span-1 text-right">
+<span class="material-symbols-outlined text-[16px] text-emerald-accent" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="flex justify-end space-x-3 pt-6 pb-gutter">
+<button class="px-6 py-2 rounded-full border border-outline-variant text-on-surface font-semibold text-body-md hover:bg-surface-container-high transition-all active:scale-95">
+                    Print Voucher
+                </button>
+<button class="px-6 py-2 rounded-full bg-primary text-on-primary font-semibold text-body-md shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95 flex items-center">
+<span class="material-symbols-outlined mr-2">download</span>
+                    Export PDF
+                </button>
+</div>
+</div>
+</main>
+<!-- Floating Action Button Contextual Logic -->
+<!-- Suppressed per instructions for Detail screens -->
+<script>
+        // Micro-interactions for table rows and hover states
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.style.background = 'rgba(255, 255, 255, 0.05)';
+            });
+            row.addEventListener('mouseleave', () => {
+                if(!row.classList.contains('bg-white/[0.02]')) {
+                    row.style.background = 'transparent';
+                } else {
+                    row.style.background = 'rgba(255, 255, 255, 0.02)';
+                }
+            });
+        });
+
+        // Simple subtle animation for the posted status dot
+        const pulseDot = document.querySelector('.animate-pulse');
+        if(pulseDot) {
+            setInterval(() => {
+                pulseDot.style.boxShadow = pulseDot.style.boxShadow === 'none' ? '0 0 8px #10b981' : 'none';
+            }, 1000);
+        }
+    </script>
+</body></html>

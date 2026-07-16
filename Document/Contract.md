@@ -58,7 +58,7 @@ const { data, error } = await supabase.rpc('scan_lookup', { p_code: '89012345678
     "brand": "SanDisk",
     "model": "SDCZ50-064G",
     "unit": "PCS",
-    "sku_barcode": "ST-P-000123"
+    "sku_barcode": "ST00000123"
   },
   "stock": {
     "office_id": "uuid",

@@ -1,0 +1,39 @@
+{
+  "name": "@siddesh/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Siddesh ERP desktop client (Electron)",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "package": "npm run build && electron-builder --win --publish never",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource-variable/roboto-flex": "^5.2.8",
+    "@siddesh/shared": "*",
+    "@supabase/supabase-js": "^2.110.6",
+    "@tanstack/react-query": "^5.101.2",
+    "clsx": "^2.1.1",
+    "keytar": "^7.9.0",
+    "lucide-react": "^1.24.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.1",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "tailwindcss": "^4.3.2",
+    "vite": "^8.1.4"
+  }
+}

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock | Barcode Generator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+              "surface-container-highest": "#353437",
+              "inverse-on-surface": "#313032",
+              "secondary": "#adc6ff",
+              "primary-container": "#a078ff",
+              "outline-variant": "#494454",
+              "on-tertiary-fixed-variant": "#673d00",
+              "inverse-primary": "#6d3bd7",
+              "error": "#ffb4ab",
+              "on-secondary": "#002e6a",
+              "on-secondary-container": "#e6ecff",
+              "surface": "#131315",
+              "surface-container-lowest": "#0e0e10",
+              "surface-container": "#201f22",
+              "on-background": "#e5e1e4",
+              "secondary-fixed": "#d8e2ff",
+              "surface-variant": "#353437",
+              "on-tertiary": "#482900",
+              "on-primary-fixed-variant": "#5516be",
+              "on-tertiary-container": "#3f2300",
+              "on-primary-fixed": "#23005c",
+              "tertiary": "#ffb869",
+              "surface-container-high": "#2a2a2c",
+              "secondary-fixed-dim": "#adc6ff",
+              "surface-bright": "#39393b",
+              "on-error": "#690005",
+              "secondary-container": "#0566d9",
+              "outline": "#958ea0",
+              "surface-tint": "#d0bcff",
+              "on-tertiary-fixed": "#2c1700",
+              "on-primary-container": "#340080",
+              "surface-container-low": "#1c1b1d",
+              "inverse-surface": "#e5e1e4",
+              "on-surface-variant": "#cbc3d7",
+              "on-surface": "#e5e1e4",
+              "on-error-container": "#ffdad6",
+              "primary-fixed": "#e9ddff",
+              "primary-fixed-dim": "#d0bcff",
+              "tertiary-fixed-dim": "#ffb869",
+              "error-container": "#93000a",
+              "primary": "#d0bcff",
+              "surface-dim": "#131315",
+              "on-secondary-fixed": "#001a42",
+              "on-primary": "#3c0091",
+              "background": "#131315",
+              "on-secondary-fixed-variant": "#004395",
+              "tertiary-container": "#ca801e",
+              "tertiary-fixed": "#ffdcbb"
+            },
+            "borderRadius": {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px"
+            },
+            "spacing": {
+              "container_padding": "24px",
+              "base_grid": "8px",
+              "table_row_height": "40px",
+              "gutter": "16px",
+              "sidebar_width": "208px"
+            },
+            "fontFamily": {
+              "h2": ["Roboto Flex"],
+              "body-md": ["Roboto Flex"],
+              "label-caps": ["Roboto Flex"],
+              "body-sm": ["Roboto Flex"],
+              "table-cell": ["Roboto Flex"],
+              "h1": ["Roboto Flex"],
+              "mono-id": ["JetBrains Mono"]
+            },
+            "fontSize": {
+              "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+              "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+              "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+              "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+              "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+              "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+              "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+      body {
+        background-color: #09090b;
+        color: #e5e1e4;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(208, 188, 255, 0.2);
+        border-radius: 10px;
+      }
+
+      .barcode-bars {
+        display: flex;
+        align-items: flex-end;
+        height: 60px;
+        gap: 1.5px;
+      }
+      .bar-s { width: 1px; background: #000; height: 100%; }
+      .bar-m { width: 2px; background: #000; height: 100%; }
+      .bar-l { width: 3.5px; background: #000; height: 100%; }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-hidden">
+<!-- Side Navigation Bar -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant bg-surface flex flex-col py-container_padding z-50">
+<div class="px-6 mb-8">
+<h2 class="font-h2 text-h2 text-on-surface">OmniStock Admin</h2>
+<p class="text-[10px] text-outline uppercase tracking-widest mt-1">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1 px-3 overflow-y-auto custom-scrollbar">
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-primary border-l-2 border-primary font-semibold transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+<span class="font-body-md">Inventory</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-[18px]">local_shipping</span>
+<span class="font-body-md">Shipments</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-[18px]">domain</span>
+<span class="font-body-md">Warehouses</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-[18px]">monitoring</span>
+<span class="font-body-md">Analytics</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span class="font-body-md">Settings</span>
+</div>
+</nav>
+<div class="mt-auto px-3 border-t border-outline-variant pt-4 space-y-1">
+<button class="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">help</span>
+<span class="font-body-md">Help Center</span>
+</button>
+<button class="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+<span class="font-body-md">Log Out</span>
+</button>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] flex items-center justify-between px-gutter bg-surface/80 backdrop-blur-md border-b border-outline-variant z-40">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="w-full bg-black/20 border border-outline-variant rounded-lg py-1.5 pl-10 pr-4 text-body-md focus:outline-none focus:border-primary transition-all" placeholder="Search system inventory..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-surface-container-high rounded-lg transition-all active:scale-95 duration-150 relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-surface"></span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-lg transition-all active:scale-95 duration-150">
+<span class="material-symbols-outlined text-on-surface-variant">history</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-lg transition-all active:scale-95 duration-150">
+<span class="material-symbols-outlined text-on-surface-variant">apps</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant mx-1"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right">
+<p class="text-body-sm font-semibold text-on-surface">Alex Mercer</p>
+<p class="text-[10px] text-outline">System Operator</p>
+</div>
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional close-up headshot of a system administrator in a dark, high-tech environment. The lighting is moody and focused, with subtle violet highlights reflected on the skin. The overall aesthetic is clean, precise, and sophisticated, matching an obsidian precision design style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaF7zWrnY4h66yDQC80BbuOR7x01O4Dq59qgsgXNdUwN8PzcNgmWOMqvmR3b2-ibSkrFhI-rY1STopTgD4e-Qnkwd01WONMWPx0Y2o1zHl9d4rWE_7HQElMR6arrFe8lsd3XmVAmZ6plHgj5gaqvdAI4Sj9SGi4TFdJxFlSjahATnjftHxriSsGs-xie1O-Eq70nHYazXZDRDALgBZ9p2UV5Uyvly92FDlEBeMH7KoH9_F9u-woRsAiKzMot_4qB4Z_a6gT1k0A3c"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] mt-[56px] h-[calc(100vh-56px)] p-container_padding overflow-y-auto custom-scrollbar bg-background relative">
+<!-- Background subtle gradient glow -->
+<div class="absolute top-0 right-0 w-1/3 h-1/3 bg-primary-container/5 blur-[120px] pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 w-1/4 h-1/4 bg-secondary-container/5 blur-[100px] pointer-events-none"></div>
+<div class="max-w-6xl mx-auto">
+<div class="mb-8">
+<nav class="flex gap-2 text-[11px] text-outline uppercase tracking-wider mb-2 font-label-caps">
+<span class="hover:text-primary cursor-pointer transition-colors">Inventory</span>
+<span>/</span>
+<span class="text-on-surface">Label Management</span>
+</nav>
+<h1 class="font-h1 text-h1 text-on-background">Barcode Generator</h1>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter items-start">
+<!-- Left: Generate Card -->
+<section class="glass-card rounded-xl p-8 space-y-6">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary">qr_code_2</span>
+</div>
+<div>
+<h3 class="text-h2 font-h2 text-on-surface">Generate Label</h3>
+<p class="text-body-sm text-outline">Configure your inventory identification parameters.</p>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<label class="font-label-caps text-outline uppercase mb-2 block">Product Identity</label>
+<div class="relative">
+<select class="w-full bg-black/30 border border-outline-variant rounded-lg px-4 py-3 text-body-md focus:ring-1 focus:ring-primary focus:border-primary appearance-none transition-all outline-none">
+<option>Neural Processor Unit X1 (NPU-X1)</option>
+<option>Solid State Drive 2TB Platinum</option>
+<option>Quantum Cooling Module V4</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="font-label-caps text-outline uppercase mb-2 block">Source Type</label>
+<div class="grid grid-cols-2 p-1 bg-black/40 rounded-full border border-outline-variant">
+<button class="py-2 px-4 rounded-full text-body-md font-semibold bg-surface-container-highest text-primary shadow-sm transition-all">Generate new</button>
+<button class="py-2 px-4 rounded-full text-body-md text-outline hover:text-on-surface transition-all">Manufacturer's</button>
+</div>
+</div>
+<div>
+<label class="font-label-caps text-outline uppercase mb-2 block">Assigned Code</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-low font-mono-id text-mono-id border border-outline-variant/50 rounded-lg px-4 py-3 tracking-widest text-primary-fixed-dim" readonly="" type="text" value="ST-P-000248"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline/50 group-hover:text-primary transition-colors cursor-pointer">content_copy</span>
+</div>
+<p class="text-[10px] text-outline-variant mt-2 px-1">Internal alphanumeric sequence generated using SHA-256 seed logic.</p>
+</div>
+</div>
+<div class="pt-4">
+<button class="w-full bg-primary-container hover:bg-inverse-primary text-on-primary-container font-semibold py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-95">
+<span class="material-symbols-outlined">auto_fix_high</span>
+              Generate &amp; Save to Registry
+            </button>
+</div>
+</section>
+<!-- Right: Preview Card -->
+<section class="glass-card rounded-xl p-8 flex flex-col h-full min-h-[520px]">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center border border-secondary/20">
+<span class="material-symbols-outlined text-secondary">visibility</span>
+</div>
+<div>
+<h3 class="text-h2 font-h2 text-on-surface">Label Preview</h3>
+<p class="text-body-sm text-outline">Output visualization at 1:1 scale.</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 glass-card rounded-lg hover:text-primary transition-colors" title="Zoom In">
+<span class="material-symbols-outlined">zoom_in</span>
+</button>
+<button class="p-2 glass-card rounded-lg hover:text-primary transition-colors" title="Download SVG">
+<span class="material-symbols-outlined">file_download</span>
+</button>
+</div>
+</div>
+<!-- Realistic Barcode Label -->
+<div class="flex-1 flex flex-col items-center justify-center bg-black/40 rounded-xl border border-dashed border-outline-variant p-10 relative overflow-hidden">
+<!-- Ambient shadow effect for label -->
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-50"></div>
+<!-- The Label Itself -->
+<div class="relative w-full max-w-[340px] bg-white text-black p-6 rounded-sm shadow-2xl rotate-1 flex flex-col gap-4 transform transition-transform hover:rotate-0 duration-500">
+<div class="flex justify-between items-start border-b border-black/10 pb-2">
+<div>
+<p class="text-[9px] font-bold uppercase tracking-tighter opacity-60 leading-none">Global Stock Unit</p>
+<p class="text-[13px] font-bold leading-tight mt-1">Neural Processor Unit X1</p>
+</div>
+<div class="w-8 h-8 opacity-20">
+<span class="material-symbols-outlined text-[32px]">inventory</span>
+</div>
+</div>
+<div class="barcode-bars w-full justify-center">
+<div class="bar-m"></div><div class="bar-s"></div><div class="bar-l"></div><div class="bar-s"></div><div class="bar-m"></div>
+<div class="bar-l"></div><div class="bar-s"></div><div class="bar-s"></div><div class="bar-m"></div><div class="bar-l"></div>
+<div class="bar-s"></div><div class="bar-m"></div><div class="bar-l"></div><div class="bar-s"></div><div class="bar-m"></div>
+<div class="bar-l"></div><div class="bar-s"></div><div class="bar-l"></div><div class="bar-s"></div><div class="bar-s"></div>
+<div class="bar-m"></div><div class="bar-l"></div><div class="bar-s"></div><div class="bar-m"></div><div class="bar-l"></div>
+<div class="bar-s"></div><div class="bar-m"></div><div class="bar-l"></div><div class="bar-s"></div><div class="bar-s"></div>
+<div class="bar-m"></div><div class="bar-l"></div><div class="bar-s"></div><div class="bar-m"></div><div class="bar-l"></div>
+</div>
+<div class="text-center font-mono-id tracking-[0.3em] text-[14px] font-bold mt-1">
+                  ST-P-000248
+                </div>
+<div class="flex justify-between items-end mt-2 pt-2 border-t border-black/10">
+<p class="text-[8px] font-semibold opacity-50 uppercase">Origin: Site-04 / Rack-B8</p>
+<p class="text-[8px] font-bold bg-black text-white px-1.5 py-0.5 rounded-sm">INTERNAL USE</p>
+</div>
+</div>
+</div>
+<!-- Configuration Footer -->
+<div class="mt-8 grid grid-cols-2 gap-4">
+<div class="space-y-2">
+<label class="font-label-caps text-outline uppercase block">Label Size</label>
+<div class="relative">
+<select class="w-full bg-black/20 border border-outline-variant rounded-lg px-4 py-2 text-body-sm focus:border-secondary appearance-none outline-none">
+<option>4.0" x 2.0" (Thermal)</option>
+<option>3.5" x 1.5" (Standard)</option>
+<option>2.0" x 1.0" (Mini)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[16px]">expand_more</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-caps text-outline uppercase block">Print Copies</label>
+<div class="flex items-center bg-black/20 border border-outline-variant rounded-lg overflow-hidden">
+<button class="px-3 py-2 hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[16px]">remove</span></button>
+<input class="w-full bg-transparent text-center text-body-sm font-semibold outline-none pointer-events-none" type="number" value="1"/>
+<button class="px-3 py-2 hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined text-[16px]">add</span></button>
+</div>
+</div>
+</div>
+<div class="mt-6 flex gap-3">
+<button class="flex-1 py-3 px-4 glass-card hover:bg-surface-container-high rounded-lg text-body-sm font-semibold flex items-center justify-center gap-2 transition-all text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">queue</span>
+               Send to Print Queue
+             </button>
+<button class="w-12 h-12 glass-card hover:text-primary rounded-lg flex items-center justify-center transition-all">
+<span class="material-symbols-outlined">print</span>
+</button>
+</div>
+</section>
+</div>
+</div>
+</main>
+<script>
+    // Micro-interactions and simulation logic
+    document.addEventListener('DOMContentLoaded', () => {
+      const generateBtn = document.querySelector('button.bg-primary-container');
+      const barcodeLabel = document.querySelector('.barcode-bars');
+      
+      generateBtn.addEventListener('click', () => {
+        // Simple visual feedback for "generation"
+        generateBtn.classList.add('opacity-50');
+        generateBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Processing...';
+        
+        setTimeout(() => {
+          generateBtn.classList.remove('opacity-50');
+          generateBtn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Generated & Saved';
+          
+          // Slight wobble effect on the barcode as if it just updated
+          const label = document.querySelector('.bg-white');
+          label.style.transform = 'scale(1.05) rotate(0deg)';
+          setTimeout(() => {
+            label.style.transform = 'scale(1) rotate(1deg)';
+          }, 200);
+
+          setTimeout(() => {
+            generateBtn.innerHTML = '<span class="material-symbols-outlined">auto_fix_high</span> Generate & Save to Registry';
+          }, 2000);
+        }, 1200);
+      });
+
+      // Interactive hover for cards
+      const cards = document.querySelectorAll('.glass-card');
+      cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
+        });
+      });
+    });
+  </script>
+</body></html>

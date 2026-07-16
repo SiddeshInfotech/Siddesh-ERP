@@ -1,0 +1,341 @@
+@import 'tailwindcss';
+
+/* Self-hosted fonts. The app runs over file:// in three offices and must work with no
+   network — a Google Fonts <link> would render unstyled text offline and punch a hole in
+   the CSP. */
+@import '@fontsource-variable/roboto-flex';
+@import '@fontsource-variable/jetbrains-mono';
+
+/*
+ * Design system: "Obsidian Precision"
+ * Source: Document/stitch_siddesh_inventory_admin_system/obsidian_precision/DESIGN.md
+ *
+ * Tailwind v4 is CSS-first: tokens live here, not in a tailwind.config.js.
+ * Never hardcode a hex in a component — add a token here instead.
+ */
+@theme {
+  /* Surfaces — tiered for information density */
+  --color-surface: #131315;
+  --color-surface-dim: #131315;
+  --color-surface-bright: #39393b;
+  --color-surface-container-lowest: #0e0e10;
+  --color-surface-container-low: #1c1b1d;
+  --color-surface-container: #201f22;
+  --color-surface-container-high: #2a2a2c;
+  --color-surface-container-highest: #353437;
+  --color-surface-variant: #353437;
+
+  /* Base canvas — Level 0 per DESIGN.md elevation model */
+  --color-background: #09090b;
+  --color-on-background: #e5e1e4;
+  --color-on-surface: #e5e1e4;
+  --color-on-surface-variant: #cbc3d7;
+
+  /* Primary violet — reserved for critical actions and active nav only */
+  --color-primary: #d0bcff;
+  --color-primary-container: #a078ff;
+  --color-on-primary: #3c0091;
+  --color-on-primary-container: #340080;
+  --color-primary-fixed: #e9ddff;
+  --color-primary-fixed-dim: #d0bcff;
+  --color-on-primary-fixed: #23005c;
+  --color-on-primary-fixed-variant: #5516be;
+  --color-inverse-primary: #6d3bd7;
+  --color-surface-tint: #d0bcff;
+
+  /* Secondary blue — secondary interactive / information linking */
+  --color-secondary: #adc6ff;
+  --color-secondary-container: #0566d9;
+  --color-on-secondary: #002e6a;
+  --color-on-secondary-container: #e6ecff;
+  --color-secondary-fixed: #d8e2ff;
+  --color-secondary-fixed-dim: #adc6ff;
+  --color-on-secondary-fixed: #001a42;
+  --color-on-secondary-fixed-variant: #004395;
+
+  /* Tertiary amber — warnings, low stock */
+  --color-tertiary: #ffb869;
+  --color-tertiary-container: #ca801e;
+  --color-on-tertiary: #482900;
+  --color-on-tertiary-container: #3f2300;
+  --color-tertiary-fixed: #ffdcbb;
+  --color-tertiary-fixed-dim: #ffb869;
+  --color-on-tertiary-fixed: #2c1700;
+  --color-on-tertiary-fixed-variant: #673d00;
+
+  /* Error — destructive and failure only, never decoration */
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error: #690005;
+  --color-on-error-container: #ffdad6;
+
+  /* Success — stock received, saved */
+  --color-success: #7ee2a8;
+  --color-success-container: #005229;
+
+  /* Outlines */
+  --color-outline: #958ea0;
+  --color-outline-variant: #494454;
+  --color-inverse-surface: #e5e1e4;
+  --color-inverse-on-surface: #313032;
+
+  /* Typography — 13px base to accommodate massive data sets.
+     Hierarchy comes from weight, not size. */
+  --font-sans: 'Roboto Flex Variable', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --text-h1: 24px;
+  --text-h1--line-height: 32px;
+  --text-h1--font-weight: 600;
+  --text-h2: 20px;
+  --text-h2--line-height: 28px;
+  --text-h2--font-weight: 600;
+  --text-body-md: 13px;
+  --text-body-md--line-height: 20px;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
+  --text-table-cell: 13px;
+  --text-table-cell--line-height: 16px;
+  --text-mono-id: 12px;
+  --text-mono-id--line-height: 16px;
+  --text-mono-id--font-weight: 500;
+  --text-label-caps: 11px;
+  --text-label-caps--line-height: 16px;
+  --text-label-caps--font-weight: 700;
+  --text-label-caps--letter-spacing: 0.05em;
+
+  /* Shape — containers rounded, buttons pill, data tags technical */
+  --radius-sm: 0.25rem;
+  --radius-DEFAULT: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Layout — strict 8pt grid */
+  --spacing-sidebar: 208px;
+  --spacing-row: 40px;
+  --spacing-gutter: 16px;
+  --spacing-container: 24px;
+}
+
+/*
+ * LIGHT THEME
+ * Source: stitch_siddesh_inventory_admin_system/inward_entry_light + outward_entry_light.
+ *
+ * Not an inversion of the dark palette — Stitch ships a real light design and these are its
+ * values. The primary shifts from #a078ff to #7c3aed because the pale violet that reads well
+ * on #09090b fails contrast on #f8fafc.
+ */
+:root[data-theme='light'] {
+  --color-background: #f8fafc;
+  --color-surface: #f8fafc;
+  --color-surface-dim: #ded9de;
+  --color-surface-bright: #f9f9fc;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f4f0f4;
+  --color-surface-container: #f1f1f4;
+  --color-surface-container-high: #ebe7ec;
+  --color-surface-container-highest: #e1e1e4;
+  --color-surface-variant: #e1e1e4;
+
+  --color-on-background: #1b1b1f;
+  --color-on-surface: #000000;
+  --color-on-surface-variant: #46464f;
+
+  --color-primary: #7c3aed;
+  --color-primary-container: #a078ff;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #23005c;
+  --color-inverse-primary: #d0bcff;
+  --color-surface-tint: #6d3bd7;
+
+  --color-secondary: #0566d9;
+  --color-secondary-container: #d8e2ff;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #001d4a;
+
+  --color-tertiary: #8c5000;
+  --color-tertiary-container: #ffdcbb;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #2a1700;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #410002;
+
+  --color-success: #006d3b;
+  --color-success-container: #9df6bd;
+
+  --color-outline: #767680;
+  --color-outline-variant: rgb(0 0 0 / 0.14);
+  --color-inverse-surface: #313033;
+  --color-inverse-on-surface: #f4f0f4;
+
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+    font-size: var(--text-body-md);
+    line-height: var(--text-body-md--line-height);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden; /* the shell scrolls its own panes, never the window */
+  }
+
+  /* Tabular figures everywhere numbers are compared in a column.
+     Without this, quantity columns visibly jitter and misalign. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus is never removed — this app is driven by a scanner and a keyboard. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary-container);
+    outline-offset: 2px;
+  }
+
+  /* Scrollbars are never hidden (DESIGN.md): 6px track, violet thumb at 20%. */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface);
+  }
+  /* DESIGN.md: 6px track, violet thumb at 20%. Light mode uses the darker #7c3aed,
+     which is the same rule with the theme's own accent. */
+  ::-webkit-scrollbar-thumb {
+    background: rgb(160 120 255 / 0.2);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(160 120 255 / 0.35);
+  }
+
+  :root[data-theme='light'] ::-webkit-scrollbar-thumb {
+    background: rgb(124 58 237 / 0.2);
+  }
+  :root[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+    background: rgb(124 58 237 / 0.35);
+  }
+}
+
+/*
+ * Glass surfaces are driven by these four variables so a theme switch is a variable
+ * swap, not a second copy of every rule.
+ *
+ * In light mode the whole model inverts: the tint goes from white-on-black to
+ * near-opaque white, and the border from white/8% to black/14% — a translucent white
+ * card over a #f8fafc canvas would otherwise be invisible.
+ */
+:root {
+  --glass-bg: rgb(255 255 255 / 0.03);
+  --glass-border: rgb(255 255 255 / 0.08);
+  --glass-shadow: 0 8px 32px 0 rgb(0 0 0 / 0.8);
+  --glass-hairline: rgb(255 255 255 / 0.05);
+}
+
+:root[data-theme='light'] {
+  --glass-bg: rgb(255 255 255 / 0.85);
+  --glass-border: rgb(0 0 0 / 0.14);
+  --glass-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.06);
+  --glass-hairline: rgb(0 0 0 / 0.08);
+}
+
+@utility glass {
+  /* Level 1 — cards and panels. Depth via translucent stacking, not drop shadows. */
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+@utility glass-elevated {
+  /* Level 2 — modals and popovers. Higher border opacity + ambient blur. */
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Hairline dividers inside glass — white in dark, black in light. */
+@utility hairline-b {
+  border-bottom: 1px solid var(--glass-hairline);
+}
+
+@utility hairline-t {
+  border-top: 1px solid var(--glass-hairline);
+}
+
+/*
+ * The custom title bar's drag region. Everything in the top strip drags the window,
+ * except controls, which must opt out with `no-drag` or they become undraggable dead
+ * zones instead of buttons.
+ */
+@utility drag-region {
+  -webkit-app-region: drag;
+}
+
+@utility no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Atmospheric violet glow behind the login card. */
+@utility violet-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgb(160 120 255 / 0.15) 0%, rgb(9 9 11 / 0) 70%);
+  border-radius: 50%;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+@utility shake {
+  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Respect the OS setting. Motion is purposeful here, never decorative. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

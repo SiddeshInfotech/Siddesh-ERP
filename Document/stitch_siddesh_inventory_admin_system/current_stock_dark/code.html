@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin - Current Stock</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #131315;
+            color: #e5e1e4;
+            font-family: 'Roboto Flex', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(208, 188, 255, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(208, 188, 255, 0.4);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .table-container {
+            height: calc(100vh - 240px);
+            overflow-y: auto;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+            font-size: 20px;
+        }
+
+        /* Precise 40px Row constraint */
+        tr {
+            height: 40px;
+        }
+
+        .status-pill {
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#353437",
+                        "inverse-on-surface": "#313032",
+                        "secondary": "#adc6ff",
+                        "primary-container": "#a078ff",
+                        "outline-variant": "#494454",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "inverse-primary": "#6d3bd7",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#002e6a",
+                        "on-secondary-container": "#e6ecff",
+                        "surface": "#131315",
+                        "surface-container-lowest": "#0e0e10",
+                        "surface-container": "#201f22",
+                        "on-background": "#e5e1e4",
+                        "secondary-fixed": "#d8e2ff",
+                        "surface-variant": "#353437",
+                        "on-tertiary": "#482900",
+                        "on-primary-fixed-variant": "#5516be",
+                        "on-tertiary-container": "#3f2300",
+                        "on-primary-fixed": "#23005c",
+                        "tertiary": "#ffb869",
+                        "surface-container-high": "#2a2a2c",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface-bright": "#39393b",
+                        "on-error": "#690005",
+                        "secondary-container": "#0566d9",
+                        "outline": "#958ea0",
+                        "surface-tint": "#d0bcff",
+                        "on-tertiary-fixed": "#2c1700",
+                        "on-primary-container": "#340080",
+                        "surface-container-low": "#1c1b1d",
+                        "inverse-surface": "#e5e1e4",
+                        "on-surface-variant": "#cbc3d7",
+                        "on-surface": "#e5e1e4",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#e9ddff",
+                        "primary-fixed-dim": "#d0bcff",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "error-container": "#93000a",
+                        "primary": "#d0bcff",
+                        "surface-dim": "#131315",
+                        "on-secondary-fixed": "#001a42",
+                        "on-primary": "#3c0091",
+                        "background": "#131315",
+                        "on-secondary-fixed-variant": "#004395",
+                        "tertiary-container": "#ca801e",
+                        "tertiary-fixed": "#ffdcbb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container_padding": "24px",
+                        "base_grid": "8px",
+                        "table_row_height": "40px",
+                        "gutter": "16px",
+                        "sidebar_width": "208px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Roboto Flex"],
+                        "body-md": ["Roboto Flex"],
+                        "label-caps": ["Roboto Flex"],
+                        "body-sm": ["Roboto Flex"],
+                        "table-cell": ["Roboto Flex"],
+                        "h1": ["Roboto Flex"],
+                        "mono-id": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "h2": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-md": ["13px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "table-cell": ["13px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "h1": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "mono-id": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant flex flex-col py-container_padding bg-surface">
+<div class="px-gutter mb-8">
+<h1 class="font-h2 text-h2 text-on-surface">OmniStock Admin</h1>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Global Logistics</p>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-primary border-l-2 border-primary font-semibold transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span>Shipments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="domain">domain</span>
+<span>Warehouses</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-1 border-t border-outline-variant pt-4">
+<button class="w-full bg-primary-container text-on-primary-container py-2 rounded-full font-semibold text-body-md mb-4 active:scale-95 transition-transform">
+                New Entry
+            </button>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary-container transition-colors font-body-md text-body-md text-error" href="#">
+<span class="material-symbols-outlined text-error" data-icon="logout">logout</span>
+<span>Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Shell -->
+<main class="ml-[208px] min-h-screen flex flex-col">
+<!-- TopNavBar (Shared Component) -->
+<header class="h-[56px] fixed top-0 right-0 w-[calc(100%-208px)] border-b border-outline-variant bg-surface/80 backdrop-blur-md z-40 flex items-center justify-between px-gutter">
+<div class="flex items-center bg-surface-container-low border border-outline-variant rounded-lg px-3 py-1 w-96">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md text-on-surface w-full ml-2" placeholder="Search resources..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-primary/20">
+<img class="h-full w-full object-cover" data-alt="A professional close-up studio portrait of a system administrator in a dark, high-tech control room environment. Soft, focused blue and violet ambient lighting illuminates the subject, who wears clean, modern minimalist attire. The image style is sharp, corporate, and follows a premium dark glassmorphism aesthetic with high contrast and subtle depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAINU9v1CFoglDGvslmlAKqIUWArSFtJG8Evj1-xwy3vAqX_458K0vdgfrVv86Xocu-QR1ff-5ueHmBEe7ELxfr92d2dlUiSybCMfIPD_LOTwE71o7_gimvjOHOT2EKHsTl6-wIJmHohvGTmA7SAOWltJQa5BqNyXyScKA9CUQMXvzkaR_ytNR2l4MI9R22RmE4QyNQ3Xrp34sg8p93tr08SNRZ1-jSnBGnccQFkGEKvfWLJiEZzdY-6SjlTT1kEjZrl6KyDDqpc5s"/>
+</div>
+</div>
+</header>
+<!-- Canvas Area -->
+<div class="pt-[56px] p-container_padding flex-1">
+<!-- Page Header Section -->
+<div class="flex justify-between items-end mb-6">
+<div>
+<h2 class="font-h1 text-h1 text-on-surface">Current Stock</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Pune Head Office</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-1.5 rounded border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors font-body-md">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+                        Export Excel
+                    </button>
+<button class="flex items-center gap-2 px-4 py-1.5 rounded border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors font-body-md">
+<span class="material-symbols-outlined text-sm" data-icon="picture_as_pdf">picture_as_pdf</span>
+                        Export PDF
+                    </button>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="glass-panel rounded-xl p-4 mb-gutter flex flex-wrap items-center gap-gutter">
+<div class="flex-1 min-w-[240px] relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" data-icon="search">search</span>
+<input class="w-full bg-black/20 border border-outline-variant rounded-lg pl-10 pr-4 py-2 text-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Search by product name or SKU..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-label-caps font-label-caps text-on-surface-variant uppercase">Category</span>
+<select class="bg-black/20 border border-outline-variant rounded-lg px-4 py-2 text-body-md focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer">
+<option>All Categories</option>
+<option>Electronics</option>
+<option>Industrial Parts</option>
+<option>Raw Materials</option>
+<option>Finished Goods</option>
+</select>
+</div>
+<div class="flex bg-black/40 p-1 rounded-lg border border-outline-variant">
+<button class="px-4 py-1.5 rounded text-xs font-semibold bg-primary text-on-primary shadow-sm">
+                        All <span class="ml-1 opacity-70">1,284</span>
+</button>
+<button class="px-4 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-colors">
+                        In Stock <span class="ml-1 opacity-50">942</span>
+</button>
+<button class="px-4 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-colors">
+                        Low <span class="ml-1 opacity-50">218</span>
+</button>
+<button class="px-4 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-colors">
+                        Out of Stock <span class="ml-1 opacity-50">124</span>
+</button>
+</div>
+</div>
+<!-- Inventory Data Table -->
+<div class="glass-panel rounded-xl overflow-hidden">
+<div class="table-container">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-variant/80 backdrop-blur-md z-10">
+<tr class="border-b border-outline-variant text-label-caps font-label-caps text-on-surface-variant">
+<th class="pl-gutter pr-2 py-3 uppercase tracking-wider">Barcode</th>
+<th class="px-4 py-3 uppercase tracking-wider">Product</th>
+<th class="px-4 py-3 uppercase tracking-wider">Category</th>
+<th class="px-4 py-3 uppercase tracking-wider text-right">Opening</th>
+<th class="px-4 py-3 uppercase tracking-wider text-right">Inward</th>
+<th class="px-4 py-3 uppercase tracking-wider text-right">Outward</th>
+<th class="px-4 py-3 uppercase tracking-wider text-right">Current</th>
+<th class="px-4 py-3 uppercase tracking-wider text-right">Reserved</th>
+<th class="px-4 py-3 uppercase tracking-wider text-right">Available</th>
+<th class="px-4 py-3 uppercase tracking-wider text-right pr-gutter">Min</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30 text-table-cell font-table-cell">
+<!-- Low Stock Row Example -->
+<tr class="hover:bg-white/[0.04] transition-colors group relative border-l-2 border-tertiary bg-tertiary/5">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-4921-X</td>
+<td class="px-4 font-semibold text-on-surface">Precision Actuator v4</td>
+<td class="px-4">
+<span class="status-pill bg-outline-variant/40 text-on-surface-variant">Industrial</span>
+</td>
+<td class="px-4 text-right">450</td>
+<td class="px-4 text-right text-emerald-400">+120</td>
+<td class="px-4 text-right text-rose-400">-538</td>
+<td class="px-4 text-right font-bold">32</td>
+<td class="px-4 text-right">18</td>
+<td class="px-4 text-right font-bold text-tertiary">14</td>
+<td class="px-4 text-right pr-gutter opacity-60">25</td>
+</tr>
+<!-- Normal Row -->
+<tr class="hover:bg-white/[0.04] transition-colors group">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-2083-A</td>
+<td class="px-4 font-semibold text-on-surface">Fiber Optic Module 10G</td>
+<td class="px-4">
+<span class="status-pill bg-secondary-container/40 text-secondary">Electronics</span>
+</td>
+<td class="px-4 text-right">1,200</td>
+<td class="px-4 text-right text-emerald-400">+450</td>
+<td class="px-4 text-right text-rose-400">-210</td>
+<td class="px-4 text-right font-bold">1,440</td>
+<td class="px-4 text-right">100</td>
+<td class="px-4 text-right font-bold">1,340</td>
+<td class="px-4 text-right pr-gutter opacity-60">150</td>
+</tr>
+<!-- Out of Stock Row -->
+<tr class="hover:bg-white/[0.04] transition-colors group border-l-2 border-error bg-error/5">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-1102-M</td>
+<td class="px-4 font-semibold text-on-surface">Thermal Paste Premium</td>
+<td class="px-4">
+<span class="status-pill bg-outline-variant/40 text-on-surface-variant">Raw Materials</span>
+</td>
+<td class="px-4 text-right">25</td>
+<td class="px-4 text-right text-emerald-400">+0</td>
+<td class="px-4 text-right text-rose-400">-25</td>
+<td class="px-4 text-right font-bold">0</td>
+<td class="px-4 text-right">0</td>
+<td class="px-4 text-right font-bold text-error">0</td>
+<td class="px-4 text-right pr-gutter opacity-60">10</td>
+</tr>
+<!-- Repeat standard rows for density simulation -->
+<tr class="hover:bg-white/[0.04] transition-colors group">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-3392-L</td>
+<td class="px-4 font-semibold text-on-surface">Titanium Alloy Bolt M8</td>
+<td class="px-4">
+<span class="status-pill bg-secondary-container/40 text-secondary">Industrial</span>
+</td>
+<td class="px-4 text-right">5,000</td>
+<td class="px-4 text-right text-emerald-400">+1,500</td>
+<td class="px-4 text-right text-rose-400">-800</td>
+<td class="px-4 text-right font-bold">5,700</td>
+<td class="px-4 text-right">500</td>
+<td class="px-4 text-right font-bold">5,200</td>
+<td class="px-4 text-right pr-gutter opacity-60">1,000</td>
+</tr>
+<tr class="hover:bg-white/[0.04] transition-colors group">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-8821-B</td>
+<td class="px-4 font-semibold text-on-surface">Li-Ion Battery Cell</td>
+<td class="px-4">
+<span class="status-pill bg-secondary-container/40 text-secondary">Electronics</span>
+</td>
+<td class="px-4 text-right">890</td>
+<td class="px-4 text-right text-emerald-400">+0</td>
+<td class="px-4 text-right text-rose-400">-120</td>
+<td class="px-4 text-right font-bold">770</td>
+<td class="px-4 text-right">240</td>
+<td class="px-4 text-right font-bold">530</td>
+<td class="px-4 text-right pr-gutter opacity-60">200</td>
+</tr>
+<tr class="hover:bg-white/[0.04] transition-colors group border-l-2 border-tertiary bg-tertiary/5">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-0021-X</td>
+<td class="px-4 font-semibold text-on-surface">Capacitor 470uF</td>
+<td class="px-4">
+<span class="status-pill bg-secondary-container/40 text-secondary">Electronics</span>
+</td>
+<td class="px-4 text-right">2,000</td>
+<td class="px-4 text-right text-emerald-400">+0</td>
+<td class="px-4 text-right text-rose-400">-1,850</td>
+<td class="px-4 text-right font-bold">150</td>
+<td class="px-4 text-right">80</td>
+<td class="px-4 text-right font-bold text-tertiary">70</td>
+<td class="px-4 text-right pr-gutter opacity-60">100</td>
+</tr>
+<!-- More data rows for scrolling simulation -->
+<tr class="hover:bg-white/[0.04] transition-colors group">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-4922-P</td>
+<td class="px-4 font-semibold text-on-surface">Steel Gasket Set</td>
+<td class="px-4">
+<span class="status-pill bg-outline-variant/40 text-on-surface-variant">Industrial</span>
+</td>
+<td class="px-4 text-right">600</td>
+<td class="px-4 text-right text-emerald-400">+40</td>
+<td class="px-4 text-right text-rose-400">-10</td>
+<td class="px-4 text-right font-bold">630</td>
+<td class="px-4 text-right">20</td>
+<td class="px-4 text-right font-bold">610</td>
+<td class="px-4 text-right pr-gutter opacity-60">50</td>
+</tr>
+<tr class="hover:bg-white/[0.04] transition-colors group">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-9911-W</td>
+<td class="px-4 font-semibold text-on-surface">Welding Wire Roll</td>
+<td class="px-4">
+<span class="status-pill bg-outline-variant/40 text-on-surface-variant">Raw Materials</span>
+</td>
+<td class="px-4 text-right">80</td>
+<td class="px-4 text-right text-emerald-400">+10</td>
+<td class="px-4 text-right text-rose-400">-5</td>
+<td class="px-4 text-right font-bold">85</td>
+<td class="px-4 text-right">10</td>
+<td class="px-4 text-right font-bold">75</td>
+<td class="px-4 text-right pr-gutter opacity-60">15</td>
+</tr>
+<tr class="hover:bg-white/[0.04] transition-colors group">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-7711-K</td>
+<td class="px-4 font-semibold text-on-surface">Control Board v2.1</td>
+<td class="px-4">
+<span class="status-pill bg-secondary-container/40 text-secondary">Electronics</span>
+</td>
+<td class="px-4 text-right">45</td>
+<td class="px-4 text-right text-emerald-400">+5</td>
+<td class="px-4 text-right text-rose-400">-0</td>
+<td class="px-4 text-right font-bold">50</td>
+<td class="px-4 text-right">12</td>
+<td class="px-4 text-right font-bold">38</td>
+<td class="px-4 text-right pr-gutter opacity-60">10</td>
+</tr>
+<tr class="hover:bg-white/[0.04] transition-colors group">
+<td class="pl-gutter pr-2 font-mono-id text-mono-id text-on-surface-variant">OS-6623-R</td>
+<td class="px-4 font-semibold text-on-surface">Resistor Pack (100)</td>
+<td class="px-4">
+<span class="status-pill bg-secondary-container/40 text-secondary">Electronics</span>
+</td>
+<td class="px-4 text-right">250</td>
+<td class="px-4 text-right text-emerald-400">+100</td>
+<td class="px-4 text-right text-rose-400">-50</td>
+<td class="px-4 text-right font-bold">300</td>
+<td class="px-4 text-right">20</td>
+<td class="px-4 text-right font-bold">280</td>
+<td class="px-4 text-right pr-gutter opacity-60">50</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer/Pagination -->
+<div class="px-gutter py-3 border-t border-outline-variant flex items-center justify-between text-body-sm text-on-surface-variant bg-surface-container-low">
+<div class="flex gap-4">
+<span>Showing 1-10 of 1,284 products</span>
+<div class="flex items-center gap-2">
+<span>Rows per page:</span>
+<select class="bg-transparent border-none focus:ring-0 cursor-pointer">
+<option>10</option>
+<option>25</option>
+<option>50</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1 rounded hover:bg-surface-container-high transition-colors disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded bg-primary-container text-on-primary-container font-semibold">1</button>
+<button class="w-8 h-8 rounded hover:bg-surface-container-high transition-colors">2</button>
+<button class="w-8 h-8 rounded hover:bg-surface-container-high transition-colors">3</button>
+<span class="px-2">...</span>
+<button class="w-8 h-8 rounded hover:bg-surface-container-high transition-colors">129</button>
+<button class="p-1 rounded hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- System Footer -->
+<footer class="px-gutter py-4 flex justify-between items-center text-on-surface-variant/60 border-t border-outline-variant/30 text-[10px] uppercase tracking-widest mt-auto">
+<div>OmniStock Admin © 2024 • Obsidian Precision Build 12.0.4</div>
+<div class="flex gap-4">
+<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Server Status: Nominal</span>
+<span>Uptime: 99.98%</span>
+</div>
+</footer>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', () => {
+                // Micro-feedback on row click
+                row.classList.add('bg-primary/10');
+                setTimeout(() => {
+                    row.classList.remove('bg-primary/10');
+                }, 150);
+            });
+        });
+
+        // Search highlight logic (mock)
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(val) ? '' : 'none';
+            });
+        });
+    </script>
+</body></html>

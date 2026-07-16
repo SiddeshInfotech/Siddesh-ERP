@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#a078ff",
+                    "surface-variant": "#353437",
+                    "on-primary": "#3c0091",
+                    "on-primary-fixed-variant": "#5516be",
+                    "surface-tint": "#d0bcff",
+                    "primary-fixed": "#e9ddff",
+                    "tertiary-container": "#ca801e",
+                    "surface-container-high": "#2a2a2c",
+                    "inverse-primary": "#6d3bd7",
+                    "outline-variant": "#494454",
+                    "secondary-fixed": "#d8e2ff",
+                    "on-tertiary-fixed-variant": "#673d00",
+                    "surface-container-highest": "#353437",
+                    "on-primary-fixed": "#23005c",
+                    "on-tertiary-container": "#3f2300",
+                    "surface-container-low": "#1c1b1d",
+                    "tertiary-fixed-dim": "#ffb869",
+                    "on-secondary-fixed": "#001a42",
+                    "on-error-container": "#ffdad6",
+                    "inverse-surface": "#e5e1e4",
+                    "primary-fixed-dim": "#d0bcff",
+                    "secondary": "#adc6ff",
+                    "on-tertiary-fixed": "#2c1700",
+                    "on-secondary-container": "#e6ecff",
+                    "outline": "#958ea0",
+                    "tertiary": "#ffb869",
+                    "on-primary-container": "#340080",
+                    "surface-bright": "#39393b",
+                    "surface": "#131315",
+                    "inverse-on-surface": "#313032",
+                    "background": "#131315",
+                    "on-tertiary": "#482900",
+                    "on-surface": "#e5e1e4",
+                    "on-surface-variant": "#cbc3d7",
+                    "surface-container": "#201f22",
+                    "on-secondary": "#002e6a",
+                    "primary": "#d0bcff",
+                    "tertiary-fixed": "#ffdcbb",
+                    "on-secondary-fixed-variant": "#004395",
+                    "secondary-container": "#0566d9",
+                    "on-error": "#690005",
+                    "surface-container-lowest": "#0e0e10",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "error": "#ffb4ab",
+                    "error-container": "#93000a",
+                    "on-background": "#e5e1e4",
+                    "surface-dim": "#131315"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base_grid": "8px",
+                    "container_padding": "24px",
+                    "table_row_height": "40px",
+                    "sidebar_width": "208px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "h1": ["Roboto Flex"],
+                    "mono-id": ["JetBrains Mono"],
+                    "table-cell": ["Roboto Flex"],
+                    "h2": ["Roboto Flex"],
+                    "label-caps": ["Roboto Flex"],
+                    "body-sm": ["Roboto Flex"],
+                    "body-md": ["Roboto Flex"]
+            },
+            "fontSize": {
+                    "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #09090b;
+            color: #e5e1e4;
+            font-family: 'Roboto Flex', sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(208, 188, 255, 0.2);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(208, 188, 255, 0.3);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="dark overflow-hidden">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] bg-surface dark:bg-surface border-r border-dashed border-outline-variant flex flex-col h-full py-container_padding z-50">
+<div class="px-6 mb-8">
+<h1 class="font-h2 text-h2 text-on-surface dark:text-on-surface tracking-tight">OmniStock Admin</h1>
+<p class="text-xs text-on-surface-variant/60 font-medium">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1 px-3">
+<!-- Dashboard (Active) -->
+<a class="flex items-center gap-3 px-3 py-2 text-primary dark:text-primary border-l-2 border-primary font-semibold transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+<span class="font-body-md text-body-md">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">local_shipping</span>
+<span class="font-body-md text-body-md">Shipments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">domain</span>
+<span class="font-body-md text-body-md">Warehouses</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">monitoring</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="px-3 mt-auto space-y-1">
+<button class="w-full bg-primary text-on-primary font-bold py-2 rounded-full text-sm mb-4 flex items-center justify-center gap-2 active:scale-95 duration-150">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Entry
+            </button>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+<span class="font-body-md text-body-md">Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-primary-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+<span class="font-body-md text-body-md">Log Out</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-gutter z-40">
+<div class="flex items-center w-1/3">
+<div class="relative w-full max-w-sm">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-all" placeholder="Search inventory, shipments..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-95">
+<span class="material-symbols-outlined">apps</span>
+</button>
+</div>
+<div class="h-8 w-px bg-outline-variant mx-1"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right">
+<p class="text-xs font-semibold text-on-surface">Alex Rivera</p>
+<p class="text-[10px] text-on-surface-variant">Admin</p>
+</div>
+<img class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A professional headshot of a young male system operator with short hair and a focused expression, wearing a minimalist black turtleneck, set against a dark architectural background with soft blue lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvXGuz9gES_v2-MrJa8EIozI1X1pT-tDnTuKd0sGRTxQZnu7TEnVvGOregYaryrExrQ8iOoaT_PNkWSVlkTjcf5ohttquopmuVr06kkuwObxo8_xChG2uLxxGlNky-WHCli7LgJ5Pz8Yd45d9Fg8eHe08HGuXt5pG8FpbaUczrzSvkE9b4PxJXmZQMKTRwDra0CRggHRyqPe9L3b-G_lWFA5zyDqDglbCU3Yv-Y9ooROMLLZ_vIMSwl31hrXEBzn4ftQH4IOKhMmA"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[208px] mt-[56px] p-gutter h-[calc(100vh-56px)] overflow-y-auto custom-scrollbar">
+<!-- Dashboard Header -->
+<div class="mb-gutter flex items-center justify-between">
+<h2 class="text-[28px] font-semibold text-on-surface">Dashboard</h2>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-3 py-1.5 border border-outline-variant rounded-lg text-sm hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                    Today: Oct 24, 2023
+                </button>
+<button class="flex items-center gap-2 px-3 py-1.5 bg-primary text-on-primary rounded-lg text-sm font-semibold active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[16px]">file_download</span>
+                    Export Report
+                </button>
+</div>
+</div>
+<!-- Metric Cards -->
+<div class="grid grid-cols-5 gap-4 mb-gutter">
+<div class="glass-card p-4 rounded-xl flex flex-col justify-between h-32 transition-all">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant text-label-caps font-label-caps">Current Stock</span>
+<span class="material-symbols-outlined text-primary text-[20px]">inventory</span>
+</div>
+<div>
+<p class="text-2xl font-bold text-on-surface">2,847</p>
+<p class="text-[10px] text-on-surface-variant mt-1">Total units across 4 sites</p>
+</div>
+</div>
+<div class="glass-card p-4 rounded-xl flex flex-col justify-between h-32 transition-all">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant text-label-caps font-label-caps">Today's Inward</span>
+<span class="material-symbols-outlined text-emerald-400 text-[20px]">arrow_downward</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<p class="text-2xl font-bold text-on-surface">+124</p>
+<span class="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full text-[10px] font-bold">+12%</span>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-1">Received from 3 suppliers</p>
+</div>
+</div>
+<div class="glass-card p-4 rounded-xl flex flex-col justify-between h-32 transition-all">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant text-label-caps font-label-caps">Today's Outward</span>
+<span class="material-symbols-outlined text-indigo-400 text-[20px]">arrow_upward</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<p class="text-2xl font-bold text-on-surface">-86</p>
+<span class="bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded-full text-[10px] font-bold">-4%</span>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-1">Dispatched orders</p>
+</div>
+</div>
+<div class="glass-card p-4 rounded-xl flex flex-col justify-between h-32 transition-all">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant text-label-caps font-label-caps">Low Stock</span>
+<span class="material-symbols-outlined text-amber-400 text-[20px]">warning</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<p class="text-2xl font-bold text-on-surface">7</p>
+<span class="bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full text-[10px] font-bold">Action Needed</span>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-1">Below critical threshold</p>
+</div>
+</div>
+<div class="glass-card p-4 rounded-xl flex flex-col justify-between h-32 transition-all">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant text-label-caps font-label-caps">In Transit</span>
+<span class="material-symbols-outlined text-indigo-400 text-[20px]">local_shipping</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<p class="text-2xl font-bold text-on-surface">3</p>
+<span class="bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded-full text-[10px] font-bold">Inbound</span>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-1">ETA within 48 hours</p>
+</div>
+</div>
+</div>
+<!-- Two Column Split -->
+<div class="grid grid-cols-10 gap-gutter">
+<!-- Recent Activity (60%) -->
+<section class="col-span-6 glass-card rounded-xl overflow-hidden flex flex-col h-[520px]">
+<div class="px-container_padding py-4 border-b border-outline-variant flex items-center justify-between">
+<h3 class="font-h2 text-h2 text-on-surface">Recent Activity</h3>
+<button class="text-primary text-xs font-semibold hover:underline">View All</button>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/5 sticky top-0 z-10">
+<th class="px-container_padding py-3 font-label-caps text-label-caps text-on-surface-variant">Type</th>
+<th class="px-4 py-3 font-label-caps text-label-caps text-on-surface-variant">Product Name</th>
+<th class="px-4 py-3 font-label-caps text-label-caps text-on-surface-variant text-right">Qty</th>
+<th class="px-4 py-3 font-label-caps text-label-caps text-on-surface-variant">Party / Location</th>
+<th class="px-container_padding py-3 font-label-caps text-label-caps text-on-surface-variant text-right">Time</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Rows -->
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-body-sm font-body-sm">Inward</span>
+</div>
+</td>
+<td class="px-4 py-2 font-mono-id text-mono-id">SKU-90284 Titanium Rods</td>
+<td class="px-4 py-2 text-right text-body-sm font-medium">+45</td>
+<td class="px-4 py-2 text-body-sm text-on-surface-variant">Stark Industries</td>
+<td class="px-container_padding py-2 text-right text-body-sm text-on-surface-variant/60">09:12 AM</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+<span class="text-body-sm font-body-sm">Outward</span>
+</div>
+</td>
+<td class="px-4 py-2 font-mono-id text-mono-id">SKU-22019 Optical Sensors</td>
+<td class="px-4 py-2 text-right text-body-sm font-medium">-12</td>
+<td class="px-4 py-2 text-body-sm text-on-surface-variant">WH-North Bay</td>
+<td class="px-container_padding py-2 text-right text-body-sm text-on-surface-variant/60">10:45 AM</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-body-sm font-body-sm">Inward</span>
+</div>
+</td>
+<td class="px-4 py-2 font-mono-id text-mono-id">SKU-11204 Cooling Plate</td>
+<td class="px-4 py-2 text-right text-body-sm font-medium">+79</td>
+<td class="px-4 py-2 text-body-sm text-on-surface-variant">Frost Logistics</td>
+<td class="px-container_padding py-2 text-right text-body-sm text-on-surface-variant/60">11:30 AM</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+<span class="text-body-sm font-body-sm">Transfer</span>
+</div>
+</td>
+<td class="px-4 py-2 font-mono-id text-mono-id">SKU-44093 Copper Coils</td>
+<td class="px-4 py-2 text-right text-body-sm font-medium">150</td>
+<td class="px-4 py-2 text-body-sm text-on-surface-variant">Site A → Site B</td>
+<td class="px-container_padding py-2 text-right text-body-sm text-on-surface-variant/60">12:15 PM</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+<span class="text-body-sm font-body-sm">Outward</span>
+</div>
+</td>
+<td class="px-4 py-2 font-mono-id text-mono-id">SKU-22019 Optical Sensors</td>
+<td class="px-4 py-2 text-right text-body-sm font-medium">-40</td>
+<td class="px-4 py-2 text-body-sm text-on-surface-variant">Global Tech Corp</td>
+<td class="px-container_padding py-2 text-right text-body-sm text-on-surface-variant/60">01:50 PM</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-body-sm font-body-sm">Inward</span>
+</div>
+</td>
+<td class="px-4 py-2 font-mono-id text-mono-id">SKU-88731 Resin Packs</td>
+<td class="px-4 py-2 text-right text-body-sm font-medium">+200</td>
+<td class="px-4 py-2 text-body-sm text-on-surface-variant">ChemEx Ltd</td>
+<td class="px-container_padding py-2 text-right text-body-sm text-on-surface-variant/60">02:20 PM</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+<span class="text-body-sm font-body-sm">Outward</span>
+</div>
+</td>
+<td class="px-4 py-2 font-mono-id text-mono-id">SKU-33211 Micro Chips</td>
+<td class="px-4 py-2 text-right text-body-sm font-medium">-34</td>
+<td class="px-4 py-2 text-body-sm text-on-surface-variant">Service Center B</td>
+<td class="px-container_padding py-2 text-right text-body-sm text-on-surface-variant/60">03:05 PM</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-body-sm font-body-sm">Inward</span>
+</div>
+</td>
+<td class="px-4 py-2 font-mono-id text-mono-id">SKU-00912 Carbon Fiber</td>
+<td class="px-4 py-2 text-right text-body-sm font-medium">+5</td>
+<td class="px-4 py-2 text-body-sm text-on-surface-variant">Aero Composite</td>
+<td class="px-container_padding py-2 text-right text-body-sm text-on-surface-variant/60">04:40 PM</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Low Stock Alert (40%) -->
+<section class="col-span-4 glass-card rounded-xl overflow-hidden flex flex-col h-[520px]">
+<div class="px-container_padding py-4 border-b border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-amber-400 text-[20px]">report_problem</span>
+<h3 class="font-h2 text-h2 text-on-surface">Low Stock Alert</h3>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white/5 sticky top-0 z-10">
+<th class="px-container_padding py-3 font-label-caps text-label-caps text-on-surface-variant">Product</th>
+<th class="px-4 py-3 font-label-caps text-label-caps text-on-surface-variant text-right">Qty</th>
+<th class="px-4 py-3 font-label-caps text-label-caps text-on-surface-variant text-right">Min</th>
+<th class="px-container_padding py-3 font-label-caps text-label-caps text-on-surface-variant text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Alert Rows -->
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2 text-body-sm">3D Printer Filament</td>
+<td class="px-4 py-2 text-right text-body-sm font-bold text-amber-400">12</td>
+<td class="px-4 py-2 text-right text-body-sm text-on-surface-variant">50</td>
+<td class="px-container_padding py-2 text-right">
+<button class="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[10px] font-bold hover:bg-amber-500/30 transition-all uppercase tracking-wider">Reorder</button>
+</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2 text-body-sm">Pneumatic Valves</td>
+<td class="px-4 py-2 text-right text-body-sm font-bold text-amber-400">4</td>
+<td class="px-4 py-2 text-right text-body-sm text-on-surface-variant">25</td>
+<td class="px-container_padding py-2 text-right">
+<button class="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[10px] font-bold hover:bg-amber-500/30 transition-all uppercase tracking-wider">Reorder</button>
+</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2 text-body-sm">Silicon Sealant</td>
+<td class="px-4 py-2 text-right text-body-sm font-bold text-amber-400">8</td>
+<td class="px-4 py-2 text-right text-body-sm text-on-surface-variant">30</td>
+<td class="px-container_padding py-2 text-right">
+<button class="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[10px] font-bold hover:bg-amber-500/30 transition-all uppercase tracking-wider">Reorder</button>
+</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2 text-body-sm">Heatsink Grade A</td>
+<td class="px-4 py-2 text-right text-body-sm font-bold text-amber-400">22</td>
+<td class="px-4 py-2 text-right text-body-sm text-on-surface-variant">100</td>
+<td class="px-container_padding py-2 text-right">
+<button class="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[10px] font-bold hover:bg-amber-500/30 transition-all uppercase tracking-wider">Reorder</button>
+</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2 text-body-sm">Metric Bolt M8</td>
+<td class="px-4 py-2 text-right text-body-sm font-bold text-amber-400">156</td>
+<td class="px-4 py-2 text-right text-body-sm text-on-surface-variant">500</td>
+<td class="px-container_padding py-2 text-right">
+<button class="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[10px] font-bold hover:bg-amber-500/30 transition-all uppercase tracking-wider">Reorder</button>
+</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2 text-body-sm">Lubricant Oil X-2</td>
+<td class="px-4 py-2 text-right text-body-sm font-bold text-amber-400">3</td>
+<td class="px-4 py-2 text-right text-body-sm text-on-surface-variant">15</td>
+<td class="px-container_padding py-2 text-right">
+<button class="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[10px] font-bold hover:bg-amber-500/30 transition-all uppercase tracking-wider">Reorder</button>
+</td>
+</tr>
+<tr class="h-table_row_height hover:bg-white/[0.05] transition-colors">
+<td class="px-container_padding py-2 text-body-sm">Nylon Zip Ties</td>
+<td class="px-4 py-2 text-right text-body-sm font-bold text-amber-400">45</td>
+<td class="px-4 py-2 text-right text-body-sm text-on-surface-variant">200</td>
+<td class="px-container_padding py-2 text-right">
+<button class="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[10px] font-bold hover:bg-amber-500/30 transition-all uppercase tracking-wider">Reorder</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Secondary Row: Warehouse Map / Quick Stats -->
+<div class="mt-gutter grid grid-cols-10 gap-gutter pb-gutter">
+<div class="col-span-10 glass-card rounded-xl p-gutter flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div>
+<p class="text-label-caps text-on-surface-variant opacity-60 mb-1 uppercase">Main Warehouse</p>
+<p class="text-h2 font-semibold">Berlin Central</p>
+</div>
+<div class="h-10 w-px bg-outline-variant"></div>
+<div>
+<p class="text-label-caps text-on-surface-variant opacity-60 mb-1 uppercase">Capacity</p>
+<div class="flex items-center gap-3">
+<div class="w-32 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="w-[78%] h-full bg-primary"></div>
+</div>
+<span class="text-body-sm font-bold">78%</span>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container-high transition-all text-sm">Monitor Sensors</button>
+<button class="px-4 py-2 rounded-lg bg-surface-container-highest text-on-surface hover:bg-surface-bright transition-all text-sm font-semibold">Site Details</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Atmosphere -->
+<div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+<div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px]"></div>
+<div class="absolute top-[40%] -right-[10%] w-[40%] h-[60%] rounded-full bg-secondary-container/5 blur-[120px]"></div>
+</div>
+<script>
+        // Micro-interaction for Metric Cards
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body></html>

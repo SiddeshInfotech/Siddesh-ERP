@@ -1,0 +1,23 @@
+{
+  "name": "siddesh-erp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Siddesh ERP — inventory management across Pune, Nashik, Mumbai",
+  "workspaces": [
+    "apps/desktop",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/desktop",
+    "build": "npm run build --workspace apps/desktop",
+    "package": "npm run package --workspace apps/desktop",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:start": "supabase start",
+    "db:types": "supabase gen types typescript --local > packages/shared/database.types.ts"
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "supabase": "^2.98.0",
+    "typescript": "^7.0.2"
+  }
+}

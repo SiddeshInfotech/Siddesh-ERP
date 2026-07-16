@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniStock Admin - Suppliers</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&amp;family=JetBrains+Mono:wght@100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#353437",
+                    "inverse-on-surface": "#313032",
+                    "secondary": "#adc6ff",
+                    "primary-container": "#a078ff",
+                    "outline-variant": "#494454",
+                    "on-tertiary-fixed-variant": "#673d00",
+                    "inverse-primary": "#6d3bd7",
+                    "error": "#ffb4ab",
+                    "on-secondary": "#002e6a",
+                    "on-secondary-container": "#e6ecff",
+                    "surface": "#131315",
+                    "surface-container-lowest": "#0e0e10",
+                    "surface-container": "#201f22",
+                    "on-background": "#e5e1e4",
+                    "secondary-fixed": "#d8e2ff",
+                    "surface-variant": "#353437",
+                    "on-tertiary": "#482900",
+                    "on-primary-fixed-variant": "#5516be",
+                    "on-tertiary-container": "#3f2300",
+                    "on-primary-fixed": "#23005c",
+                    "tertiary": "#ffb869",
+                    "surface-container-high": "#2a2a2c",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "surface-bright": "#39393b",
+                    "on-error": "#690005",
+                    "secondary-container": "#0566d9",
+                    "outline": "#958ea0",
+                    "surface-tint": "#d0bcff",
+                    "on-tertiary-fixed": "#2c1700",
+                    "on-primary-container": "#340080",
+                    "surface-container-low": "#1c1b1d",
+                    "inverse-surface": "#e5e1e4",
+                    "on-surface-variant": "#cbc3d7",
+                    "on-surface": "#e5e1e4",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed": "#e9ddff",
+                    "primary-fixed-dim": "#d0bcff",
+                    "tertiary-fixed-dim": "#ffb869",
+                    "error-container": "#93000a",
+                    "primary": "#d0bcff",
+                    "surface-dim": "#131315",
+                    "on-secondary-fixed": "#001a42",
+                    "on-primary": "#3c0091",
+                    "background": "#131315",
+                    "on-secondary-fixed-variant": "#004395",
+                    "tertiary-container": "#ca801e",
+                    "tertiary-fixed": "#ffdcbb"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container_padding": "24px",
+                    "base_grid": "8px",
+                    "table_row_height": "40px",
+                    "gutter": "16px",
+                    "sidebar_width": "208px"
+            },
+            "fontFamily": {
+                    "h2": ["Roboto Flex"],
+                    "body-md": ["Roboto Flex"],
+                    "label-caps": ["Roboto Flex"],
+                    "body-sm": ["Roboto Flex"],
+                    "table-cell": ["Roboto Flex"],
+                    "h1": ["Roboto Flex"],
+                    "mono-id": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "h2": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "table-cell": ["13px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "h1": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "mono-id": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #131315;
+            color: #e5e1e4;
+            overflow-x: hidden;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(160, 120, 255, 0.2);
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(160, 120, 255, 0.4);
+        }
+
+        .material-symbols-outlined {
+            font-size: 18px;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .row-hover:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md custom-scrollbar">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-[208px] border-r border-dashed border-outline-variant flex flex-col py-container_padding bg-surface">
+<div class="px-gutter mb-8">
+<h1 class="font-h2 text-h2 text-on-surface">OmniStock Admin</h1>
+<p class="text-[10px] uppercase tracking-widest text-outline">Global Logistics</p>
+</div>
+<nav class="flex-1 space-y-1">
+<div class="px-4 py-2 flex items-center gap-3 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-primary border-l-2 border-primary font-semibold transition-colors cursor-pointer group">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-body-md">Inventory</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="font-body-md">Shipments</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined">domain</span>
+<span class="font-body-md">Warehouses</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-body-md">Analytics</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md">Settings</span>
+</div>
+</nav>
+<div class="mt-auto px-4 space-y-1">
+<div class="px-4 py-2 flex items-center gap-3 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer">
+<span class="material-symbols-outlined">help</span>
+<span class="font-body-md">Help Center</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-on-surface-variant hover:text-primary-container transition-colors cursor-pointer">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md">Log Out</span>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-208px)] h-[56px] bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-gutter z-50">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-xs">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-10 pr-4 py-1.5 text-body-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Search suppliers..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high p-1.5 rounded-full transition-all">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high p-1.5 rounded-full transition-all">history</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high p-1.5 rounded-full transition-all">apps</span>
+</div>
+<div class="h-8 w-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Professional portrait of a middle-aged male system operator in a dark sleek environment with glowing violet accents in the background. The lighting is low-key and dramatic, reflecting a high-tech logistics control center atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCa2-txDG8Sl1hOMtwZh0K4y8IGQMbSrDKNQka8AB_jdZuAWhMj_horv6VzZZOQk8AdPBSOXT3MQV2k16qCUZsaV6JmKSfoUYuqFM8U54ohijkbGoQeD9lj-_qQQDzBExqFTK8U6elMS5Et5d3s7TG7bPOdEp04qiKv1odEQz4W9TP8QUYz5wezyImCue3gpeMOJzwyZPhG9TTwJM5WVYv_Mu7--w7TKvqz-SNujnxCWjmhwIjE8hznxcHXKORTPC8yBkfUP2meork"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[208px] pt-[56px] min-h-screen p-gutter flex flex-col gap-6">
+<!-- Header Actions Area -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-h1 text-h1 text-on-surface mb-1">Suppliers</h2>
+<nav class="flex text-body-sm text-outline-variant gap-2 items-center">
+<span>Inventory</span>
+<span class="material-symbols-outlined !text-[14px]">chevron_right</span>
+<span class="text-on-surface-variant">Supplier Network</span>
+</nav>
+</div>
+<button class="bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-semibold flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined">person_add</span>
+                New Supplier
+            </button>
+</div>
+<!-- Bento Stats Grid -->
+<div class="grid grid-cols-4 gap-gutter">
+<div class="glass-panel p-4 rounded-xl">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-caps text-outline">Total Active</span>
+<span class="material-symbols-outlined text-primary">groups</span>
+</div>
+<div class="text-h1">1,284</div>
+<div class="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined !text-[12px]">trending_up</span> +12% from last month
+                </div>
+</div>
+<div class="glass-panel p-4 rounded-xl">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-caps text-outline">Global Regions</span>
+<span class="material-symbols-outlined text-primary">public</span>
+</div>
+<div class="text-h1">42</div>
+<div class="text-[10px] text-outline-variant mt-1">Spanning 12 countries</div>
+</div>
+<div class="glass-panel p-4 rounded-xl">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-caps text-outline">Inbound Quality</span>
+<span class="material-symbols-outlined text-primary">verified_user</span>
+</div>
+<div class="text-h1">99.4%</div>
+<div class="text-[10px] text-emerald-400 mt-1">Excellent performance</div>
+</div>
+<div class="glass-panel p-4 rounded-xl">
+<div class="flex justify-between items-start mb-2">
+<span class="text-label-caps text-outline">Average Lead Time</span>
+<span class="material-symbols-outlined text-primary">schedule</span>
+</div>
+<div class="text-h1">4.2d</div>
+<div class="text-[10px] text-tertiary mt-1">-0.3d optimization</div>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="glass-panel rounded-xl flex-1 flex flex-col overflow-hidden">
+<!-- Table Header Filter Row -->
+<div class="px-4 py-3 border-b border-outline-variant flex items-center justify-between bg-surface-container/30">
+<div class="flex gap-4">
+<div class="flex items-center gap-2 px-3 py-1 rounded bg-surface-container-high border border-outline-variant text-body-sm cursor-pointer hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined !text-[16px]">filter_list</span>
+                        Filter
+                    </div>
+<div class="flex items-center gap-2 px-3 py-1 rounded bg-surface-container-high border border-outline-variant text-body-sm cursor-pointer hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined !text-[16px]">sort</span>
+                        Sort by Last Supplied
+                    </div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-body-sm text-outline-variant">Showing 50 of 1,284</span>
+<div class="flex gap-1 ml-2">
+<button class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- The Table -->
+<div class="overflow-x-auto custom-scrollbar flex-1">
+<table class="w-full text-left border-collapse min-w-[1000px]">
+<thead class="bg-white/5 sticky top-0 z-10">
+<tr class="h-10">
+<th class="px-6 font-label-caps text-label-caps text-outline border-b border-outline-variant">Supplier Name</th>
+<th class="px-6 font-label-caps text-label-caps text-outline border-b border-outline-variant">Mobile</th>
+<th class="px-6 font-label-caps text-label-caps text-outline border-b border-outline-variant">GST No.</th>
+<th class="px-6 font-label-caps text-label-caps text-outline border-b border-outline-variant">City</th>
+<th class="px-6 font-label-caps text-label-caps text-outline border-b border-outline-variant text-right">Total Inwards</th>
+<th class="px-6 font-label-caps text-label-caps text-outline border-b border-outline-variant">Last Supplied</th>
+<th class="px-6 font-label-caps text-label-caps text-outline border-b border-outline-variant">Status</th>
+<th class="px-6 border-b border-outline-variant"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Row 1 -->
+<tr class="h-table_row_height row-hover transition-colors group">
+<td class="px-6">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">NX</div>
+<span class="font-table-cell text-table-cell font-medium">NexGen Electronics Ltd.</span>
+</div>
+</td>
+<td class="px-6 text-table-cell text-on-surface-variant">+91 98200 12345</td>
+<td class="px-6"><span class="font-mono-id text-mono-id text-secondary">27AAACN1234F1Z5</span></td>
+<td class="px-6 text-table-cell text-on-surface-variant">Mumbai</td>
+<td class="px-6 text-table-cell text-right font-medium">1,402</td>
+<td class="px-6 text-table-cell text-on-surface-variant">2 hours ago</td>
+<td class="px-6">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold status-active">ACTIVE</span>
+</td>
+<td class="px-6 text-right">
+<button class="opacity-0 group-hover:opacity-100 material-symbols-outlined text-outline-variant hover:text-primary transition-all p-1">more_vert</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="h-table_row_height row-hover transition-colors group">
+<td class="px-6">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-md bg-tertiary/10 border border-tertiary/20 flex items-center justify-center text-[10px] font-bold text-tertiary">SP</div>
+<span class="font-table-cell text-table-cell font-medium">Saphire Polymers</span>
+</div>
+</td>
+<td class="px-6 text-table-cell text-on-surface-variant">+91 91672 88392</td>
+<td class="px-6"><span class="font-mono-id text-mono-id text-secondary">07BBBCN8822G2Z0</span></td>
+<td class="px-6 text-table-cell text-on-surface-variant">Delhi</td>
+<td class="px-6 text-table-cell text-right font-medium">845</td>
+<td class="px-6 text-table-cell text-on-surface-variant">Yesterday</td>
+<td class="px-6">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold status-active">ACTIVE</span>
+</td>
+<td class="px-6 text-right">
+<button class="opacity-0 group-hover:opacity-100 material-symbols-outlined text-outline-variant hover:text-primary transition-all p-1">more_vert</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="h-table_row_height row-hover transition-colors group">
+<td class="px-6">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-md bg-secondary/10 border border-secondary/20 flex items-center justify-center text-[10px] font-bold text-secondary">VM</div>
+<span class="font-table-cell text-table-cell font-medium">Vertex Motors Corp</span>
+</div>
+</td>
+<td class="px-6 text-table-cell text-on-surface-variant">+91 88791 44556</td>
+<td class="px-6"><span class="font-mono-id text-mono-id text-secondary">24CCCCN5566H3Z1</span></td>
+<td class="px-6 text-table-cell text-on-surface-variant">Bangalore</td>
+<td class="px-6 text-table-cell text-right font-medium">3,210</td>
+<td class="px-6 text-table-cell text-on-surface-variant">3 days ago</td>
+<td class="px-6">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold status-active">ACTIVE</span>
+</td>
+<td class="px-6 text-right">
+<button class="opacity-0 group-hover:opacity-100 material-symbols-outlined text-outline-variant hover:text-primary transition-all p-1">more_vert</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="h-table_row_height row-hover transition-colors group">
+<td class="px-6">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-md bg-error/10 border border-error/20 flex items-center justify-center text-[10px] font-bold text-error">HL</div>
+<span class="font-table-cell text-table-cell font-medium">Horizon Logistics</span>
+</div>
+</td>
+<td class="px-6 text-table-cell text-on-surface-variant">+91 77382 99012</td>
+<td class="px-6"><span class="font-mono-id text-mono-id text-secondary">19DDDDN0011I4Z2</span></td>
+<td class="px-6 text-table-cell text-on-surface-variant">Chennai</td>
+<td class="px-6 text-table-cell text-right font-medium">62</td>
+<td class="px-6 text-table-cell text-on-surface-variant">Last Week</td>
+<td class="px-6">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold status-active">ACTIVE</span>
+</td>
+<td class="px-6 text-right">
+<button class="opacity-0 group-hover:opacity-100 material-symbols-outlined text-outline-variant hover:text-primary transition-all p-1">more_vert</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="h-table_row_height row-hover transition-colors group">
+<td class="px-6">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-md bg-primary-container/10 border border-primary-container/20 flex items-center justify-center text-[10px] font-bold text-primary-container">OS</div>
+<span class="font-table-cell text-table-cell font-medium">Oceanic Supply Co.</span>
+</div>
+</td>
+<td class="px-6 text-table-cell text-on-surface-variant">+91 99301 55667</td>
+<td class="px-6"><span class="font-mono-id text-mono-id text-secondary">33EEEEN2233J5Z3</span></td>
+<td class="px-6 text-table-cell text-on-surface-variant">Kolkata</td>
+<td class="px-6 text-table-cell text-right font-medium">15,840</td>
+<td class="px-6 text-table-cell text-on-surface-variant">2 weeks ago</td>
+<td class="px-6">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold status-active">ACTIVE</span>
+</td>
+<td class="px-6 text-right">
+<button class="opacity-0 group-hover:opacity-100 material-symbols-outlined text-outline-variant hover:text-primary transition-all p-1">more_vert</button>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="h-table_row_height row-hover transition-colors group">
+<td class="px-6">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-md bg-outline/10 border border-outline/20 flex items-center justify-center text-[10px] font-bold text-outline">TK</div>
+<span class="font-table-cell text-table-cell font-medium">Tekno-Krafts Inc.</span>
+</div>
+</td>
+<td class="px-6 text-table-cell text-on-surface-variant">+91 98690 44332</td>
+<td class="px-6"><span class="font-mono-id text-mono-id text-secondary">18FFFFN4455K6Z4</span></td>
+<td class="px-6 text-table-cell text-on-surface-variant">Pune</td>
+<td class="px-6 text-table-cell text-right font-medium">492</td>
+<td class="px-6 text-table-cell text-on-surface-variant">Today</td>
+<td class="px-6">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold status-active">ACTIVE</span>
+</td>
+<td class="px-6 text-right">
+<button class="opacity-0 group-hover:opacity-100 material-symbols-outlined text-outline-variant hover:text-primary transition-all p-1">more_vert</button>
+</td>
+</tr>
+<!-- Row 7 -->
+<tr class="h-table_row_height row-hover transition-colors group">
+<td class="px-6">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-md bg-secondary-fixed/10 border border-secondary-fixed/20 flex items-center justify-center text-[10px] font-bold text-secondary-fixed">AP</div>
+<span class="font-table-cell text-table-cell font-medium">Alpha Packaging</span>
+</div>
+</td>
+<td class="px-6 text-table-cell text-on-surface-variant">+91 91223 33445</td>
+<td class="px-6"><span class="font-mono-id text-mono-id text-secondary">27GGGGN6677L7Z5</span></td>
+<td class="px-6 text-table-cell text-on-surface-variant">Surat</td>
+<td class="px-6 text-table-cell text-right font-medium">1,120</td>
+<td class="px-6 text-table-cell text-on-surface-variant">5 days ago</td>
+<td class="px-6">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold status-active">ACTIVE</span>
+</td>
+<td class="px-6 text-right">
+<button class="opacity-0 group-hover:opacity-100 material-symbols-outlined text-outline-variant hover:text-primary transition-all p-1">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Utility Footer Context -->
+<div class="flex justify-between items-center text-body-sm text-outline-variant pb-4">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> System Synchronized</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined !text-[14px]">bolt</span> Data API Latency: 24ms</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined !text-[16px]">download</span>
+                Export CSV
+            </div>
+</div>
+</main>
+<script>
+        // Micro-interactions for table rows
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', function() {
+                if(this.closest('thead')) return;
+                // Highlight row interaction
+                this.classList.toggle('bg-primary/5');
+            });
+        });
+
+        // Search bar focus effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-[1.02]');
+            searchInput.parentElement.style.transition = 'transform 0.2s ease-out';
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-[1.02]');
+        });
+    </script>
+</body></html>

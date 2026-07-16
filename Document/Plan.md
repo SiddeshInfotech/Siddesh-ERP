@@ -23,3 +23,4 @@ language plpgsql
 security definer   -- runs with elevated rights, not the caller's
 as $$ ... $$;
 
+The free tier pauses after ~7 days of inactivity and has no backups. Your Plan.md already says move to Pro before real inventory is entered. That's the real deadline, and it's a data-loss concern, not a performance one.
