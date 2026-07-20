@@ -9,8 +9,14 @@ import { AuthProvider } from '@/hooks/useAuth'
 import { SidebarProvider } from '@/hooks/useSidebar'
 import { ThemeProvider } from '@/hooks/useTheme'
 import { Dashboard } from '@/routes/Dashboard'
+import { Inward } from '@/routes/Inward'
 import { Login } from '@/routes/Login'
-import { Placeholder } from '@/routes/Placeholder'
+import { Outward } from '@/routes/Outward'
+import { ProductDetail } from '@/routes/ProductDetail'
+import { ProductEditor } from '@/routes/ProductEditor'
+import { Products } from '@/routes/Products'
+import { Reports } from '@/routes/Reports'
+import { Stock } from '@/routes/Stock'
 import './styles.css'
 
 /**
@@ -28,11 +34,15 @@ const router = createHashRouter([
     ),
     children: [
       { index: true, element: <Dashboard /> },
-      { path: 'products', element: <Placeholder arrives="on Day 2" title="Products" /> },
-      { path: 'inward', element: <Placeholder arrives="on Day 3" title="Inward" /> },
-      { path: 'outward', element: <Placeholder arrives="on Day 3" title="Outward" /> },
-      { path: 'stock', element: <Placeholder arrives="on Day 4" title="Stock" /> },
-      { path: 'reports', element: <Placeholder arrives="on Day 4" title="Reports" /> }
+      // Static segments before the :id route, or "new" resolves as a product id.
+      { path: 'products', element: <Products /> },
+      { path: 'products/new', element: <ProductEditor /> },
+      { path: 'products/:id', element: <ProductDetail /> },
+      { path: 'products/:id/edit', element: <ProductEditor /> },
+      { path: 'inward', element: <Inward /> },
+      { path: 'outward', element: <Outward /> },
+      { path: 'stock', element: <Stock /> },
+      { path: 'reports', element: <Reports /> }
     ]
   }
 ])

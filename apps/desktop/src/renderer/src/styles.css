@@ -73,9 +73,19 @@
   --color-success: #7ee2a8;
   --color-success-container: #005229;
 
-  /* Outlines */
+  /*
+   * THE border colour. DESIGN.md calls it "the mode's border color" and uses one value for
+   * every edge: card, input, button, table row, sidebar rule. There is exactly one token so
+   * components cannot drift apart — never add a second border colour, and never reach for
+   * --color-outline here.
+   *
+   * Non-negotiable pairing: this is a BORDER colour, never a text colour. It is a low-alpha
+   * value, so text painted with it is invisible against its own background.
+   */
+  --color-border: rgb(255 255 255 / 0.12);
+
+  /* Muted foreground — icons and placeholders. A real colour, safe for text. */
   --color-outline: #958ea0;
-  --color-outline-variant: #494454;
   --color-inverse-surface: #e5e1e4;
   --color-inverse-on-surface: #313032;
 
@@ -167,8 +177,16 @@
   --color-success: #006d3b;
   --color-success-container: #9df6bd;
 
+  /*
+   * Light mode carries a noticeably firmer edge than dark, on purpose — it is not the
+   * inverse of white/12%. On a #f8fafc canvas a 12% hairline all but disappears, and the
+   * near-opaque white cards leave nothing else to separate a control from its background.
+   * Dark mode has the opposite problem: the same weight there reads as a hard outline
+   * against #09090b and fights the glass. One token, one value per mode.
+   */
+  --color-border: rgb(0 0 0 / 0.24);
+
   --color-outline: #767680;
-  --color-outline-variant: rgb(0 0 0 / 0.14);
   --color-inverse-surface: #313033;
   --color-inverse-on-surface: #f4f0f4;
 
@@ -230,25 +248,21 @@
 }
 
 /*
- * Glass surfaces are driven by these four variables so a theme switch is a variable
- * swap, not a second copy of every rule.
+ * Glass surfaces are driven by these variables so a theme switch is a variable swap, not a
+ * second copy of every rule.
  *
- * In light mode the whole model inverts: the tint goes from white-on-black to
- * near-opaque white, and the border from white/8% to black/14% — a translucent white
- * card over a #f8fafc canvas would otherwise be invisible.
+ * In light mode the tint inverts: white-on-black becomes near-opaque white, because a
+ * translucent white card over a #f8fafc canvas would otherwise be invisible. The border
+ * does NOT live here — it is --color-border, shared with every other component.
  */
 :root {
   --glass-bg: rgb(255 255 255 / 0.03);
-  --glass-border: rgb(255 255 255 / 0.08);
   --glass-shadow: 0 8px 32px 0 rgb(0 0 0 / 0.8);
-  --glass-hairline: rgb(255 255 255 / 0.05);
 }
 
 :root[data-theme='light'] {
   --glass-bg: rgb(255 255 255 / 0.85);
-  --glass-border: rgb(0 0 0 / 0.14);
   --glass-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.06);
-  --glass-hairline: rgb(0 0 0 / 0.08);
 }
 
 @utility glass {
@@ -256,26 +270,28 @@
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-border);
   box-shadow: var(--glass-shadow);
 }
 
 @utility glass-elevated {
-  /* Level 2 — modals and popovers. Higher border opacity + ambient blur. */
+  /* Level 2 — modals and popovers. Separated from Level 1 by a deeper blur, not by a
+     different border: DESIGN.md asks for a heavier edge here, but one border colour across
+     the app is the stronger rule. Blur and shadow carry the elevation instead. */
   background: var(--glass-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-border);
   box-shadow: var(--glass-shadow);
 }
 
-/* Hairline dividers inside glass — white in dark, black in light. */
+/* Dividers inside glass. Same edge as everything else — see --color-border. */
 @utility hairline-b {
-  border-bottom: 1px solid var(--glass-hairline);
+  border-bottom: 1px solid var(--color-border);
 }
 
 @utility hairline-t {
-  border-top: 1px solid var(--glass-hairline);
+  border-top: 1px solid var(--color-border);
 }
 
 /*
@@ -303,6 +319,23 @@
   left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
+}
+
+/* Dropdown entry. DESIGN.md: 150–250ms, ease-out, purposeful — it explains where the list
+   came from. The 4px rise is deliberately small; a bigger one reads as a bounce. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility pop-in {
+  animation: pop-in 150ms cubic-bezier(0, 0, 0.2, 1);
 }
 
 @keyframes shake {

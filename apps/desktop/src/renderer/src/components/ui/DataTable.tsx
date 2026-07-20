@@ -81,7 +81,7 @@ export function DataTable<Row>({
   if (rows.length === 0) {
     return (
       <div className="flex min-h-64 flex-col items-center justify-center gap-3 p-5">
-        <Inbox aria-hidden="true" className="size-8 text-outline-variant" strokeWidth={1.5} />
+        <Inbox aria-hidden="true" className="size-8 text-outline" strokeWidth={1.5} />
         <p className="text-body-sm text-on-surface-variant/70">{emptyMessage}</p>
       </div>
     )

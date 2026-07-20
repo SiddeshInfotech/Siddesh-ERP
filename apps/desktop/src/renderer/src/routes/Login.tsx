@@ -93,7 +93,7 @@ export function Login() {
             adornment={
               <button
                 aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
-                className="text-outline-variant transition-colors hover:text-on-surface-variant"
+                className="text-outline transition-colors hover:text-on-surface-variant"
                 onClick={() => setIsPasswordVisible((visible) => !visible)}
                 type="button"
               >
@@ -128,7 +128,7 @@ export function Login() {
         </form>
       </div>
 
-      <footer className="mt-12 text-center text-body-sm text-outline-variant">
+      <footer className="mt-12 text-center text-body-sm text-outline">
         <p>© 2026 Siddesh Technologies Pvt. Ltd.</p>
       </footer>
     </main>

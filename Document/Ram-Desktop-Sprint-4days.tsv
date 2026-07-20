@@ -19,6 +19,8 @@ Day 1	16/07/2026	DSK-117	Ram	UI Basics	Standard success message	Build one reusab
 Day 1	16/07/2026	DSK-118	Ram	UI Basics	Set app colours and fonts	Decide the standard colours, fonts and button styles so every screen looks the same.	P1	0.75	To Do
 Day 1	16/07/2026	DSK-119	Ram	UI Basics	Reusable table style	Build one table design used everywhere (products, reports, stock), so they all match.	P1	1	To Do
 Day 1	16/07/2026	DSK-120	Ram	UI Basics	Reusable form boxes	Build standard text boxes, dropdowns and a date picker used in every form.	P1	1	To Do
+
+
 Day 2	17/07/2026	DSK-201	Ram	Products	Product list page	Build a page that shows all products in a table: name, category, barcode and current stock.	P0	1	To Do
 Day 2	17/07/2026	DSK-202	Ram	Products	Load products from database	Fetch the real product list from the database and fill the table with it.	P0	0.75	To Do
 Day 2	17/07/2026	DSK-203	Ram	Products	Add Product button	A button that opens a blank New Product form.	P0	0.25	To Do
@@ -39,6 +41,8 @@ Day 2	17/07/2026	DSK-217	Ram	Products	Low-stock alert level	Save a "warn me belo
 Day 2	17/07/2026	DSK-218	Ram	Products	Deactivate old products	Hide products that are no longer used without deleting their history.	P1	0.5	To Do
 Day 2	17/07/2026	DSK-219	Ram	Products	Product detail view	A read-only page showing everything about one product plus its current stock.	P1	1	To Do
 Day 2	17/07/2026	DSK-220	Ram	Products	Sort and filter the list	Let the user sort by name or stock and filter the list by category.	P1	0.75	To Do
+
+
 Day 3	18/07/2026	DSK-301	Ram	Inward	Build the Inward page	Build the "receive stock into the store" screen.	P0	1	To Do
 Day 3	18/07/2026	DSK-302	Ram	Inward	Pick the product	Scan a barcode or search to choose which product is being received.	P0	0.75	To Do
 Day 3	18/07/2026	DSK-303	Ram	Inward	Auto-fill on scan	When a barcode is scanned, automatically show the product name and its current stock.	P0	0.75	To Do

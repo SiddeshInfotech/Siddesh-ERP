@@ -55,6 +55,17 @@ export function parseAvailableQty(error: UnknownError): number | null {
   return Number.isNaN(qty) ? null : qty
 }
 
+/**
+ * True when Postgres rejected a write for breaking a UNIQUE index.
+ *
+ * The one that matters here is `uq_product_barcode_code` (SRD §4, DSK-210): a barcode that
+ * resolves to two products makes every future scan ambiguous, so the index — not the UI — is
+ * what actually prevents it. This turns that rejection into a message.
+ */
+export function isUniqueViolation(error: UnknownError): boolean {
+  return asErrorShape(error).code === '23505'
+}
+
 /** True for connectivity failures, which deserve a Retry rather than an apology. */
 export function isNetworkError(error: UnknownError): boolean {
   const { message, name } = asErrorShape(error)

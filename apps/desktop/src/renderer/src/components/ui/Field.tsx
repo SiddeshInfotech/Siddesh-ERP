@@ -41,7 +41,7 @@ export function Field({
   return (
     <div className={cn('flex flex-col', containerClassName)}>
       <label
-        className="mb-1.5 ml-1 block text-label-caps uppercase text-outline-variant"
+        className="mb-1.5 ml-1 block text-label-caps uppercase text-on-surface-variant"
         htmlFor={id}
       >
         {label}
@@ -54,11 +54,11 @@ export function Field({
           aria-invalid={error !== undefined}
           className={cn(
             'h-10 w-full rounded-xl border bg-surface-container-lowest/50 px-4',
-            'text-on-surface placeholder:text-outline-variant',
+            'text-on-surface placeholder:text-outline',
             'transition-all focus:border-primary-container',
             'disabled:cursor-not-allowed disabled:opacity-50',
             mono && 'font-mono tracking-wide',
-            error ? 'border-error/50' : 'border-outline-variant',
+            error ? 'border-error/50' : 'border-border',
             adornment ? 'pr-11' : '',
             className
           )}

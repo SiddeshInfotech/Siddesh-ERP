@@ -84,7 +84,7 @@ export function Sidebar() {
     <nav
       aria-label="Main"
       className={cn(
-        'flex shrink-0 flex-col border-r border-dashed border-outline-variant/30 bg-surface',
+        'flex shrink-0 flex-col border-r border-dashed border-border bg-surface',
         'transition-[width] duration-200 ease-out',
         isCollapsed ? 'w-16' : 'w-sidebar'
       )}

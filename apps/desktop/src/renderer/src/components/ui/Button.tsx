@@ -6,7 +6,7 @@ import { Spinner } from './Spinner'
 const VARIANTS = {
   primary: 'bg-primary-container text-on-primary-container hover:bg-on-primary-fixed-variant',
   secondary:
-    'border border-outline-variant text-on-surface hover:bg-surface-variant/30 bg-transparent',
+    'border border-border text-on-surface hover:bg-surface-variant/30 bg-transparent',
   ghost: 'text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface',
   danger: 'bg-error-container text-on-error-container hover:bg-error-container/80'
 } as const

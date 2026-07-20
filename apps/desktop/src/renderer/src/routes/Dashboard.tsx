@@ -1,19 +1,81 @@
-import { CheckCircle2 } from 'lucide-react'
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  PackageX,
+  TriangleAlert,
+  Warehouse
+} from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { Alert } from '@/components/ui/Alert'
 import { Card } from '@/components/ui/Card'
-import { Spinner } from '@/components/ui/Spinner'
+import { useDashboard } from '@/hooks/useDashboard'
+import { cn } from '@/lib/cn'
 import { toUserMessage } from '@/lib/errors'
-import { useConnectionCheck } from '@/hooks/useConnectionCheck'
 
 /**
- * Dashboard.
+ * Dashboard — the home screen (SRD §12; DSK-401 → DSK-405).
  *
- * Day 1 scope is the connection state only. The stat cards, Recent Activity and Low Stock
- * Alert from the Stitch mock (dashboard_dark) need the ledger, which lands Day 3 — showing
- * them now with invented numbers would be worse than showing nothing.
+ * SRD §12 also lists "Pending Orders", explicitly marked future. There is no purchase-order
+ * table, so it is absent rather than shown as 0 — a card reading 0 asserts "none pending",
+ * which we cannot know.
  */
+
+interface StatCardProps {
+  label: string
+  value: number
+  unit?: string
+  icon: ReactNode
+  /** Amber when this number means someone has to act. Never colour for decoration. */
+  tone?: 'default' | 'warning'
+  hint?: string
+  to?: string
+  isLoading: boolean
+}
+
+function StatCard({ label, value, unit, icon, tone = 'default', hint, to, isLoading }: StatCardProps) {
+  const body = (
+    <Card
+      className={cn(
+        'flex flex-col gap-3 p-5 transition-colors',
+        to !== undefined && 'hover:bg-on-surface/[0.04]'
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-label-caps uppercase text-on-surface-variant">{label}</span>
+        {icon}
+      </div>
+
+      {isLoading ? (
+        // A skeleton the same height as the real figure — DESIGN.md: no layout shift on load.
+        <div className="h-9 w-20 animate-pulse rounded bg-on-surface/10" />
+      ) : (
+        <p
+          className={cn(
+            'text-[32px] font-semibold leading-none tabular-nums',
+            tone === 'warning' && value > 0 ? 'text-tertiary' : 'text-on-surface'
+          )}
+        >
+          {value}
+          {unit === undefined ? null : (
+            <span className="ml-1.5 text-body-md font-normal text-on-surface-variant/60">
+              {unit}
+            </span>
+          )}
+        </p>
+      )}
+
+      {hint === undefined ? null : (
+        <p className="text-body-sm text-on-surface-variant/60">{hint}</p>
+      )}
+    </Card>
+  )
+
+  return to === undefined ? body : <Link to={to}>{body}</Link>
+}
+
 export function Dashboard() {
-  const { data: officeCount, isPending, error, refetch } = useConnectionCheck()
+  const { data, isPending, error, refetch } = useDashboard()
 
   return (
     <div className="flex flex-col gap-gutter">
@@ -24,42 +86,92 @@ export function Dashboard() {
         </p>
       </div>
 
-      <Card className="p-5">
-        <h2 className="mb-3 text-h2 text-on-surface">Database connection</h2>
+      {error !== null ? (
+        <Alert
+          action={
+            <button
+              className="rounded-full px-3 py-1 text-body-sm font-semibold text-error underline-offset-2 hover:underline"
+              onClick={() => void refetch()}
+              type="button"
+            >
+              Retry
+            </button>
+          }
+          tone="error"
+        >
+          {toUserMessage(error)}
+        </Alert>
+      ) : null}
 
-        {isPending ? (
-          <div className="flex items-center gap-3">
-            <Spinner size="sm" label={null} />
-            <span className="text-body-md text-on-surface-variant">Checking…</span>
-          </div>
-        ) : error ? (
-          <Alert
-            tone="error"
-            action={
-              <button
-                className="rounded-full px-3 py-1 text-body-sm font-semibold text-error underline-offset-2 hover:underline"
-                onClick={() => void refetch()}
-                type="button"
-              >
-                Retry
-              </button>
-            }
-          >
-            {toUserMessage(error)}
-          </Alert>
-        ) : (
-          <Alert tone="success">
-            Connected — {officeCount} {officeCount === 1 ? 'office' : 'offices'} found.
-          </Alert>
-        )}
-      </Card>
+      <div className="grid grid-cols-4 gap-gutter">
+        <StatCard
+          hint={`Across ${data?.productsTracked ?? 0} products`}
+          icon={<Warehouse aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />}
+          isLoading={isPending}
+          label="Current stock"
+          to="/stock"
+          unit="units"
+          value={data?.totalOnHand ?? 0}
+        />
 
-      <Card className="p-5">
-        <div className="flex items-center gap-2 text-body-md text-on-surface-variant/70">
-          <CheckCircle2 aria-hidden="true" className="size-[18px] text-success" strokeWidth={1.5} />
-          Shell, design system and sign-in are in place. Products land next.
-        </div>
-      </Card>
+        <StatCard
+          hint="Received today"
+          icon={
+            <ArrowDownToLine aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />
+          }
+          isLoading={isPending}
+          label="Today's inward"
+          to="/reports"
+          unit="units"
+          value={data?.todayInward ?? 0}
+        />
+
+        <StatCard
+          hint="Given out today"
+          icon={
+            <ArrowUpFromLine aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />
+          }
+          isLoading={isPending}
+          label="Today's outward"
+          to="/reports"
+          unit="units"
+          value={data?.todayOutward ?? 0}
+        />
+
+        <StatCard
+          hint="At or below minimum level"
+          icon={
+            <TriangleAlert aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />
+          }
+          isLoading={isPending}
+          label="Low stock"
+          to="/stock"
+          tone="warning"
+          value={data?.lowStockCount ?? 0}
+        />
+      </div>
+
+      {/* Out of stock earns a place only when it is true. An always-present card reading 0 is
+          noise; a line that appears when something is actually wrong gets read. */}
+      {!isPending && (data?.outOfStockCount ?? 0) > 0 ? (
+        <Alert
+          action={
+            <Link
+              className="whitespace-nowrap rounded-full px-3 py-1 text-body-sm font-semibold text-tertiary underline-offset-2 hover:underline"
+              to="/stock"
+            >
+              View stock
+            </Link>
+          }
+          tone="warning"
+        >
+          <span className="flex items-center gap-2">
+            <PackageX aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.5} />
+            {data?.outOfStockCount} product{data?.outOfStockCount === 1 ? ' has' : 's have'} no
+            stock left.
+          </span>
+        </Alert>
+      ) : null}
     </div>
   )
 }

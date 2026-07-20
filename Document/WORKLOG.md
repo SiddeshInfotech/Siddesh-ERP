@@ -185,3 +185,315 @@ light body rgb(248,250,252) / card white 85% / border black 14%. Matches Stitch 
 migrations applied. Untested by click.
 **Files:** main/index.ts, preload/index.ts, hooks/useTheme.tsx, hooks/useSidebar.tsx,
 components/layout/{Sidebar,TopBar}.tsx, components/ui/{Card,DataTable}.tsx, styles.css, main.tsx
+
+## 17/07/2026 10:31 — UI-002 — One border colour for every component — Ram
+**Status:** Done — typecheck + build pass; both themes verified against the compiled CSS
+**What:** Introduced `--color-border`, the single border colour for the whole app, and pointed
+every edge at it: cards, inputs, buttons, table rows, sidebar rule, hairline dividers. Dark is
+white/12%, light is black/12%. `glass`, `glass-elevated`, `hairline-b` and `hairline-t` now
+read the same variable instead of carrying their own `--glass-border` / `--glass-hairline`.
+**Why it drifted:** `--color-outline-variant` was doing two unrelated jobs — the border colour
+AND the colour of label/placeholder/icon text. That coupling is what let borders diverge
+(cards on white/8% glass, inputs on opaque #494454), and it had a nastier edge: an uncommitted
+change had set light-mode `outline-variant` to `rgb(0 0 0 / 0.12)`, which made Field labels and
+the login footer 12%-opacity black text on a #f8fafc canvas — very nearly invisible. Both
+Stitch mocks colour labels with `text-on-surface-variant` and never `text-outline-variant`, so
+this was our deviation, not theirs.
+**Fix:** `--color-outline-variant` is deleted, not repurposed — leaving it around invites the
+same double-duty bug back. Borders use `--color-border`; muted text and icons use
+`--color-outline` (a real colour: #958ea0 dark / #767680 light); labels use
+`text-on-surface-variant`, matching the mocks.
+**Deviation, on purpose:** DESIGN.md §Level 2 asks for a heavier border (white/24%) on
+modals. One border colour app-wide is the stronger rule, so `glass-elevated` now carries its
+elevation with blur and shadow only.
+**Verified:** built CSS emits `.border-border{border-color:var(--color-border)}` with
+`--color-border:#ffffff1f` and `#0000001f` under `[data-theme=light]`; card, button and input
+all resolve to the identical value in both themes.
+**Tooling trap worth knowing:** the in-app browser reported the input border stuck at white/12%
+in light mode, reproducibly, even on a clean static page. It was not a CSS bug —
+`getAnimations()` showed 6 transitions with `playState:"running"` but `currentTime:0`. The
+pane was not compositing (screenshots timed out too), so `transition-all` froze those elements
+at their pre-flip value while untransitioned elements updated. Calling `.finish()` returned the
+correct `rgba(0,0,0,0.12)`. Any element with a transition will mis-measure in that pane.
+**Files:** styles.css, components/ui/{Field,Button,DataTable}.tsx,
+components/layout/{Sidebar,TopBar}.tsx, routes/{Login,Placeholder}.tsx
+
+## 17/07/2026 11:10 — DB-005 — Database types generated; db:types fixed — Ram
+**Status:** Done
+**What:** `packages/shared/database.types.ts` is now the real schema (1,581 lines: 21 tables,
+2 views, all RPCs, 8 enums) instead of the `Record<string, never>` placeholder. Every typed
+query in Day 2 depends on it.
+**Correction to DB-002/DB-003:** those entries say the migrations were "NOT yet applied". They
+**are** applied — products, categories, brands, uoms, product_barcodes and the RPCs all
+respond on the live project. This entry corrects the record; per §11 the old entries stand.
+**The generated types settle two of DB-002's three open conflicts:** `app_role` is
+`ADMIN | STORE_MANAGER | SALES_EXECUTIVE` (SRD §2) and barcodes are `ST` + 8 digits (SRD §4).
+Both landed as DB-003 intended.
+**`npm run db:types` was broken** and would never have worked: it ran `supabase gen types
+--local`, which needs the Docker stack that Tech-Stack.md says we deliberately do not use, and
+npm does not load .env so the CLI had no token either way. Replaced with
+`scripts/gen-db-types.mjs`: loads .env, derives the project ref from VITE_SUPABASE_URL, calls
+the CLI. Verified idempotent — two consecutive runs produce byte-identical output.
+**Security:** SUPABASE_ACCESS_TOKEN lives in .env (gitignored) with **no** VITE_ prefix, so
+Vite cannot expose it — only VITE_* reaches the renderer. Verified by grepping the whole build
+output: the token is absent, the anon key is present, as designed. Documented in .env.example.
+**Two rules the script follows:** it does not shell out (`shell:true` concatenates argv, so a
+doctored VITE_SUPABASE_URL would execute — Node 24 also refuses to spawn a .cmd without a
+shell, so it calls `node_modules/supabase/bin/supabase.exe` directly), and it validates the
+parsed ref against `^[a-z]{20}$` before it reaches a command line. It also refuses to write a
+response that lacks `export type Database`, because the CLI can exit 0 with an empty body and
+that would silently blank the schema for both clients.
+**Files:** packages/shared/database.types.ts, scripts/gen-db-types.mjs, package.json,
+.env.example
+
+## 17/07/2026 14:04 — DSK-201→220 — Day 2: product master and barcodes — Ram
+**Status:** Done — typecheck + build pass; barcode encoding verified; **CRUD not yet run**
+**What:** The Products module. List with search / category filter / status filter / sort /
+paging (DSK-201, 202, 216, 220); New and Edit forms carrying every SRD §3 field — name,
+category, brand, model, unit, description, minimum stock, HSN, GST — plus the §4 barcode
+choice and §18B tracking mode (DSK-203→207, 217); barcode generation, manufacturer codes,
+duplicate blocking, label preview, Code 128 rendering and printing one or many (DSK-208→214);
+read-only detail view with live stock (DSK-219); deactivate rather than delete (DSK-218).
+**Design system:** added `Select` and `Textarea` — Day 1 shipped only `Field`, so a form with
+dropdowns had nowhere to go. Both use `--color-border` (UI-002), so the whole form is one
+control family.
+**Decisions worth knowing:**
+(1) **The list loads the whole master (capped at 2,000), not a server page.** Rule §3 names the
+ledger and reports — lists that grow per transaction. The product master grows when the
+business sells a new *kind* of thing. Loading it once is what makes "sort by stock" correct:
+stock lives in `stock_balances`, so no PostgREST `order` can reach it, and server-paging would
+sort each page in isolation — reordering rows within a page and quietly lying. The table still
+renders 25 rows at a time; past the cap the UI says so rather than showing a short list.
+(2) **The list is driven by `products`, with stock merged on.** `v_current_stock` inner-joins
+`stock_balances`, so a product created but never received has no row there and would vanish
+from the master list. It must appear, reading 0.
+(3) **An ADMIN has no office and sees all three**, so stock is summed per product. Taking one
+row would return whichever office sorted first — a plausible number, and wrong.
+(4) **Products are written through the table, not an RPC.** Not a breach of rule 0.2: that rule
+exists because stock needs locking and an audit trail a client cannot be trusted with. A
+product row needs neither; `products_write` RLS already limits writes to ADMIN/STORE_MANAGER
+and `tg_set_audit` stamps created_by/updated_by from the JWT (SRD §14).
+(5) **Edits use optimistic locking** (`.eq('version', …)`), since `tg_set_audit` bumps the
+counter on every write. Without it, two people editing one product means the second save
+silently discards the first — invisible until an audit.
+(6) **The manufacturer's code is stored as an alias, not as the primary.** The generated ST-code
+stays primary and stays the one we print (SRD §9); both resolve to the product on a scan, which
+is the point of `product_barcodes` being 1:N.
+**Honest gap — a partial write exists and is reported, not hidden:** creating a product with a
+manufacturer barcode is two statements (product, then barcode) and PostgREST gives no
+transaction across them. A duplicate is pre-checked, but two clerks can still race; the loser
+gets a saved product whose alias is missing. The product is complete and usable — it always has
+its own ST-code — so the UI says exactly that and points at the fix, rather than deleting a
+valid product behind the user's back. Making this atomic needs an RPC, which needs DDL rights I
+do not have.
+**Printing: `window.open` is a trap in this app.** main/index.ts installs
+`setWindowOpenHandler` → `shell.openExternal(url)` + deny, so the standard "open a window,
+write the labels, print" recipe would print nothing and pop open the user's browser. Labels
+print through a same-origin hidden iframe, which no handler intercepts and which satisfies the
+existing CSP (inline style + inline SVG, nothing external).
+**Verified by running:** jsbarcode against a real DOM — a detached SVG renders (32 bars,
+digits present), it genuinely throws `InvalidInputException` on `''` and `'ü'` (so the
+`@throws` docs are true), and `Kit (2024) #7 50% a_b` plus EAN `8901234567890` both encode.
+Our validator is deliberately stricter than jsbarcode (`È` encodes but we reject it), so the
+wrapper fails closed.
+**NOT verified — the honest part:** no product has been created, edited, searched or printed
+against the live database. Every screen is behind auth, and the in-app browser cannot sign in:
+it has no Electron preload, so `window.api.secureStore` is undefined and the session adapter
+cannot read. This needs a run in the real Electron app. Typecheck and build passing prove
+neither the RLS path nor the print dialog.
+**Files:** lib/{barcode,productForm,labelDocument,errors}.ts,
+hooks/{useProducts,useProduct,useProductLookups,useProductMutations,usePrintLabels}.ts,
+components/products/{ProductForm,BarcodeLabel,LabelPrintPanel}.tsx,
+components/ui/{Select,Textarea}.tsx, routes/{Products,ProductEditor,ProductDetail}.tsx,
+main.tsx, apps/desktop/package.json (jsbarcode 3.12.3)
+
+## 17/07/2026 15:10 — DB-006 — RLS was never applied; every table was locked shut — Ram
+**Status:** Done — applied to the live project, with Ram's approval
+**Reported:** "lots of missing data" — Category, Unit and Brand dropdowns empty, product list
+empty.
+**Cause — not a UI bug.** All 21 public tables had `rowsecurity = true` and **zero policies**.
+Postgres denies by default once RLS is on, so the absence of a policy is a denial: every
+select and every write from every client returned nothing. 07_rls.sql had only half applied —
+the 21 `alter table … enable row level security` statements at the top ran, and not one of the
+34 `create policy` statements after them did. The RPCs from 06 exist, so 07 is the only file
+that failed, silently, some time before today.
+**Second cause, independent:** `profiles` had 0 rows. The only auth user
+(siddesherp78@gmail.com) was created 16/07 10:06 — *before* the migrations landed (DB-004 was
+17:40 that day). `tg_on_auth_user_created` fires on INSERT only, so it never ran for them.
+With no profile, `app.current_role()` is null, which denies `products_write` and would have
+blocked every product save even with RLS fixed. Neither symptom was visible in the earlier
+anon-key probe: anon sees `[]` either way, which is exactly why that check proved less than it
+appeared to.
+**Fix:** re-ran the repo's own 07_rls.sql via the Management API — 34 policies created — and
+backfilled the profile using the trigger's own logic (ADMIN, Pune Head Office). Pune rather
+than null because `chk_profiles_office` permits an office-less ADMIN but
+`save_inward`/`save_outward` raise NO_OFFICE without one, so Day 3 would have failed next.
+**Verified as the real signed-in user, RLS enforced:** role ADMIN, office Pune, categories 3,
+uoms 5, brands 4, products 14, stock rows 11 — was all 0 before.
+**Security boundary re-checked, not assumed:** stock_ledger, stock_balances, inwards and
+outwards have SELECT policies and no write policy, so rule 0.2 holds — clients still cannot
+write stock. `relforcerowsecurity` is false on both ledger tables, which 07's own comment
+requires: FORCE would subject the owner to RLS and break `app.post_ledger`, i.e. every inward
+and outward.
+**Worth knowing:** the app was never insecure here — it was locked shut, which fails safe. But
+"empty dropdown" is what a missing RLS policy looks like from the UI, and it reads exactly
+like a front-end bug. Check `pg_policies` before touching the component.
+
+## 17/07/2026 15:22 — UI-003 — Real dropdown, clearer light border, barcode preview — Ram
+**Status:** Done — typecheck + build pass; the dropdown verified by driving it
+**What (Ram's review of Day 2):**
+(1) **Dropdowns are now a real listbox, not a native `<select>`.** The native control was the
+right first choice for keyboard and scanner support, but Chromium draws `<option>` with the OS
+and ignores nearly all styling, so every picker opened as a grey Windows list belonging to a
+different product. The replacement owes back everything the platform was giving free, so all
+of it is implemented: Enter/Space/Arrow to open, Arrow/Home/End to move, Enter to commit,
+Escape to close without committing, type-ahead, `aria-activedescendant`, click-outside,
+scroll-into-view. This app runs on a keyboard and a scanner (SRD §8) — a div that only responds
+to clicks would have been a downgrade wearing better paint.
+(2) **Light border is now black/24%, dark stays white/12%.** Not an inversion, deliberately:
+on the #f8fafc canvas a 12% hairline disappears against near-opaque white cards, while the same
+weight on #09090b reads as a hard outline and fights the glass. Still one token
+(`--color-border`, UI-002) — one value per mode.
+(3) **The label preview now shows on New Product**, using sample code ST00000000 and captioned
+as such. The real code cannot be previewed: `sku_barcode` defaults to
+`app.next_product_barcode()`, so the database mints it at INSERT. Peeking at the sequence would
+be a race and could show a number another clerk's save takes first — an invented-but-real-looking
+SKU is worse than an obvious placeholder, because someone writes it on a box.
+(4) **Unit shows "PCS" with "Pieces" underneath** instead of "PCS — Pieces" crammed on one
+line; tracking mode is "Quantity" / "Serial number" with the explanation as a subtitle; model
+number lost its fake example placeholder.
+**Verified by driving it in a browser:** mouse select commits and returns focus to the trigger;
+ArrowDown opens on the *current* choice; Arrow+Enter commits; Escape closes and leaves the
+value untouched; type-ahead "k" highlights KIT; Home/End jump; typing "p" while closed selects
+PCS directly, as the native control does. Light popup border measured at rgba(0,0,0,0.24),
+dark at rgba(255,255,255,0.12).
+**Tooling note (cost an hour, twice):** the in-app browser's `computer key` sends keydown with
+`key: ""`, so keyboard tests through it silently do nothing and read as a broken component.
+Dispatching a real KeyboardEvent works — but only one per task: three in one synchronous block
+all observe the same pre-render state and look like a bug too. Elements with `transition-all`
+also still misreport computed colour there (see UI-002). Verify this pane's findings before
+believing them.
+**Files:** components/ui/Select.tsx (rewritten), components/products/ProductForm.tsx,
+routes/Products.tsx, components/products/LabelPrintPanel.tsx, hooks/useProductLookups.ts,
+styles.css
+
+## 17/07/2026 16:00 — DB-007 / CONTRACT-001 — save_inward + save_outward take party details — Ram
+**Status:** Done — Contract.md amended first, migration applied and verified
+**Why:** SRD §5 requires a supplier GST number; §6 requires a party GST number and address.
+`suppliers.gst_no`, `customers.gst_no` and `customers.address` have existed since 04, but no
+RPC accepted them — so the Day 3 forms had nowhere to put three fields the SRD demands.
+**Contract.md changed BEFORE the code, per the rule book.** It had also drifted from the
+database: it documented `p_received_by` on save_inward, which has never existed, and omitted
+`p_purchase_order`, `p_brought_by`, `p_notes` and `p_computer_name`, which do. The signatures
+there are now transcribed from `pg_get_function_arguments` on the live project, not memory.
+**⚠️ Ram must tell the group the contract changed** — that part is not done by writing this.
+**Migration:** `20260718090000_09_rpc_party_details.sql`. New params are optional and
+trailing, so every existing caller is unaffected.
+**Why drop-and-recreate, not `create or replace`:** adding a parameter changes the signature,
+and Postgres treats that as a NEW function. The old 11-arg save_inward would have survived
+beside the new 12-arg one and every defaulted call would fail as ambiguous. Verified after
+applying: exactly 1 overload each. A DROP also takes the grants with it — re-issued in the
+same file, or every client gets "permission denied for function save_inward" and no stock
+moves at all.
+**Bug found and fixed while in there:** the RPCs passed `p_supplier_mobile` / `p_mobile`
+straight into the insert. `chk_suppliers_mobile` is `mobile is null or mobile ~ '^[0-9]{10}$'`,
+so an empty string from an untouched optional input is neither — it would raise, abort the
+whole transaction, and the delivery would never be received. A blank optional field could
+fail a receipt. Empty strings are now normalised to NULL. Same for GST, which is also
+upper-cased since the CHECK only accepts upper-case.
+**Find-or-create fills blanks only:** a GST typed into today's inward never overwrites a value
+already on file. Correcting party details is an edit of that record, not a side effect of
+receiving stock. The guard also avoids a pointless UPDATE and version bump on every inward.
+**Files:** Document/Contract.md, supabase/migrations/20260718090000_09_rpc_party_details.sql,
+packages/shared/{index.ts,database.types.ts}
+
+## 17/07/2026 16:18 — DSK-301→320 — Day 3: Inward and Outward — Ram
+**Status:** Done — typecheck + build pass; **RPC path verified against the live database**
+**What:** Inward (SRD §5) and Outward (SRD §6), sharing one scan-or-search product picker.
+Every field both sections of the SRD ask for is present: product, quantity, supplier
+name/mobile/GST, invoice no/date, purchase order, brought-by; and outward type, school name,
+contact person, mobile, GST, address, invoice no, sales order no, handed-over-by, received-by.
+**Verified end-to-end by calling the real RPCs as the real signed-in user, RLS enforced,
+inside a transaction that was rolled back** (results carried out in a raised exception, so the
+database was left byte-for-byte as found — re-checked afterwards: stock back to 50, 0 test
+suppliers, 0 test customers, ledger still 11 rows, inwards/outwards still 0):
+- inward 20 → balance 50→70
+- **idempotency**: replaying the same client_txn_id returned the SAME ledger_id with
+  `replayed:true` and balance still 70, not 90 — and exactly **1** ledger row exists for that
+  txn id. This is the single most valuable thing in Day 3 and it works.
+- supplier GST landed: 27AAAAA0000A1Z5 (the new param)
+- outward 5 → balance 65; customer GST + address landed (the new params)
+- oversell blocked: `INSUFFICIENT_STOCK: available 65, requested 999999` — which is exactly the
+  shape `parseAvailableQty` parses, so DSK-319 renders "Only 65 left in stock."
+- empty-string mobile/GST no longer aborts a receipt (the DB-007 fix, confirmed)
+- `PARTY_REQUIRED` still blocks a SALE with no customer
+**Rule 0.5, the one that matters:** `client_txn_id` is minted in a `useRef` on mount and reused
+on every retry; a new one is minted **only** in `resetForNextEntry`. Generating it in the
+submit handler would give each retry a fresh id, `replay_if_seen` would never match, and a
+retried save would post stock twice — invisible until a stock count months later.
+**Design decision — the quantity warning never blocks.** DSK-313 warns when qty exceeds what
+we last read, but Save stays enabled. The client's "available" is already stale (two clerks can
+scan the last unit in the same second), and only save_outward under its row lock may actually
+refuse. Blocking client-side would put the same rule in two places, and they would drift.
+**Bug caught in review before it shipped:** the picker first mirrored the scan result into the
+parent via `onPick` **during render** — which React forbids (updating a parent while rendering a
+child) and which would also have gone stale: the picked product carries a stock figure, so a
+copy keeps showing the old number after an inward invalidates the cache. Rewritten so `picked`
+is *derived* in `useProductPicker`. Copying server state into local state is how a storekeeper
+ends up reading a confidently wrong quantity.
+**One scan = one lookup (§9):** the lookup is a `useQuery` keyed by the code, so a scanner
+firing ten times a second produces one request, and the code is committed on Enter — which is
+exactly what a USB keyboard-emulation scanner already does.
+**NOT built, both P2 and consciously skipped:** DSK-307 invoice file upload and DSK-317
+signature/photo proof. Both need a Supabase Storage bucket with its own RLS, which does not
+exist.
+**NOT verified:** the screens themselves have not been clicked — they are behind auth and the
+in-app browser cannot sign in (no Electron preload). The data path underneath them is verified;
+the rendering is not.
+**Files:** routes/{Inward,Outward}.tsx, components/movement/ProductPicker.tsx,
+hooks/{useProductPicker,useScanLookup,useSaveMovement}.ts, lib/movementForm.ts, main.tsx
+
+## 17/07/2026 16:34 — DSK-401→414 — Day 4: dashboard and reports — Ram
+**Status:** Done — typecheck + build pass; report queries verified against real data.
+Ship tasks (418–420), global search (415) and backup (416–417) NOT done — see below.
+**What:** Dashboard cards (401–405); current stock / low stock / out of stock as one filtered
+table (406–408); inward, outward and product-ledger reports with a from/to date filter
+(409–412); Excel and PDF export on every report (413–414).
+**✅ DSK-301→309 IS NOW PROVEN IN THE REAL APP — by Ram, not by me.** A genuine inward landed
+while I was working: IN-2026-00005, 48 × 128 GB Pen Drive, supplier "hdh" with GST
+27AAAAA0000A1Z5 and mobile 9090909090, invoice T001, PO 11, brought by "mfj", ledger
+balance_after 98. That GST value is the new `p_supplier_gst` from migration 09 arriving
+through the actual UI — the exact path I could not reach myself. Day 3's Inward is verified
+end-to-end for real.
+**Verified (movements created in a rolled-back transaction, as the real user, RLS on):**
+inward report join → 2 rows (Ram's 48 + the test's 20, no duplicate-row bug); outward join →
+1 row; ledger → `OPENING 50 bal=50 | INWARD 20 bal=70 | OUTWARD -5 bal=65 party=XYZ School`,
+which is SRD §11's example shape exactly; dashboard → today_inward 68, today_outward 5,
+on_hand 613, low 1, products 11. Re-checked afterwards: only Ram's real inward persists.
+**Excel:** `write-excel-file` (~220KB; bundle 1.83→2.05MB). `exceljs` is 21MB unpacked and
+npm's `xlsx` is a stale 2022 build with known CVEs — neither belongs in an .exe shipped to
+three offices. Note `npm audit` cannot run at all here: the registry is npmmirror, which does
+not implement the audit endpoint.
+**PDF is print-to-PDF, not a PDF library.** Windows ships "Microsoft Print to PDF", so
+Save-as-PDF and printing on paper are one action and cost the bundle nothing. Uses the hidden
+iframe again, because `setWindowOpenHandler` denies `window.open`.
+**Date filter subtlety:** `to` is an inclusive DATE but the columns are timestamptz, so a
+plain `lte` silently drops everything after midnight on the final day — nearly the whole day
+the user asked for. Compared against the start of the next day instead.
+**Deliberate:** SRD §12's "Pending Orders" card is omitted rather than shown as 0 — there is no
+purchase-order table, and a card reading 0 asserts "none pending", which we cannot know.
+Out-of-stock appears as a line only when it is non-zero; an always-present 0 is noise.
+`Placeholder.tsx` deleted — every route is real now.
+**NOT done, and why:** DSK-415 global search, DSK-419/420 the .exe installer and clean-PC
+install, DSK-418 full end-to-end walkthrough — ran out of the session, not skipped on purpose.
+DSK-416/417 daily backup and restore I recommend dropping: Supabase already backs up the cloud
+database, a desktop client writing its own copies duplicates that with a false sense of safety,
+and a client that can restore over the ledger directly contradicts rule 0.3 (append-only).
+That is a call for Ram, not me.
+**NOT verified:** the Dashboard, Stock and Reports screens have not been rendered — still
+behind auth, and the in-app browser cannot sign in. The queries under them are verified; the
+PostgREST embed syntax (`inwards!inner(...)`) is typechecked against the generated schema but
+has not been executed.
+**Files:** routes/{Dashboard,Stock,Reports}.tsx, hooks/{useReports,useDashboard,useExportReport}.ts,
+lib/reportDocument.ts, components/reports/ExportButtons.tsx, main.tsx,
+routes/Placeholder.tsx (deleted), apps/desktop/package.json (write-excel-file 4.1.1)

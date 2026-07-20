@@ -13,7 +13,7 @@
     "package": "npm run package --workspace apps/desktop",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:start": "supabase start",
-    "db:types": "supabase gen types typescript --local > packages/shared/database.types.ts"
+    "db:types": "node scripts/gen-db-types.mjs"
   },
   "devDependencies": {
     "electron": "^43.1.1",
