@@ -1,4 +1,3 @@
-import { Search } from 'lucide-react'
 
 /**
  * Custom title bar + global search.
@@ -17,21 +16,6 @@ import { Search } from 'lucide-react'
  */
 export function TopBar() {
   return (
-    <header className="drag-region flex h-12 shrink-0 items-center gap-4 hairline-b px-container pr-[140px]">
-      <div className="no-drag relative w-full max-w-md">
-        <Search
-          aria-hidden="true"
-          className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-outline"
-          strokeWidth={1.5}
-        />
-        <input
-          aria-label="Search inventory"
-          className="h-8 w-full rounded-xl border border-border bg-surface-container-lowest/50 pl-9 pr-4 text-body-md text-on-surface placeholder:text-outline disabled:cursor-not-allowed disabled:opacity-50"
-          disabled
-          placeholder="Search inventory, shipments…"
-          type="search"
-        />
-      </div>
-    </header>
+    <header className="drag-region flex h-12 shrink-0 items-center gap-4 px-container pr-[140px]" />
   )
 }

@@ -84,61 +84,65 @@ export function Sidebar() {
     <nav
       aria-label="Main"
       className={cn(
-        'flex shrink-0 flex-col border-r border-dashed border-border bg-surface',
-        'transition-[width] duration-200 ease-out',
-        isCollapsed ? 'w-16' : 'w-sidebar'
+        'flex shrink-0 flex-col gap-3 p-3 transition-[width] duration-200 ease-out',
+        isCollapsed ? 'w-20' : 'w-sidebar'
       )}
     >
-      <div className={cn('px-5 py-4', isCollapsed && 'px-0 text-center')}>
-        {isCollapsed ? (
-          <span aria-hidden="true" className="text-h2 font-semibold text-primary">
-            S
-          </span>
-        ) : (
-          <>
-            <h1 className="text-h2 tracking-tight text-on-surface">Siddesh</h1>
-            <p className="text-body-sm text-on-surface-variant/60">Inventory</p>
-          </>
-        )}
+      {/* Box 1: Header & Main Navigation */}
+      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-surface/80 p-3 shadow-sm backdrop-blur-md">
+        {/* Brand Header */}
+        <div className={cn('pb-3 border-b border-border/50 mb-2 px-2 py-1', isCollapsed && 'px-0 text-center')}>
+          {isCollapsed ? (
+            <span aria-hidden="true" className="text-h2 font-bold text-primary">
+              S
+            </span>
+          ) : (
+            <div>
+              <h1 className="text-h2 font-bold tracking-tight text-on-surface">Siddesh</h1>
+              <p className="text-body-sm font-medium text-on-surface-variant/60">Inventory ERP</p>
+            </div>
+          )}
+        </div>
+
+        {/* Nav Items */}
+        <ul className="flex flex-1 flex-col gap-1.5 overflow-y-auto">
+          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            <li key={to}>
+              <NavLink
+                aria-label={isCollapsed ? label : undefined}
+                className={({ isActive }) =>
+                  cn(
+                    'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-body-md font-medium transition-all',
+                    isCollapsed && 'justify-center px-0',
+                    isActive
+                      ? 'bg-primary/10 font-semibold text-primary shadow-xs'
+                      : 'text-on-surface-variant hover:bg-surface-variant/40 hover:text-on-surface'
+                  )
+                }
+                end={to === '/'}
+                title={isCollapsed ? label : undefined}
+                to={to}
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary"
+                      />
+                    ) : null}
+                    <Icon aria-hidden="true" className="size-[18px] shrink-0" strokeWidth={1.5} />
+                    {isCollapsed ? null : <span>{label}</span>}
+                  </>
+                )}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <ul className={cn('flex flex-1 flex-col gap-1 py-2', isCollapsed ? 'px-2' : 'px-3')}>
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-          <li key={to}>
-            <NavLink
-              aria-label={isCollapsed ? label : undefined}
-              className={({ isActive }) =>
-                cn(
-                  'relative flex items-center gap-3 rounded-lg px-3 py-2 text-body-md transition-colors',
-                  isCollapsed && 'justify-center px-0',
-                  isActive
-                    ? 'font-semibold text-primary'
-                    : 'text-on-surface-variant hover:bg-surface-variant/30 hover:text-on-surface'
-                )
-              }
-              // `end` stops "/" matching every route and lighting up permanently.
-              end={to === '/'}
-              title={isCollapsed ? label : undefined}
-              to={to}
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive ? (
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary"
-                    />
-                  ) : null}
-                  <Icon aria-hidden="true" className="size-[18px] shrink-0" strokeWidth={1.5} />
-                  {isCollapsed ? null : label}
-                </>
-              )}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-
-      <div className={cn('flex flex-col gap-1 hairline-t p-2', !isCollapsed && 'p-3')}>
+      {/* Box 2: Actions & Controls (Light Mode, Collapse, Log Out) */}
+      <div className="flex flex-col gap-1 rounded-2xl border border-border bg-surface/80 p-2 shadow-sm backdrop-blur-md">
         <RailButton
           icon={theme === 'dark' ? Sun : Moon}
           isCollapsed={isCollapsed}
