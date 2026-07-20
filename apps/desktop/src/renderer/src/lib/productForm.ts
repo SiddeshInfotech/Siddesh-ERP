@@ -22,13 +22,17 @@ export type TrackingMode = 'QUANTITY' | 'SERIAL'
 export interface ProductFormValues {
   name: string
   categoryId: string
+  customCategory: string
   brandId: string
+  customBrand: string
   uomId: string
+  customUom: string
   modelNumber: string
   description: string
   minStock: string
   hsnCode: string
   gstPercent: string
+  customGst: string
   trackingMode: TrackingMode
   barcodeSource: BarcodeSource
   manufacturerBarcode: string
@@ -50,13 +54,17 @@ const HSN_PATTERN = /^[0-9]{4,8}$/
 export const EMPTY_PRODUCT_FORM: ProductFormValues = {
   name: '',
   categoryId: '',
+  customCategory: '',
   brandId: '',
+  customBrand: '',
   uomId: '',
+  customUom: '',
   modelNumber: '',
   description: '',
   minStock: '0',
   hsnCode: '',
   gstPercent: '',
+  customGst: '',
   trackingMode: 'QUANTITY',
   barcodeSource: 'GENERATE',
   manufacturerBarcode: ''
@@ -80,7 +88,18 @@ export function validateProductForm(values: ProductFormValues): ProductFormError
   }
 
   if (values.categoryId === '') errors.categoryId = 'Choose a category.'
+  else if (values.categoryId === 'OTHER' && values.customCategory.trim().length === 0) {
+    errors.customCategory = 'Enter custom category name.'
+  }
+
   if (values.uomId === '') errors.uomId = 'Choose a unit.'
+  else if (values.uomId === 'OTHER' && values.customUom.trim().length === 0) {
+    errors.customUom = 'Enter custom unit name.'
+  }
+
+  if (values.brandId === 'OTHER' && values.customBrand.trim().length === 0) {
+    errors.customBrand = 'Enter custom brand name.'
+  }
 
   if (values.modelNumber.trim().length > MAX_MODEL_LENGTH) {
     errors.modelNumber = `Keep the model number under ${MAX_MODEL_LENGTH} characters.`
@@ -98,8 +117,14 @@ export function validateProductForm(values: ProductFormValues): ProductFormError
     errors.hsnCode = 'An HSN code is 4 to 8 digits.'
   }
 
-  const gstError = validateGst(values.gstPercent)
-  if (gstError !== null) errors.gstPercent = gstError
+  if (values.gstPercent === 'OTHER') {
+    const customGstErr = validateGst(values.customGst)
+    if (customGstErr !== null) errors.customGst = customGstErr
+    else if (values.customGst.trim().length === 0) errors.customGst = 'Enter custom GST rate.'
+  } else {
+    const gstError = validateGst(values.gstPercent)
+    if (gstError !== null) errors.gstPercent = gstError
+  }
 
   if (values.barcodeSource === 'MANUFACTURER') {
     const problem = findBarcodeProblem(values.manufacturerBarcode)
@@ -135,10 +160,10 @@ function validateGst(raw: string): string | null {
   return null
 }
 
-/** Blank optional text becomes NULL, never ''. An empty string is a value; absence is not. */
+/** Blank optional text or placeholder 'OTHER' becomes NULL, never ''. An empty string is a value; absence is not. */
 function orNull(raw: string): string | null {
   const trimmed = raw.trim()
-  return trimmed.length === 0 ? null : trimmed
+  return trimmed.length === 0 || trimmed === 'OTHER' ? null : trimmed
 }
 
 export interface ProductRow {
@@ -163,6 +188,9 @@ export interface ProductRow {
  * so the database owns the ST-sequence and two clients can never mint the same code.
  */
 export function toProductRow(values: ProductFormValues): ProductRow {
+  const gstRaw = orNull(values.gstPercent)
+  const gstNum = gstRaw === null ? null : Number(gstRaw)
+
   return {
     name: values.name.trim(),
     category_id: orNull(values.categoryId),
@@ -172,8 +200,7 @@ export function toProductRow(values: ProductFormValues): ProductRow {
     description: orNull(values.description),
     min_stock: Number(values.minStock.trim()),
     hsn_code: orNull(values.hsnCode),
-    // Number('') is 0, which would silently write a real 0% GST for "not specified".
-    gst_percent: orNull(values.gstPercent) === null ? null : Number(values.gstPercent.trim()),
+    gst_percent: gstNum !== null && !Number.isNaN(gstNum) ? gstNum : null,
     tracking_mode: values.trackingMode
   }
 }

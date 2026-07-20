@@ -87,6 +87,122 @@ export interface SavedProduct {
   skuBarcode: string
 }
 
+function generateUomCode(name: string): string {
+  const numMap: Record<string, string> = {
+    '0': 'ZERO',
+    '1': 'ONE',
+    '2': 'TWO',
+    '3': 'THREE',
+    '4': 'FOUR',
+    '5': 'FIVE',
+    '6': 'SIX',
+    '7': 'SEVEN',
+    '8': 'EIGHT',
+    '9': 'NINE'
+  }
+  const replaced = name.trim().toUpperCase().replace(/[0-9]/g, (m) => numMap[m] ?? '')
+  let cleaned = replaced.replace(/[^A-Z]/g, '').slice(0, 10)
+  if (cleaned.length < 2) cleaned = (cleaned + 'PCS').slice(0, 2)
+  return cleaned.slice(0, 10)
+}
+
+/**
+ * Resolves custom 'OTHER' category, brand, uom, or gst values into database IDs or numbers.
+ * Inserts new rows into categories, brands, or uoms tables if they don't already exist.
+ */
+async function resolveLookupIds(values: ProductFormValues): Promise<ProductFormValues> {
+  const resolved = { ...values }
+
+  if (values.categoryId === 'OTHER' && values.customCategory.trim().length > 0) {
+    const catName = values.customCategory.trim()
+    const { data: existing } = await supabase
+      .from('categories')
+      .select('id')
+      .ilike('name', catName)
+      .maybeSingle()
+
+    if (existing) {
+      resolved.categoryId = existing.id
+    } else {
+      const { data: inserted, error } = await supabase
+        .from('categories')
+        .insert({ name: catName })
+        .select('id')
+        .single()
+
+      if (error) {
+        logger.error('Could not create custom category', toLogContext(error))
+        throw error
+      }
+      resolved.categoryId = inserted.id
+    }
+  }
+
+  if (values.brandId === 'OTHER' && values.customBrand.trim().length > 0) {
+    const brandName = values.customBrand.trim()
+    const { data: existing } = await supabase
+      .from('brands')
+      .select('id')
+      .ilike('name', brandName)
+      .maybeSingle()
+
+    if (existing) {
+      resolved.brandId = existing.id
+    } else {
+      const { data: inserted, error } = await supabase
+        .from('brands')
+        .insert({ name: brandName })
+        .select('id')
+        .single()
+
+      if (error) {
+        logger.error('Could not create custom brand', toLogContext(error))
+        throw error
+      }
+      resolved.brandId = inserted.id
+    }
+  }
+
+  if (values.uomId === 'OTHER' && values.customUom.trim().length > 0) {
+    const uomName = values.customUom.trim()
+    const code = generateUomCode(uomName)
+
+    const { data: existing } = await supabase
+      .from('uoms')
+      .select('id')
+      .eq('code', code)
+      .maybeSingle()
+
+    if (existing) {
+      resolved.uomId = existing.id
+    } else {
+      const { data: inserted, error } = await supabase
+        .from('uoms')
+        .insert({ code, name: uomName })
+        .select('id')
+        .single()
+
+      if (error) {
+        logger.error('Could not create custom uom', toLogContext(error))
+        throw error
+      }
+      resolved.uomId = inserted.id
+    }
+  }
+
+  if (values.gstPercent === 'OTHER') {
+    resolved.gstPercent = values.customGst.trim()
+  }
+
+  // Safety fallback: if any ID remains 'OTHER', reset to empty string so toProductRow turns it into null
+  if (resolved.categoryId === 'OTHER') resolved.categoryId = ''
+  if (resolved.brandId === 'OTHER') resolved.brandId = ''
+  if (resolved.uomId === 'OTHER') resolved.uomId = ''
+  if (resolved.gstPercent === 'OTHER') resolved.gstPercent = ''
+
+  return resolved
+}
+
 /**
  * Creates a product (DSK-205) and, for SRD §4 Option B, links the pasted manufacturer code.
  *
@@ -108,9 +224,11 @@ export function useCreateProduct() {
 
       if (manufacturerCode !== null) await assertBarcodeFree(manufacturerCode)
 
+      const resolvedValues = await resolveLookupIds(values)
+
       const { data, error } = await supabase
         .from('products')
-        .insert(toProductRow(values))
+        .insert(toProductRow(resolvedValues))
         .select('id, name, sku_barcode')
         .single()
 
@@ -125,6 +243,9 @@ export function useCreateProduct() {
       return { id: data.id, name: data.name, skuBarcode: data.sku_barcode }
     },
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['categories'] })
+      void queryClient.invalidateQueries({ queryKey: ['brands'] })
+      void queryClient.invalidateQueries({ queryKey: ['uoms'] })
       void queryClient.invalidateQueries({ queryKey: ['products'] })
     }
   })
@@ -165,9 +286,11 @@ export function useUpdateProduct() {
 
       if (manufacturerCode !== null) await assertBarcodeFree(manufacturerCode)
 
+      const resolvedValues = await resolveLookupIds(values)
+
       const { data, error } = await supabase
         .from('products')
-        .update(toProductRow(values))
+        .update(toProductRow(resolvedValues))
         .eq('id', id)
         .eq('version', version)
         .select('id, name, sku_barcode')
@@ -191,6 +314,9 @@ export function useUpdateProduct() {
       return { id: data.id, name: data.name, skuBarcode: data.sku_barcode }
     },
     onSuccess: (product) => {
+      void queryClient.invalidateQueries({ queryKey: ['categories'] })
+      void queryClient.invalidateQueries({ queryKey: ['brands'] })
+      void queryClient.invalidateQueries({ queryKey: ['uoms'] })
       void queryClient.invalidateQueries({ queryKey: ['products'] })
       void queryClient.invalidateQueries({ queryKey: ['product', product.id] })
     }

@@ -64,6 +64,7 @@ export function Select({
   const describedBy = error ? errorId : hint ? hintId : undefined
 
   const [isOpen, setIsOpen] = useState(false)
+  const [dropUp, setDropUp] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
 
   const rootRef = useRef<HTMLDivElement>(null)
@@ -91,6 +92,12 @@ export function Select({
 
   const open = useCallback(() => {
     if (disabled) return
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const spaceAbove = rect.top
+      setDropUp(spaceBelow < 300 && spaceAbove > spaceBelow)
+    }
     setIsOpen(true)
     // Land on the current choice, not the top — the user is usually changing, not restarting.
     setActiveIndex(Math.max(0, entries.findIndex((entry) => entry.value === value)))
@@ -203,7 +210,7 @@ export function Select({
   const activeId = activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined
 
   return (
-    <div className={cn('flex flex-col', containerClassName)} ref={rootRef}>
+    <div className={cn('flex flex-col mb-1.5', isOpen && 'relative z-[999]', containerClassName)} ref={rootRef}>
       <label
         className="mb-1.5 ml-1 block text-label-caps uppercase text-on-surface-variant"
         htmlFor={id}
@@ -253,7 +260,10 @@ export function Select({
 
         {isOpen ? (
           <ul
-            className="glass-elevated pop-in absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-xl p-1"
+            className={cn(
+              'glass-elevated pop-in absolute z-[9999] max-h-64 min-w-full w-max max-w-[calc(100vw-2.5rem)] overflow-auto rounded-2xl p-1.5 shadow-2xl backdrop-blur-3xl no-scrollbar',
+              dropUp ? 'bottom-full mb-1.5 top-auto' : 'top-full mt-1.5'
+            )}
             id={listboxId}
             ref={listRef}
             role="listbox"
@@ -272,7 +282,7 @@ export function Select({
                   <li
                     aria-selected={isSelected}
                     className={cn(
-                      'flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2',
+                      'flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3.5 py-2.5',
                       'transition-colors',
                       isActive && 'bg-on-surface/10',
                       isSelected && 'text-primary'
@@ -287,10 +297,10 @@ export function Select({
                     onMouseEnter={() => setActiveIndex(index)}
                     role="option"
                   >
-                    <span className="flex min-w-0 flex-col">
+                    <span className="flex min-w-0 flex-col gap-0.5">
                       <span
                         className={cn(
-                          'truncate text-body-md',
+                          'text-body-md',
                           entry.value === '' && 'text-on-surface-variant/60',
                           isSelected ? 'font-semibold' : 'text-on-surface'
                         )}
@@ -298,7 +308,7 @@ export function Select({
                         {entry.label}
                       </span>
                       {entry.description === undefined ? null : (
-                        <span className="truncate text-body-sm text-on-surface-variant/60">
+                        <span className="text-body-sm text-on-surface-variant/70 leading-snug break-words">
                           {entry.description}
                         </span>
                       )}

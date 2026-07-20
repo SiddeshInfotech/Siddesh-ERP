@@ -1,5 +1,5 @@
-import { Barcode, Package, Percent, Warehouse } from 'lucide-react'
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { Barcode, Package, Percent, Sparkles, Warehouse } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -54,23 +54,84 @@ const TRACKING_MODE_OPTIONS: SelectOption[] = [
   { value: 'SERIAL', label: 'Serial number', description: 'Each unit gets its own barcode' }
 ]
 
-/** SRD §3 lists GST as optional; these are the standard Indian slabs. */
+/** SRD §3 lists GST as optional; these are the standard Indian slabs plus custom. */
 const GST_OPTIONS: SelectOption[] = [
   { value: '0', label: '0%' },
   { value: '5', label: '5%' },
   { value: '12', label: '12%' },
   { value: '18', label: '18%' },
-  { value: '28', label: '28%' }
+  { value: '28', label: '28%' },
+  { value: 'OTHER', label: '+ Other (Custom GST Rate)' }
 ]
+
+const OTHER_LOOKUP_OPTION: SelectOption = {
+  value: 'OTHER',
+  label: '+ Other (Add custom)'
+}
+
+interface CustomOptionFieldProps {
+  label: string
+  value: string
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  error?: string
+  placeholder?: string
+  required?: boolean
+  type?: string
+  step?: string
+  min?: number
+  max?: number
+  inputMode?: 'text' | 'numeric' | 'decimal' | 'search' | 'tel' | 'url' | 'email'
+  badgeLabel?: string
+}
+
+function CustomOptionField({
+  label,
+  value,
+  onChange,
+  error,
+  placeholder,
+  required,
+  type = 'text',
+  step,
+  min,
+  max,
+  inputMode,
+  badgeLabel = 'Custom Entry'
+}: CustomOptionFieldProps) {
+  return (
+    <div className="mt-2.5 rounded-xl border border-primary-container/40 bg-primary-container/5 dark:bg-primary-container/10 p-3 transition-all animate-in fade-in slide-in-from-top-1 duration-200 shadow-sm">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Sparkles className="size-3.5 text-primary-container shrink-0" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-primary-container">
+          {badgeLabel}
+        </span>
+      </div>
+      <Field
+        autoFocus
+        error={error}
+        inputMode={inputMode}
+        label={label}
+        max={max}
+        min={min}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        step={step}
+        type={type}
+        value={value}
+      />
+    </div>
+  )
+}
 
 function Section({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
-    <Card>
+    <Card className="mb-2 overflow-visible">
       <div className="flex items-center gap-2 hairline-b px-5 py-3.5">
         {icon}
         <h2 className="text-label-caps uppercase text-on-surface-variant">{title}</h2>
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-5 pb-6">{children}</div>
     </Card>
   )
 }
@@ -91,6 +152,21 @@ export function ProductForm({
   const [values, setValues] = useState<ProductFormValues>(initialValues)
   const [errors, setErrors] = useState<ProductFormErrors>({})
   const formRef = useRef<HTMLFormElement>(null)
+
+  const categoryOptions = useMemo<SelectOption[]>(
+    () => [...categories, OTHER_LOOKUP_OPTION],
+    [categories]
+  )
+
+  const brandOptions = useMemo<SelectOption[]>(
+    () => [...brands, OTHER_LOOKUP_OPTION],
+    [brands]
+  )
+
+  const uomOptions = useMemo<SelectOption[]>(
+    () => [...uoms, OTHER_LOOKUP_OPTION],
+    [uoms]
+  )
 
   // A server error (duplicate barcode) must appear on its field, not just as a banner.
   const allErrors: ProductFormErrors = { ...errors, ...serverErrors }
@@ -154,34 +230,72 @@ export function ProductForm({
             value={values.name}
           />
 
-          <Select
-            error={allErrors.categoryId}
-            label="Category"
-            onChange={(next) => update('categoryId', next)}
-            options={categories}
-            placeholder="Choose a category"
-            required
-            value={values.categoryId}
-          />
+          <div>
+            <Select
+              error={allErrors.categoryId}
+              label="Category"
+              onChange={(next) => update('categoryId', next)}
+              options={categoryOptions}
+              placeholder="Choose a category"
+              required
+              value={values.categoryId}
+            />
+            {values.categoryId === 'OTHER' ? (
+              <CustomOptionField
+                badgeLabel="Custom Category"
+                error={allErrors.customCategory}
+                label="Custom Category Name"
+                onChange={(event) => update('customCategory', event.target.value)}
+                placeholder="e.g. Robotics"
+                required
+                value={values.customCategory}
+              />
+            ) : null}
+          </div>
 
-          <Select
-            error={allErrors.uomId}
-            hint="How this product is counted."
-            label="Unit"
-            onChange={(next) => update('uomId', next)}
-            options={uoms}
-            placeholder="Choose a unit"
-            required
-            value={values.uomId}
-          />
+          <div>
+            <Select
+              error={allErrors.uomId}
+              hint="How this product is counted."
+              label="Unit"
+              onChange={(next) => update('uomId', next)}
+              options={uomOptions}
+              placeholder="Choose a unit"
+              required
+              value={values.uomId}
+            />
+            {values.uomId === 'OTHER' ? (
+              <CustomOptionField
+                badgeLabel="Custom Unit"
+                error={allErrors.customUom}
+                label="Custom Unit Name"
+                onChange={(event) => update('customUom', event.target.value)}
+                placeholder="e.g. ROLL or KG"
+                required
+                value={values.customUom}
+              />
+            ) : null}
+          </div>
 
-          <Select
-            label="Brand"
-            onChange={(next) => update('brandId', next)}
-            options={brands}
-            placeholder="No brand"
-            value={values.brandId}
-          />
+          <div>
+            <Select
+              label="Brand"
+              onChange={(next) => update('brandId', next)}
+              options={brandOptions}
+              placeholder="No brand"
+              value={values.brandId}
+            />
+            {values.brandId === 'OTHER' ? (
+              <CustomOptionField
+                badgeLabel="Custom Brand"
+                error={allErrors.customBrand}
+                label="Custom Brand Name"
+                onChange={(event) => update('customBrand', event.target.value)}
+                placeholder="e.g. Logitech"
+                value={values.customBrand}
+              />
+            ) : null}
+          </div>
 
           <Field
             error={allErrors.modelNumber}
@@ -189,6 +303,7 @@ export function ProductForm({
             label="Model number"
             maxLength={100}
             onChange={(event) => update('modelNumber', event.target.value)}
+            placeholder="e.g. R3-V2"
             value={values.modelNumber}
           />
 
@@ -330,15 +445,32 @@ export function ProductForm({
             value={values.hsnCode}
           />
 
-          <Select
-            error={allErrors.gstPercent}
-            hint="Optional."
-            label="GST rate"
-            onChange={(next) => update('gstPercent', next)}
-            options={GST_OPTIONS}
-            placeholder="Not specified"
-            value={values.gstPercent}
-          />
+          <div>
+            <Select
+              error={allErrors.gstPercent}
+              hint="Optional."
+              label="GST rate"
+              onChange={(next) => update('gstPercent', next)}
+              options={GST_OPTIONS}
+              placeholder="Not specified"
+              value={values.gstPercent}
+            />
+            {values.gstPercent === 'OTHER' ? (
+              <CustomOptionField
+                badgeLabel="Custom GST Rate"
+                error={allErrors.customGst}
+                inputMode="decimal"
+                label="Custom GST Rate (%)"
+                max={100}
+                min={0}
+                onChange={(event) => update('customGst', event.target.value)}
+                placeholder="e.g. 18.5"
+                step="0.01"
+                type="number"
+                value={values.customGst}
+              />
+            ) : null}
+          </div>
         </div>
       </Section>
 
@@ -348,7 +480,7 @@ export function ProductForm({
         </Alert>
       ) : null}
 
-      <div className="flex items-center justify-end gap-3 pb-2">
+      <div className="flex items-center justify-end gap-3 pb-8 pt-4">
         <Button disabled={isSaving} onClick={onCancel} type="button" variant="secondary">
           Cancel
         </Button>

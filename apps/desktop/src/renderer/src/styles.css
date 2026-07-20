@@ -247,6 +247,17 @@
   }
 }
 
+/* Hide scrollbars while maintaining scrolling capability */
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
 /*
  * Glass surfaces are driven by these variables so a theme switch is a variable swap, not a
  * second copy of every rule.
@@ -257,12 +268,14 @@
  */
 :root {
   --glass-bg: rgb(255 255 255 / 0.03);
-  --glass-shadow: 0 8px 32px 0 rgb(0 0 0 / 0.8);
+  --glass-elevated-bg: rgb(18 17 22 / 1);
+  --glass-shadow: 0 16px 48px 0 rgb(0 0 0 / 0.95);
 }
 
 :root[data-theme='light'] {
   --glass-bg: rgb(255 255 255 / 0.85);
-  --glass-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.06);
+  --glass-elevated-bg: rgb(255 255 255 / 1);
+  --glass-shadow: 0 8px 24px 0 rgb(0 0 0 / 0.08);
 }
 
 @utility glass {
@@ -275,12 +288,10 @@
 }
 
 @utility glass-elevated {
-  /* Level 2 — modals and popovers. Separated from Level 1 by a deeper blur, not by a
-     different border: DESIGN.md asks for a heavier edge here, but one border colour across
-     the app is the stronger rule. Blur and shadow carry the elevation instead. */
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  /* Level 2 — modals and popovers. Extra large blur (64px) & high opacity (94%) for maximum contrast and legibility in dark mode. */
+  background: var(--glass-elevated-bg);
+  backdrop-filter: blur(64px);
+  -webkit-backdrop-filter: blur(64px);
   border: 1px solid var(--color-border);
   box-shadow: var(--glass-shadow);
 }

@@ -102,17 +102,24 @@ export function useProduct(id: string | undefined) {
  * boxes, so the form offers *adding* a manufacturer code, never regenerating the SKU.
  */
 export function toFormValues(product: ProductDetail): ProductFormValues {
+  const standardGst = ['0', '5', '12', '18', '28']
+  const rawGst = product.gstPercent === null ? '' : String(product.gstPercent)
+  const isCustomGst = rawGst !== '' && !standardGst.includes(rawGst)
+
   return {
     name: product.name,
     categoryId: product.categoryId ?? '',
+    customCategory: '',
     brandId: product.brandId ?? '',
+    customBrand: '',
     uomId: product.uomId ?? '',
+    customUom: '',
     modelNumber: product.modelNumber ?? '',
     description: product.description ?? '',
     minStock: String(product.minStock),
     hsnCode: product.hsnCode ?? '',
-    // A real 0% GST must render as "0", not as blank. String(null) would be "null".
-    gstPercent: product.gstPercent === null ? '' : String(product.gstPercent),
+    gstPercent: isCustomGst ? 'OTHER' : rawGst,
+    customGst: isCustomGst ? rawGst : '',
     trackingMode: product.trackingMode,
     barcodeSource: 'GENERATE',
     manufacturerBarcode: ''

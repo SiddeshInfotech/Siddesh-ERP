@@ -16,7 +16,14 @@ interface CardProps {
  */
 export function Card({ children, className, elevated = false }: CardProps) {
   return (
-    <div className={cn(elevated ? 'glass-elevated' : 'glass', 'rounded-xl', className)}>
+    <div
+      className={cn(
+        elevated ? 'glass-elevated' : 'glass',
+        'rounded-xl',
+        '[&:has([aria-expanded="true"])]:relative [&:has([aria-expanded="true"])]:z-50',
+        className
+      )}
+    >
       {children}
     </div>
   )

@@ -91,6 +91,11 @@ export function toUserMessage(error: UnknownError): string {
     return 'Cannot reach the server. Check your connection and try again.'
   }
 
+  const shape = asErrorShape(error)
+  if (shape.message) {
+    return shape.message
+  }
+
   return 'Something went wrong. Please try again.'
 }
 

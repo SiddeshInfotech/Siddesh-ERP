@@ -42,9 +42,9 @@ export function BarcodeGeneratorModal({ product, onClose }: BarcodeGeneratorModa
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden font-sans animate-in fade-in zoom-in duration-150">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 font-sans animate-in fade-in zoom-in duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
+        <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200 rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
               <Barcode className="w-5 h-5" />
