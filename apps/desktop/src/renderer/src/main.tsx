@@ -12,16 +12,11 @@ import { Dashboard } from '@/routes/Dashboard'
 import { Inward } from '@/routes/Inward'
 import { Login } from '@/routes/Login'
 import { Outward } from '@/routes/Outward'
-<<<<<<< Updated upstream
 import { ProductDetail } from '@/routes/ProductDetail'
 import { ProductEditor } from '@/routes/ProductEditor'
 import { Products } from '@/routes/Products'
 import { Reports } from '@/routes/Reports'
 import { Stock } from '@/routes/Stock'
-=======
-import { Placeholder } from '@/routes/Placeholder'
-import { Products } from '@/routes/Products'
->>>>>>> Stashed changes
 import './styles.css'
 
 /**
@@ -39,7 +34,6 @@ const router = createHashRouter([
     ),
     children: [
       { index: true, element: <Dashboard /> },
-<<<<<<< Updated upstream
       // Static segments before the :id route, or "new" resolves as a product id.
       { path: 'products', element: <Products /> },
       { path: 'products/new', element: <ProductEditor /> },
@@ -49,13 +43,6 @@ const router = createHashRouter([
       { path: 'outward', element: <Outward /> },
       { path: 'stock', element: <Stock /> },
       { path: 'reports', element: <Reports /> }
-=======
-      { path: 'products', element: <Products /> },
-      { path: 'inward', element: <Inward /> },
-      { path: 'outward', element: <Outward /> },
-      { path: 'stock', element: <Placeholder arrives="on Day 4" title="Stock" /> },
-      { path: 'reports', element: <Placeholder arrives="on Day 4" title="Reports" /> }
->>>>>>> Stashed changes
     ]
   }
 ])

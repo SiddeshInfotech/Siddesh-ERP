@@ -77,7 +77,7 @@ interface BarcodeCanvasA4Props {
 export function BarcodeCanvasA4({ items, onBack }: BarcodeCanvasA4Props) {
   const [selectedPresetKey, setSelectedPresetKey] = useState<PresetKey>('medium24')
 
-  const preset = GRID_PRESETS.find((p) => p.key === selectedPresetKey) || GRID_PRESETS[0]
+  const preset = (GRID_PRESETS.find((p) => p.key === selectedPresetKey) || GRID_PRESETS[0])!
 
   const handlePrint = () => {
     window.print()

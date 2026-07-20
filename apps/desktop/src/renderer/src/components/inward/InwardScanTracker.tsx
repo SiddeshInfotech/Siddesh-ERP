@@ -44,14 +44,15 @@ export function InwardScanTracker({
 
     if (targetIdx !== -1) {
       const updated = [...units]
+      const currentUnit = updated[targetIdx]!
       updated[targetIdx] = {
-        ...updated[targetIdx],
+        ...currentUnit,
         isScanned: true,
         scannedAt: new Date().toLocaleTimeString()
       }
       onUnitsChange(updated)
       setScanFeedback({
-        message: `✅ Scanned Unit: ${updated[targetIdx].unitBarcode}`,
+        message: `✅ Scanned Unit: ${currentUnit.unitBarcode}`,
         isError: false
       })
       setScanInput('')

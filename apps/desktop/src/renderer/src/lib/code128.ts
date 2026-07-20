@@ -152,9 +152,9 @@ export function generateCode128Svg(text: string, options: BarcodeOptions = {}): 
   }
 
   // Calculate checksum modulo 103
-  let checksum = codes[0]
+  let checksum = codes[0] ?? 104
   for (let i = 1; i < codes.length; i++) {
-    checksum += i * codes[i]
+    checksum += i * (codes[i] ?? 0)
   }
   checksum %= 103
   codes.push(checksum)
@@ -171,7 +171,7 @@ export function generateCode128Svg(text: string, options: BarcodeOptions = {}): 
   }
 
   for (const code of codes) {
-    const pattern = CODE128_PATTERNS[code] || CODE128_PATTERNS[0]
+    const pattern = CODE128_PATTERNS[code] ?? CODE128_PATTERNS[0]!
     let isBar = true
     for (const width of pattern) {
       for (let w = 0; w < width; w++) {
