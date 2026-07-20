@@ -14,7 +14,7 @@ export function AppShell() {
       <Sidebar />
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar />
-        <main className="-mt-12 flex-1 overflow-y-auto px-container pb-container pt-14">
+        <main className="flex-1 overflow-y-auto px-container pb-container pt-16">
           <Outlet />
         </main>
       </div>

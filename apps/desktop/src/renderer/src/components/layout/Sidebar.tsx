@@ -2,6 +2,7 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   BarChart3,
+  Barcode,
   LayoutDashboard,
   LogOut,
   Moon,
@@ -28,6 +29,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/products', label: 'Products', icon: Package },
+  { to: '/barcodes', label: 'Barcodes', icon: Barcode },
   { to: '/inward', label: 'Inward', icon: ArrowDownToLine },
   { to: '/outward', label: 'Outward', icon: ArrowUpFromLine },
   { to: '/stock', label: 'Stock', icon: Warehouse },

@@ -8,6 +8,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { AuthProvider } from '@/hooks/useAuth'
 import { SidebarProvider } from '@/hooks/useSidebar'
 import { ThemeProvider } from '@/hooks/useTheme'
+import { Barcodes } from '@/routes/Barcodes'
 import { Dashboard } from '@/routes/Dashboard'
 import { Inward } from '@/routes/Inward'
 import { Login } from '@/routes/Login'
@@ -39,6 +40,7 @@ const router = createHashRouter([
       { path: 'products/new', element: <ProductEditor /> },
       { path: 'products/:id', element: <ProductDetail /> },
       { path: 'products/:id/edit', element: <ProductEditor /> },
+      { path: 'barcodes', element: <Barcodes /> },
       { path: 'inward', element: <Inward /> },
       { path: 'outward', element: <Outward /> },
       { path: 'stock', element: <Stock /> },
