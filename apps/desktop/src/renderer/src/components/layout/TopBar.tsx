@@ -16,6 +16,6 @@
  */
 export function TopBar() {
   return (
-    <header className="drag-region flex h-12 shrink-0 items-center gap-4 px-container pr-[140px]" />
+    <header className="drag-region sticky top-0 z-50 flex h-12 shrink-0 items-center gap-4 px-container pr-[140px] backdrop-blur-xl transition-all duration-200" />
   )
 }

@@ -12,9 +12,9 @@ export function AppShell() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar />
-        <main className="flex-1 overflow-y-auto p-container">
+        <main className="-mt-12 flex-1 overflow-y-auto px-container pb-container pt-14">
           <Outlet />
         </main>
       </div>

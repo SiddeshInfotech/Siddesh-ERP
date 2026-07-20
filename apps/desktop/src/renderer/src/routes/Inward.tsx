@@ -4,6 +4,7 @@ import { ProductPicker } from '@/components/movement/ProductPicker'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { Field } from '@/components/ui/Field'
 import { Textarea } from '@/components/ui/Textarea'
 import { useProductPicker } from '@/hooks/useProductPicker'
@@ -268,11 +269,10 @@ export function Inward() {
               onChange={(event) => setInvoiceNo(event.target.value)}
               value={invoiceNo}
             />
-            <Field
+            <DatePicker
               hint="Optional."
               label="Invoice date"
-              onChange={(event) => setInvoiceDate(event.target.value)}
-              type="date"
+              onChange={setInvoiceDate}
               value={invoiceDate}
             />
             <Field

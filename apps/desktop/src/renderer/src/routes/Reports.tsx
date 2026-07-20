@@ -3,6 +3,7 @@ import { ExportButtons } from '@/components/reports/ExportButtons'
 import { Alert } from '@/components/ui/Alert'
 import { Card } from '@/components/ui/Card'
 import { DataTable, type Column } from '@/components/ui/DataTable'
+import { DatePicker } from '@/components/ui/DatePicker'
 import { Field } from '@/components/ui/Field'
 import { Select } from '@/components/ui/Select'
 import { useExportReport } from '@/hooks/useExportReport'
@@ -208,19 +209,17 @@ export function Reports() {
 
         <div className="flex items-end gap-3 hairline-b p-4">
           {/* DSK-412 — from/to on every report. */}
-          <Field
+          <DatePicker
             containerClassName="w-44"
             label="From"
-            onChange={(event) => setRange((r) => ({ ...r, from: event.target.value }))}
-            type="date"
+            onChange={(next: string) => setRange((r) => ({ ...r, from: next }))}
             value={range.from}
           />
-          <Field
+          <DatePicker
             containerClassName="w-44"
-            label="To"
             hint="Inclusive."
-            onChange={(event) => setRange((r) => ({ ...r, to: event.target.value }))}
-            type="date"
+            label="To"
+            onChange={(next: string) => setRange((r) => ({ ...r, to: next }))}
             value={range.to}
           />
 
