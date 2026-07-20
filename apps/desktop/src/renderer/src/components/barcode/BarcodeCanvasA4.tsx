@@ -1,5 +1,7 @@
 import { useState, useRef, useMemo } from 'react'
 import { Printer, Download, Grid, ArrowLeft, Sparkles, FileText, Layers } from 'lucide-react'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 import { generateCode128Svg } from '@/lib/code128'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -76,11 +78,12 @@ interface BarcodeCanvasA4Props {
 
 export function BarcodeCanvasA4({ items, onBack }: BarcodeCanvasA4Props) {
   const [selectedPresetKey, setSelectedPresetKey] = useState<PresetKey>('medium')
-  const sheetRef = useRef<HTMLDivElement>(null)
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
+  const pagesContainerRef = useRef<HTMLDivElement>(null)
 
   const preset = (GRID_PRESETS.find((p) => p.key === selectedPresetKey) || GRID_PRESETS[2])!
 
-  // Chunk items into exact physical A4 paper pages based on labelsPerPage
+  // Slice items into exact physical A4 paper pages based on labelsPerPage
   const pageChunks = useMemo(() => {
     const size = preset.labelsPerPage
     const chunks: BarcodeLabelData[][] = []
@@ -90,8 +93,53 @@ export function BarcodeCanvasA4({ items, onBack }: BarcodeCanvasA4Props) {
     return chunks.length > 0 ? chunks : [[]]
   }, [items, preset.labelsPerPage])
 
-  // Direct PDF Download / Print
-  const handleDownloadPDF = () => {
+  // Direct High Quality Multi-Page PDF Download via jsPDF & html2canvas
+  const handleDownloadPDF = async () => {
+    if (!pagesContainerRef.current) return
+    setIsGeneratingPDF(true)
+
+    try {
+      const pageElements = pagesContainerRef.current.querySelectorAll<HTMLElement>('.a4-paper-sheet')
+      if (pageElements.length === 0) return
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      })
+
+      for (let i = 0; i < pageElements.length; i++) {
+        const pageEl = pageElements[i]
+        if (!pageEl) continue
+
+        // Capture page element at 2.5x resolution for vector sharpness
+        const canvas = await html2canvas(pageEl, {
+          scale: 2.5,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        })
+
+        const imgData = canvas.toDataURL('image/png', 1.0)
+
+        if (i > 0) {
+          pdf.addPage('a4', 'portrait')
+        }
+
+        // Add 210mm x 297mm page image filling exact A4 paper dimensions
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297)
+      }
+
+      pdf.save(`Barcode_Labels_${preset.key}_${Date.now()}.pdf`)
+    } catch (err) {
+      console.error('jsPDF Generation Error:', err)
+      window.print()
+    } finally {
+      setIsGeneratingPDF(false)
+    }
+  }
+
+  const handlePrint = () => {
     window.print()
   }
 
@@ -118,12 +166,16 @@ export function BarcodeCanvasA4({ items, onBack }: BarcodeCanvasA4Props) {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="primary" onClick={handleDownloadPDF}>
+          <Button
+            variant="primary"
+            onClick={handleDownloadPDF}
+            isLoading={isGeneratingPDF}
+          >
             <Download className="size-4 mr-1.5" />
             Download PDF
           </Button>
 
-          <Button variant="secondary" onClick={handleDownloadPDF}>
+          <Button variant="secondary" onClick={handlePrint}>
             <Printer className="size-4 mr-1.5" />
             Direct Print
           </Button>
@@ -154,15 +206,17 @@ export function BarcodeCanvasA4({ items, onBack }: BarcodeCanvasA4Props) {
           </div>
         </div>
 
-        {/* REAL PDF A4 PAGES VIEWPORT - CLEAN STACKED A4 SHEETS */}
-        <div className="p-8 bg-surface-container-lowest/60 rounded-b-2xl max-h-[calc(100vh-260px)] overflow-y-auto print:max-h-none print:p-0 print:overflow-visible scrollbar-thin">
+        {/* REAL PDF A4 PAGES VIEWPORT */}
+        <div
+          ref={pagesContainerRef}
+          className="p-8 bg-surface-container-lowest/60 rounded-b-2xl max-h-[calc(100vh-260px)] overflow-y-auto print:max-h-none print:p-0 print:overflow-visible scrollbar-thin"
+        >
           <div className="space-y-8">
             {pageChunks.map((pageItems, pageIdx) => (
               <div key={pageIdx}>
                 {/* REAL PHYSICAL A4 PAPER SHEET (210mm x 297mm) */}
                 <div
-                  ref={pageIdx === 0 ? sheetRef : undefined}
-                  className="bg-white text-slate-950 shadow-2xl rounded-sm p-[8mm] mx-auto print:shadow-none print:p-0 print:m-0 w-full max-w-[210mm] print:break-after-page transition-all duration-150"
+                  className="a4-paper-sheet bg-white text-slate-950 shadow-2xl rounded-sm p-[8mm] mx-auto print:shadow-none print:p-0 print:m-0 w-full max-w-[210mm] print:break-after-page transition-all duration-150"
                   style={{
                     minHeight: '297mm',
                     boxSizing: 'border-box'
@@ -216,15 +270,22 @@ export function BarcodeCanvasA4({ items, onBack }: BarcodeCanvasA4Props) {
         </div>
       </Card>
 
-      {/* Embedded CSS for Print Mode */}
+      {/* Embedded CSS for Print Mode — Hides all App Shell & Nav elements during print */}
       <style>{`
         @media print {
           body {
             background: white !important;
             color: black !important;
           }
-          header, .print\\:hidden {
+          nav, aside, header, footer, .print\\:hidden {
             display: none !important;
+          }
+          .a4-paper-sheet {
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
           }
           .print\\:break-after-page {
             page-break-after: always !important;
