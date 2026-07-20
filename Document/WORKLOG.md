@@ -509,4 +509,10 @@ routes/Placeholder.tsx (deleted), apps/desktop/package.json (write-excel-file 4.
 **Notes:** Live unit scanning verification updates unscanned count in real-time as items are scanned. Light theme styled.
 **Files:** apps/desktop/src/renderer/src/components/inward/InwardScanTracker.tsx, apps/desktop/src/renderer/src/routes/Inward.tsx, apps/desktop/src/renderer/src/lib/sequence.ts
 
+## 20/07/2026 16:30 — DSK-320 — A4 Barcode Canvas: vector PDF + full-page grid + boxed all-pages preview — Ram
+**Status:** Done — typecheck + build pass
+**What:** Rebuilt the A4 Barcode Label Canvas PDF export and layout. PDF is now fully vector (Code 128 bars drawn as jsPDF rectangles in mm) instead of an html2canvas raster — crisp at any zoom, small file, real page breaks (one `addPage` per full sheet). The grid now fills the entire printable A4 area, so a 24-label (3×8) selection tiles all 24 evenly across the page; barcodes scale to fit each cell. Reworked the screen into a two-pane layout: controls on the left, a boxed scrollable preview of every A4 page on the right (WYSIWYG via container-query units, matches the PDF). Direct Print re-renders the same sheets full-size via print CSS.
+**Notes:** Added `getCode128Modules()` to `code128.ts` as the shared bar-map primitive (SVG preview and vector PDF both consume it — single source of truth). New pure lib `barcodePdf.ts` owns PDF layout; component/hook layering preserved (§5). html2canvas no longer used by this screen.
+**Files:** apps/desktop/src/renderer/src/lib/code128.ts, apps/desktop/src/renderer/src/lib/barcodePdf.ts, apps/desktop/src/renderer/src/components/barcode/BarcodeCanvasA4.tsx
+
 

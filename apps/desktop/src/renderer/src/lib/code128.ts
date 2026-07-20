@@ -125,7 +125,59 @@ export interface BarcodeOptions {
 }
 
 /**
- * Encodes text into Code 128-B bars and returns SVG element string.
+ * Encodes text into a Code 128-B module map — one boolean per module unit
+ * (`true` = bar, `false` = space) — including the quiet zones on both sides.
+ *
+ * This is the shared primitive behind both the SVG preview and the vector PDF:
+ * the PDF draws these modules as filled rectangles at exact mm widths, which is
+ * why the printed barcode stays crisp and scannable at any zoom.
+ *
+ * @param text - Value to encode. Non-printable chars fall back to `?`.
+ * @param quietZone - Blank module units padded on each side (default 10).
+ * @returns Flat module array; empty when `text` is blank.
+ */
+export function getCode128Modules(text: string, quietZone = 10): boolean[] {
+  const sanitized = text.trim()
+  if (!sanitized) return []
+
+  const codes: number[] = [104] // Start Code B
+
+  for (let i = 0; i < sanitized.length; i++) {
+    const charCode = sanitized.charCodeAt(i)
+    // Printable ASCII maps directly; anything else becomes '?' (63 - 32).
+    codes.push(charCode >= 32 && charCode <= 126 ? charCode - 32 : 63 - 32)
+  }
+
+  // Checksum modulo 103, weighted by position.
+  let checksum = codes[0] ?? 104
+  for (let i = 1; i < codes.length; i++) {
+    checksum += i * (codes[i] ?? 0)
+  }
+  checksum %= 103
+  codes.push(checksum)
+  codes.push(106) // Stop symbol
+
+  const modules: boolean[] = []
+
+  for (let q = 0; q < quietZone; q++) modules.push(false)
+
+  for (const code of codes) {
+    const pattern = CODE128_PATTERNS[code] ?? CODE128_PATTERNS[0]!
+    let isBar = true
+    for (const width of pattern) {
+      for (let w = 0; w < width; w++) modules.push(isBar)
+      isBar = !isBar
+    }
+  }
+
+  for (let q = 0; q < quietZone; q++) modules.push(false)
+
+  return modules
+}
+
+/**
+ * Encodes text into Code 128-B bars and returns an SVG element string that
+ * scales to fill its container.
  */
 export function generateCode128Svg(text: string, options: BarcodeOptions = {}): string {
   const {
@@ -140,63 +192,19 @@ export function generateCode128Svg(text: string, options: BarcodeOptions = {}): 
   const sanitized = text.trim()
   if (!sanitized) return ''
 
-  const codes: number[] = [104] // Start Code B
+  const modules = getCode128Modules(sanitized, quietZone)
 
-  for (let i = 0; i < sanitized.length; i++) {
-    const charCode = sanitized.charCodeAt(i)
-    if (charCode >= 32 && charCode <= 126) {
-      codes.push(charCode - 32)
-    } else {
-      codes.push(63 - 32)
-    }
-  }
-
-  // Calculate checksum modulo 103
-  let checksum = codes[0] ?? 104
-  for (let i = 1; i < codes.length; i++) {
-    checksum += i * (codes[i] ?? 0)
-  }
-  checksum %= 103
-  codes.push(checksum)
-
-  // Append Stop symbol
-  codes.push(106)
-
-  // Calculate module elements
-  const moduleElements: boolean[] = []
-
-  // Left Quiet zone
-  for (let q = 0; q < quietZone; q++) {
-    moduleElements.push(false)
-  }
-
-  for (const code of codes) {
-    const pattern = CODE128_PATTERNS[code] ?? CODE128_PATTERNS[0]!
-    let isBar = true
-    for (const width of pattern) {
-      for (let w = 0; w < width; w++) {
-        moduleElements.push(isBar)
-      }
-      isBar = !isBar
-    }
-  }
-
-  // Right Quiet zone
-  for (let q = 0; q < quietZone; q++) {
-    moduleElements.push(false)
-  }
-
-  const totalWidth = moduleElements.length * moduleWidth
+  const totalWidth = modules.length * moduleWidth
   const textHeight = includeText ? 16 : 0
   const svgHeight = height + textHeight
 
   let rectsSvg = ''
   let currentX = 0
 
-  for (let i = 0; i < moduleElements.length; i++) {
-    if (moduleElements[i]) {
+  for (let i = 0; i < modules.length; i++) {
+    if (modules[i]) {
       let runLength = 1
-      while (i + 1 < moduleElements.length && moduleElements[i + 1]) {
+      while (i + 1 < modules.length && modules[i + 1]) {
         runLength++
         i++
       }
