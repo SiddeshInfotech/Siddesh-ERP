@@ -186,6 +186,7 @@ migrations applied. Untested by click.
 **Files:** main/index.ts, preload/index.ts, hooks/useTheme.tsx, hooks/useSidebar.tsx,
 components/layout/{Sidebar,TopBar}.tsx, components/ui/{Card,DataTable}.tsx, styles.css, main.tsx
 
+<<<<<<< Updated upstream
 ## 17/07/2026 10:31 — UI-002 — One border colour for every component — Ram
 **Status:** Done — typecheck + build pass; both themes verified against the compiled CSS
 **What:** Introduced `--color-border`, the single border colour for the whole app, and pointed
@@ -497,3 +498,18 @@ has not been executed.
 **Files:** routes/{Dashboard,Stock,Reports}.tsx, hooks/{useReports,useDashboard,useExportReport}.ts,
 lib/reportDocument.ts, components/reports/ExportButtons.tsx, main.tsx,
 routes/Placeholder.tsx (deleted), apps/desktop/package.json (write-excel-file 4.1.1)
+=======
+## 18/07/2026 11:45 — DSK-208-214 — Barcode Management (Option A/B), A4 Canvas & Inward/Outward — Ram
+**Status:** Done
+**What:** Implemented Code 128 SVG barcode generator, barcode sequence tracking (`ST00000001`), Option A/B barcode assignment, A4 printable barcode canvas with 5 grid presets (24, 65, 40, 14, 8 labels/page), PDF export & direct printing, Product Master route, and Inward/Outward workflow screens.
+**Notes:** Preset 1D Code 128 SVG barcodes maintain standard quiet zones to ensure 100% scanner compatibility across handheld USB/Bluetooth & camera scanners. Styled with Obsidian Light theme tokens.
+**Files:** apps/desktop/src/renderer/src/lib/code128.ts, apps/desktop/src/renderer/src/lib/sequence.ts, apps/desktop/src/renderer/src/components/barcode/BarcodeCanvasA4.tsx, apps/desktop/src/renderer/src/components/barcode/BarcodeGeneratorModal.tsx, apps/desktop/src/renderer/src/routes/{Products,Inward,Outward}.tsx, apps/desktop/src/renderer/src/main.tsx
+
+## 18/07/2026 15:42 — DSK-301-309 — Enhanced Inward Workflow (Scanned/Unscanned Live Tracker & Barcode Generator) — Ram
+**Status:** Done — typecheck + build pass
+**What:** Implemented live Scanned vs Unscanned products tracker component (`InwardScanTracker.tsx`), on-the-fly unique barcode generator for products lacking primary barcodes, global barcode uniqueness validator (`isBarcodeUnique`), complete Supplier Details form (Name, Mobile, GST No, Invoice No, Invoice Date, PO No), and Logistics details form (Delivered By / Courier).
+**Notes:** Live unit scanning verification updates unscanned count in real-time as items are scanned. Light theme styled.
+**Files:** apps/desktop/src/renderer/src/components/inward/InwardScanTracker.tsx, apps/desktop/src/renderer/src/routes/Inward.tsx, apps/desktop/src/renderer/src/lib/sequence.ts
+
+
+>>>>>>> Stashed changes

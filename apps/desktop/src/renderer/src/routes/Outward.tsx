@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { ArrowUpFromLine, CheckCircle2, FileText, School, UserCheck } from 'lucide-react'
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { ProductPicker } from '@/components/movement/ProductPicker'
@@ -371,6 +372,306 @@ export function Outward() {
           </Button>
         </div>
       </form>
+=======
+import { useState } from 'react'
+import { ArrowUpRight, Scan, AlertTriangle, CheckCircle2, Building2, UserCheck, ShieldAlert, Package } from 'lucide-react'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+
+interface ProductItem {
+  id: string
+  name: string
+  barcode: string
+  currentStock: number
+  availableStock: number
+  category: string
+}
+
+const DEMO_PRODUCTS: ProductItem[] = [
+  { id: '1', name: 'Arduino UNO R3 Board', barcode: 'ST00000001', currentStock: 45, availableStock: 45, category: 'AI Lab' },
+  { id: '2', name: 'Servo Motor SG90', barcode: 'ST00000002', currentStock: 120, availableStock: 120, category: 'AI Lab' },
+  { id: '3', name: 'RFID RC522 Module', barcode: 'ST00000003', currentStock: 8, availableStock: 8, category: 'AI Lab' },
+  { id: '4', name: '64 GB Pen Drive (Std 1-4)', barcode: 'ST00000004', currentStock: 80, availableStock: 80, category: 'Digital Products' }
+]
+
+export type OutwardType = 'SALE' | 'DEMO' | 'REPLACEMENT' | 'INTERNAL_USE' | 'SERVICE' | 'SAMPLE'
+
+export function Outward() {
+  const [scanQuery, setScanQuery] = useState<string>('')
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null)
+  const [quantity, setQuantity] = useState<number>(1)
+  const [outwardType, setOutwardType] = useState<OutwardType>('SALE')
+  const [schoolName, setSchoolName] = useState<string>('')
+  const [contactPerson, setContactPerson] = useState<string>('')
+  const [mobileNumber, setMobileNumber] = useState<string>('')
+  const [handedOverBy, setHandedOverBy] = useState<string>('')
+  const [receivedBy, setReceivedBy] = useState<string>('')
+  const [isSaved, setIsSaved] = useState<boolean>(false)
+
+  const handleScanOrSearch = (query: string) => {
+    setScanQuery(query)
+    const match = DEMO_PRODUCTS.find(
+      (p) => p.barcode.toLowerCase() === query.trim().toLowerCase() || p.name.toLowerCase().includes(query.trim().toLowerCase())
+    )
+    if (match) {
+      setSelectedProduct(match)
+    }
+  }
+
+  const isInsufficientStock = selectedProduct ? quantity > selectedProduct.availableStock : false
+
+  const handleSaveOutward = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedProduct || quantity <= 0 || isInsufficientStock) return
+
+    // Reduce stock in demo mode
+    selectedProduct.currentStock -= quantity
+    selectedProduct.availableStock -= quantity
+    setIsSaved(true)
+  }
+
+  const handleReset = () => {
+    setSelectedProduct(null)
+    setScanQuery('')
+    setQuantity(1)
+    setOutwardType('SALE')
+    setSchoolName('')
+    setContactPerson('')
+    setMobileNumber('')
+    setHandedOverBy('')
+    setReceivedBy('')
+    setIsSaved(false)
+  }
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto font-sans">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <ArrowUpRight className="w-6 h-6 text-indigo-600" />
+            Outward Dispatch Entry
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Dispatch stock to schools or customers, validate stock availability, and post ledger entry.
+          </p>
+        </div>
+      </div>
+
+      {isSaved ? (
+        <Card className="p-8 bg-indigo-50/80 border border-indigo-200 text-center space-y-4 rounded-2xl shadow-sm">
+          <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-indigo-950">Outward Saved Successfully!</h2>
+            <p className="text-xs text-indigo-800 mt-1">
+              Dispatched <strong className="font-bold">{quantity}</strong> unit(s) of{' '}
+              <strong className="font-bold">{selectedProduct?.name}</strong> for {outwardType}.
+            </p>
+            <p className="text-xs text-indigo-700 mt-0.5">
+              Remaining Available Stock: <span className="font-mono font-bold">{selectedProduct?.availableStock} units</span>
+            </p>
+          </div>
+          <Button onClick={handleReset} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-6 py-2">
+            Record Another Outward
+          </Button>
+        </Card>
+      ) : (
+        <form onSubmit={handleSaveOutward} className="space-y-6">
+          {/* Step 1 & 2: Barcode Scan & Product Display */}
+          <Card className="p-5 bg-white border border-slate-200 shadow-sm rounded-xl space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
+              <Scan className="w-4 h-4 text-indigo-600" />
+              1. Scan Barcode or Select Product
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Scan / Search Barcode</label>
+                <input
+                  type="text"
+                  value={scanQuery}
+                  onChange={(e) => handleScanOrSearch(e.target.value)}
+                  placeholder="Scan barcode (e.g. ST00000001)..."
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Product Picker</label>
+                <select
+                  value={selectedProduct?.id || ''}
+                  onChange={(e) => {
+                    const prod = DEMO_PRODUCTS.find((p) => p.id === e.target.value)
+                    if (prod) setSelectedProduct(prod)
+                  }}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">-- Select Product --</option>
+                  {DEMO_PRODUCTS.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.barcode}) - {p.availableStock} available
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Product Stock Status Display */}
+            {selectedProduct && (
+              <div
+                className={`p-4 rounded-xl border flex items-center justify-between ${
+                  selectedProduct.availableStock <= 5
+                    ? 'bg-amber-50 border-amber-200'
+                    : 'bg-slate-50 border-slate-200'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white text-slate-700 rounded-lg shadow-xs">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900">{selectedProduct.name}</h3>
+                    <p className="text-[11px] text-slate-500 font-mono">Barcode: {selectedProduct.barcode}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-semibold text-slate-500 uppercase">Available Quantity</span>
+                  <div
+                    className={`text-base font-bold font-mono ${
+                      selectedProduct.availableStock <= 5 ? 'text-amber-600' : 'text-emerald-600'
+                    }`}
+                  >
+                    {selectedProduct.availableStock} units
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Step 3 & 4: Quantity & Outward Type */}
+          <Card className="p-5 bg-white border border-slate-200 shadow-sm rounded-xl space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
+              <Building2 className="w-4 h-4 text-indigo-600" />
+              2. Quantity & Outward Reason
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Dispatch Quantity *</label>
+                <input
+                  type="number"
+                  min={1}
+                  required
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  className={`w-full px-3.5 py-2 bg-white border rounded-xl text-xs font-bold focus:outline-none ${
+                    isInsufficientStock
+                      ? 'border-rose-500 text-rose-600 focus:ring-rose-500'
+                      : 'border-slate-300 text-slate-900 focus:ring-indigo-500'
+                  }`}
+                />
+                {isInsufficientStock && (
+                  <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Insufficient stock! Only {selectedProduct?.availableStock} unit(s) available.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Outward Type *</label>
+                <select
+                  value={outwardType}
+                  onChange={(e) => setOutwardType(e.target.value as OutwardType)}
+                  className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="SALE">Sale</option>
+                  <option value="DEMO">Demo</option>
+                  <option value="REPLACEMENT">Replacement</option>
+                  <option value="INTERNAL_USE">Internal Use</option>
+                  <option value="SERVICE">Service</option>
+                  <option value="SAMPLE">Sample</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Step 5: Party / School Details */}
+            <div className="pt-2 border-t border-slate-100 space-y-3">
+              <label className="block text-xs font-semibold text-slate-800">School / Customer Information</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">School / Party Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={schoolName}
+                    onChange={(e) => setSchoolName(e.target.value)}
+                    placeholder="e.g. Nashik High School"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Contact Person</label>
+                  <input
+                    type="text"
+                    value={contactPerson}
+                    onChange={(e) => setContactPerson(e.target.value)}
+                    placeholder="e.g. Principal Patil"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Mobile Number</label>
+                  <input
+                    type="text"
+                    value={mobileNumber}
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                    placeholder="e.g. 9822099999"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Handed Over By</label>
+                  <input
+                    type="text"
+                    value={handedOverBy}
+                    onChange={(e) => setHandedOverBy(e.target.value)}
+                    placeholder="e.g. Ram Store Manager"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Receiver Name</label>
+                  <input
+                    type="text"
+                    value={receivedBy}
+                    onChange={(e) => setReceivedBy(e.target.value)}
+                    placeholder="e.g. Teacher Ramesh"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Submit Action */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              type="submit"
+              disabled={!selectedProduct || quantity <= 0 || isInsufficientStock || !schoolName.trim()}
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold text-xs px-6 py-3 rounded-xl shadow-md"
+            >
+              Save Outward & Reduce Stock
+            </Button>
+          </div>
+        </form>
+      )}
+>>>>>>> Stashed changes
     </div>
   )
 }

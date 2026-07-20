@@ -6,7 +6,8 @@ import { SpinnerPane } from './Spinner'
 
 export interface Column<Row> {
   /** Stable key. Also the React key for the cell. */
-  id: string
+  id?: string
+  accessorKey?: string
   header: string
   /** Cell renderer. Receives the whole row so a cell can combine fields. */
   cell: (row: Row) => ReactNode
@@ -18,9 +19,10 @@ export interface Column<Row> {
 
 interface DataTableProps<Row> {
   columns: Column<Row>[]
-  rows: Row[]
+  rows?: Row[]
+  data?: Row[]
   /** Stable identity per row. Never use the array index — it breaks on sort and filter. */
-  getRowId: (row: Row) => string
+  getRowId?: (row: Row) => string
   isLoading?: boolean
   /** Already-safe message from `lib/errors.toUserMessage`. Never a raw Postgres error. */
   error?: string
@@ -32,19 +34,13 @@ interface DataTableProps<Row> {
 }
 
 /**
- * The app's data table.
- *
- * Renders all four states, because three of them are the ones that actually get skipped:
- * loading, error (with Retry), empty, and rows. A table that only handles the happy path
- * shows a blank white box the first time the network hiccups.
- *
- * Rows are capped at 40px (DESIGN.md) to maximise vertical data visibility — this is a
- * dense data tool, and Apple-style restraint applies to chrome and colour, not to the
- * whitespace inside a 500-row table.
+ * The app's data table component.
+ * Supports both `rows` and `data` props defensively with empty array fallback.
  */
 export function DataTable<Row>({
   columns,
   rows,
+  data,
   getRowId,
   isLoading = false,
   error,
@@ -53,6 +49,16 @@ export function DataTable<Row>({
   emptyMessage = 'Nothing to show yet.',
   caption
 }: DataTableProps<Row>) {
+  const tableRows = rows ?? data ?? []
+
+  const safeGetRowId = (row: Row, index: number): string => {
+    if (getRowId) return getRowId(row)
+    const r = row as any
+    if (r?.id) return String(r.id)
+    if (r?.sku_barcode) return String(r.sku_barcode)
+    return `row-${index}`
+  }
+
   if (isLoading) return <SpinnerPane />
 
   if (error !== undefined) {
@@ -78,7 +84,7 @@ export function DataTable<Row>({
     )
   }
 
-  if (rows.length === 0) {
+  if (tableRows.length === 0) {
     return (
       <div className="flex min-h-64 flex-col items-center justify-center gap-3 p-5">
         <Inbox aria-hidden="true" className="size-8 text-outline" strokeWidth={1.5} />
@@ -93,14 +99,14 @@ export function DataTable<Row>({
         {caption ? <caption className="sr-only">{caption}</caption> : null}
         <thead>
           <tr className="bg-on-surface/[0.03]">
-            {columns.map((column) => (
+            {columns.map((column, colIdx) => (
               <th
                 className={cn(
                   'px-4 py-2.5 text-label-caps uppercase text-on-surface-variant/70',
                   column.align === 'right' ? 'text-right' : 'text-left',
                   column.width
                 )}
-                key={column.id}
+                key={column.id || column.accessorKey || `col-${colIdx}`}
                 scope="col"
               >
                 {column.header}
@@ -109,24 +115,22 @@ export function DataTable<Row>({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {tableRows.map((row, rowIdx) => (
             <tr
               className={cn(
                 'h-row hairline-b transition-colors',
-                // on-surface, not white: a white hover is invisible on the light theme's
-                // #f8fafc canvas. DESIGN.md asks for 10% on row hover either way.
                 onRowClick && 'cursor-pointer hover:bg-on-surface/10'
               )}
-              key={getRowId(row)}
+              key={safeGetRowId(row, rowIdx)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
             >
-              {columns.map((column) => (
+              {columns.map((column, colIdx) => (
                 <td
                   className={cn(
                     'px-4 text-table-cell text-on-surface',
                     column.align === 'right' && 'text-right'
                   )}
-                  key={column.id}
+                  key={column.id || column.accessorKey || `cell-${colIdx}`}
                 >
                   {column.cell(row)}
                 </td>

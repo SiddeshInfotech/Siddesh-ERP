@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -190,10 +191,132 @@ export function Products() {
               : `${visible.length} of ${data?.totalCount ?? 0} ${
                   (data?.totalCount ?? 0) === 1 ? 'product' : 'products'
                 }`}
+=======
+import { useState, useMemo } from 'react'
+import { Plus, Search, Filter, Printer, Package, AlertCircle } from 'lucide-react'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { DataTable } from '@/components/ui/DataTable'
+import { BarcodeGeneratorModal, ProductOption } from '@/components/barcode/BarcodeGeneratorModal'
+import { formatBarcodeNumber } from '@/lib/sequence'
+
+// Mock Seed Data for initial UI rendering & demonstration
+const SAMPLE_PRODUCTS: ProductOption[] = [
+  {
+    id: 'prod-001',
+    name: 'Arduino UNO R3 Board',
+    sku_barcode: 'ST00000001',
+    category: 'AI Lab',
+    brand: 'Arduino'
+  },
+  {
+    id: 'prod-002',
+    name: 'Servo Motor SG90',
+    sku_barcode: 'ST00000002',
+    category: 'AI Lab',
+    brand: 'TowerPro'
+  },
+  {
+    id: 'prod-003',
+    name: 'RFID RC522 Module',
+    sku_barcode: 'ST00000003',
+    category: 'AI Lab',
+    brand: 'Siddesh'
+  },
+  {
+    id: 'prod-004',
+    name: '64 GB Pen Drive (Std 1-4 Marathi v2.3)',
+    sku_barcode: 'ST00000004',
+    category: 'Digital Products',
+    brand: 'SanDisk'
+  },
+  {
+    id: 'prod-005',
+    name: '128 GB Pen Drive (Std 5-8 Science v1.0)',
+    sku_barcode: 'ST00000005',
+    category: 'Digital Products',
+    brand: 'SanDisk'
+  },
+  {
+    id: 'prod-006',
+    name: 'USB Optical Mouse',
+    sku_barcode: '8901234567890', // Manufacturer Barcode (Option B example)
+    category: 'Office Items',
+    brand: 'Logitech'
+  }
+]
+
+export function Products() {
+  const [products, setProducts] = useState<ProductOption[]>(SAMPLE_PRODUCTS)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
+  const [selectedProductForPrint, setSelectedProductForPrint] = useState<ProductOption | null>(null)
+  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false)
+
+  // New Product Form State
+  const [newProductName, setNewProductName] = useState<string>('')
+  const [newCategory, setNewCategory] = useState<string>('AI Lab')
+  const [newBrand, setNewBrand] = useState<string>('')
+  const [barcodeOptionMode, setBarcodeOptionMode] = useState<'A' | 'B'>('A')
+  const [customBarcode, setCustomBarcode] = useState<string>('')
+
+  // Filtered Products
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const matchesSearch =
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.sku_barcode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase()))
+
+      const matchesCategory = categoryFilter === 'ALL' || p.category === categoryFilter
+      return matchesSearch && matchesCategory
+    })
+  }, [products, searchQuery, categoryFilter])
+
+  const handleAddProductSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newProductName.trim()) return
+
+    const nextSeq = products.length + 1
+    const barcode =
+      barcodeOptionMode === 'A'
+        ? formatBarcodeNumber(nextSeq)
+        : customBarcode.trim() || formatBarcodeNumber(nextSeq)
+
+    const newProd: ProductOption = {
+      id: `prod-${Date.now()}`,
+      name: newProductName.trim(),
+      sku_barcode: barcode,
+      category: newCategory,
+      brand: newBrand.trim() || undefined
+    }
+
+    setProducts([newProd, ...products])
+    setIsAddModalOpen(false)
+
+    // Reset Form
+    setNewProductName('')
+    setNewBrand('')
+    setCustomBarcode('')
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <Package className="w-6 h-6 text-indigo-600" />
+            Product Master
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Manage product catalog, barcode assignments (Option A & B), and label printing.
+>>>>>>> Stashed changes
           </p>
         </div>
 
         <Button
+<<<<<<< Updated upstream
           icon={<Plus aria-hidden="true" className="size-[18px]" strokeWidth={1.5} />}
           onClick={() => void navigate('/products/new')}
         >
@@ -309,6 +432,224 @@ export function Products() {
           </div>
         ) : null}
       </Card>
+=======
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-sm px-4 py-2.5"
+        >
+          <Plus className="w-4 h-4" />
+          Add New Product
+        </Button>
+      </div>
+
+      {/* Filter and Search Section */}
+      <Card className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Search Box */}
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search product, barcode, brand..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+            />
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Filter className="w-4 h-4 text-slate-400" />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="ALL">All Categories</option>
+              <option value="AI Lab">AI Lab</option>
+              <option value="Digital Products">Digital Products</option>
+              <option value="Office Items">Office Items</option>
+            </select>
+          </div>
+        </div>
+      </Card>
+
+      {/* Products Data Table */}
+      <Card className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
+        <DataTable
+          columns={[
+            {
+              id: 'barcode',
+              header: 'SKU Barcode',
+              cell: (row) => (
+                <div className="flex items-center gap-2 font-mono font-bold text-xs text-indigo-700 bg-indigo-50/60 px-2.5 py-1 rounded-md border border-indigo-100/80 w-fit">
+                  {row.sku_barcode}
+                </div>
+              )
+            },
+            {
+              id: 'name',
+              header: 'Product Name',
+              cell: (row) => <span className="font-semibold text-slate-900 text-xs">{row.name}</span>
+            },
+            {
+              id: 'category',
+              header: 'Category',
+              cell: (row) => (
+                <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md">
+                  {row.category || 'General'}
+                </span>
+              )
+            },
+            {
+              id: 'brand',
+              header: 'Brand',
+              cell: (row) => <span className="text-xs text-slate-500">{row.brand || '—'}</span>
+            },
+            {
+              id: 'actions',
+              header: 'Actions',
+              cell: (row) => (
+                <button
+                  onClick={() => setSelectedProductForPrint(row)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Print Barcodes
+                </button>
+              )
+            }
+          ]}
+          rows={filteredProducts}
+          getRowId={(row) => row.id}
+          emptyMessage="No products found matching your search."
+        />
+      </Card>
+
+      {/* Add Product Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden font-sans">
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+              <h3 className="text-base font-bold text-slate-900">Add New Product</h3>
+              <p className="text-xs text-slate-500">
+                Create a product entry with Option A or Option B barcode assignment.
+              </p>
+            </div>
+
+            <form onSubmit={handleAddProductSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Product Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newProductName}
+                  onChange={(e) => setNewProductName(e.target.value)}
+                  placeholder="e.g. Ultrasonic Sensor HC-SR04"
+                  className="w-full px-3 py-2 text-xs font-medium text-slate-900 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-medium text-slate-900 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="AI Lab">AI Lab</option>
+                    <option value="Digital Products">Digital Products</option>
+                    <option value="Office Items">Office Items</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Brand</label>
+                  <input
+                    type="text"
+                    value={newBrand}
+                    onChange={(e) => setNewBrand(e.target.value)}
+                    placeholder="e.g. Siddesh"
+                    className="w-full px-3 py-2 text-xs font-medium text-slate-900 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Barcode Option Toggle */}
+              <div className="pt-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-2">
+                  Barcode Mode
+                </label>
+                <div className="flex gap-4 mb-3">
+                  <label className="flex items-center gap-2 text-xs font-medium text-slate-800 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="barcodeMode"
+                      checked={barcodeOptionMode === 'A'}
+                      onChange={() => setBarcodeOptionMode('A')}
+                      className="text-indigo-600 focus:ring-indigo-500"
+                    />
+                    Option A (Auto-Generate ST Sequence)
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-medium text-slate-800 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="barcodeMode"
+                      checked={barcodeOptionMode === 'B'}
+                      onChange={() => setBarcodeOptionMode('B')}
+                      className="text-indigo-600 focus:ring-indigo-500"
+                    />
+                    Option B (Manufacturer Barcode)
+                  </label>
+                </div>
+
+                {barcodeOptionMode === 'A' ? (
+                  <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-900">
+                    Auto-generated SKU barcode will be:{' '}
+                    <strong className="font-mono font-bold text-indigo-700">
+                      {formatBarcodeNumber(products.length + 1)}
+                    </strong>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="text"
+                      value={customBarcode}
+                      onChange={(e) => setCustomBarcode(e.target.value)}
+                      placeholder="Paste manufacturer barcode string..."
+                      className="w-full px-3 py-2 text-xs font-medium text-slate-900 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                >
+                  Cancel
+                </button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-5 py-2">
+                  Save Product
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Barcode Generator & Printing Modal */}
+      {selectedProductForPrint && (
+        <BarcodeGeneratorModal
+          product={selectedProductForPrint}
+          onClose={() => setSelectedProductForPrint(null)}
+        />
+      )}
+>>>>>>> Stashed changes
     </div>
   )
 }

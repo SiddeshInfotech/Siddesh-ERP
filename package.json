@@ -16,8 +16,14 @@
     "db:types": "node scripts/gen-db-types.mjs"
   },
   "devDependencies": {
-    "electron": "^43.1.1",
+    "electron": "^33.2.1",
     "supabase": "^2.98.0",
     "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  },
+  "optionalDependencies": {
+    "@electron-internal/extract-zip-win32-x64-msvc": "npm:null@*"
   }
 }
