@@ -220,6 +220,7 @@ export type Database = {
           product_unit_id: string | null
           quantity: number
           unit_cost: number | null
+          batch_no: string | null
           updated_at: string
           updated_by: string | null
           version: number
@@ -233,6 +234,7 @@ export type Database = {
           product_unit_id?: string | null
           quantity: number
           unit_cost?: number | null
+          batch_no?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -246,6 +248,7 @@ export type Database = {
           product_unit_id?: string | null
           quantity?: number
           unit_cost?: number | null
+          batch_no?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -467,6 +470,7 @@ export type Database = {
           product_unit_id: string | null
           quantity: number
           unit_price: number | null
+          batch_no: string | null
           updated_at: string
           updated_by: string | null
           version: number
@@ -480,6 +484,7 @@ export type Database = {
           product_unit_id?: string | null
           quantity: number
           unit_price?: number | null
+          batch_no?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -493,6 +498,7 @@ export type Database = {
           product_unit_id?: string | null
           quantity?: number
           unit_price?: number | null
+          batch_no?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -539,6 +545,7 @@ export type Database = {
           received_by: string | null
           sales_order_no: string | null
           signature_path: string | null
+          delivery_method: string | null
           updated_at: string
           updated_by: string | null
           version: number
@@ -560,6 +567,7 @@ export type Database = {
           received_by?: string | null
           sales_order_no?: string | null
           signature_path?: string | null
+          delivery_method?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -581,6 +589,7 @@ export type Database = {
           received_by?: string | null
           sales_order_no?: string | null
           signature_path?: string | null
+          delivery_method?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -661,6 +670,7 @@ export type Database = {
           is_primary: boolean
           product_id: string
           symbology: Database["public"]["Enums"]["barcode_symbology"]
+          batch_no: string | null
           updated_at: string
           updated_by: string | null
           version: number
@@ -673,6 +683,7 @@ export type Database = {
           is_primary?: boolean
           product_id: string
           symbology?: Database["public"]["Enums"]["barcode_symbology"]
+          batch_no?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -685,6 +696,7 @@ export type Database = {
           is_primary?: boolean
           product_id?: string
           symbology?: Database["public"]["Enums"]["barcode_symbology"]
+          batch_no?: string | null
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -960,6 +972,7 @@ export type Database = {
       stock_ledger: {
         Row: {
           balance_after: number
+          batch_no: string | null
           client_txn_id: string
           computer_name: string | null
           created_at: string
@@ -977,6 +990,7 @@ export type Database = {
         }
         Insert: {
           balance_after: number
+          batch_no?: string | null
           client_txn_id: string
           computer_name?: string | null
           created_at?: string
@@ -994,6 +1008,7 @@ export type Database = {
         }
         Update: {
           balance_after?: number
+          batch_no?: string | null
           client_txn_id?: string
           computer_name?: string | null
           created_at?: string
@@ -1264,6 +1279,15 @@ export type Database = {
       }
     }
     Views: {
+      v_stock_balances_by_batch: {
+        Row: {
+          office_id: string | null
+          product_id: string | null
+          batch_no: string | null
+          qty_on_hand: number | null
+        }
+        Relationships: []
+      }
       v_current_stock: {
         Row: {
           brand_name: string | null
@@ -1349,6 +1373,10 @@ export type Database = {
           p_supplier_gst?: string
           p_supplier_mobile?: string
           p_supplier_name: string
+          p_invoice_file_path?: string
+          p_batch_id?: string
+          p_batch_code?: string
+          p_barcodes?: string[]
         }
         Returns: Json
       }
@@ -1369,6 +1397,8 @@ export type Database = {
           p_qty: number
           p_received_by?: string
           p_sales_order_no?: string
+          p_delivery_method?: string
+          p_batch_id?: string
         }
         Returns: Json
       }

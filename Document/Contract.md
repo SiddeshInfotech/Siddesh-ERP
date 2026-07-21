@@ -19,6 +19,9 @@ If these two disagree, integration fails.
 > **Nothing existing breaks:** every new parameter defaults to NULL, so any current call site
 > compiles and behaves exactly as before. Callers that do not send them are unaffected.
 
+> **Amended 21/07/2026 — Antigravity.** Batch Management & Outward Delivery Method.
+> Added `p_batch_id` to both `save_inward` and `save_outward`. Added `p_invoice_file_path` to `save_inward`. Added `p_delivery_method` to `save_outward`.
+
 ---
 
 ## Sprint Goal (one sentence)
@@ -110,6 +113,9 @@ const { data, error } = await supabase.rpc('save_outward', {
   p_computer_name: 'PUNE-PC-01',   // nullable — SRD §14 audit trail
   p_party_gst:     '27AAAAA0000A1Z5', // nullable — SRD §6, added 18/07/2026
   p_party_address: 'Nashik Road',     // nullable — SRD §6, added 18/07/2026
+  p_signature_path: null,             // nullable — SRD §6 step 8
+  p_batch_no:      'B-001',           // nullable — added 21/07/2026
+  p_delivery_method: 'Courier',       // nullable — added 21/07/2026
 })
 ```
 
@@ -148,6 +154,8 @@ const { data, error } = await supabase.rpc('save_inward', {
   p_notes:          null,          // nullable
   p_computer_name:  'PUNE-PC-01',  // nullable — SRD §14 audit trail
   p_supplier_gst:   '27AAAAA0000A1Z5', // nullable — SRD §5, added 18/07/2026
+  p_invoice_file_path: 'invoices/abc.pdf', // nullable — SRD §5 step 6, added 21/07/2026
+  p_batch_no:       'B-001',       // nullable — added 21/07/2026
 })
 ```
 

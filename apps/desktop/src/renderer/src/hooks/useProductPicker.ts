@@ -19,6 +19,7 @@ export interface PickedProduct {
   uom: string | null
   qtyOnHand: number
   qtyAvailable: number
+  batchCode?: string | null
 }
 
 export function useProductPicker() {
@@ -40,7 +41,8 @@ export function useProductPicker() {
         skuBarcode: product.sku_barcode,
         uom: product.unit,
         qtyOnHand: stock.qty_on_hand,
-        qtyAvailable: stock.qty_available
+        qtyAvailable: stock.qty_available,
+        batchCode: lookup.data.batch?.code
       }
     }
 
@@ -55,7 +57,8 @@ export function useProductPicker() {
       skuBarcode: match.skuBarcode,
       uom: match.uomCode,
       qtyOnHand: match.qtyOnHand,
-      qtyAvailable: match.qtyAvailable
+      qtyAvailable: match.qtyAvailable,
+      batchNo: null // Choosing by name does not imply a batch
     }
   }, [lookup.data, chosenId, products.data])
 

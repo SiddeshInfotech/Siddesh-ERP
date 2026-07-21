@@ -1,12 +1,18 @@
-import { ArrowDownToLine, CheckCircle2, FileText, Truck, User } from 'lucide-react'
-import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { ArrowDownToLine, CheckCircle2, FileText, Truck, User, Plus, ChevronLeft } from 'lucide-react'
+import { useRef, useState, useEffect, type FormEvent, type ReactNode } from 'react'
 import { ProductPicker } from '@/components/movement/ProductPicker'
+import { BatchBarcodesModal } from '@/components/barcode/BatchBarcodesModal'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { Field } from '@/components/ui/Field'
 import { Textarea } from '@/components/ui/Textarea'
+import { DataTable, type Column } from '@/components/ui/DataTable'
+import { BatchPicker, type BatchSelection } from '@/components/movement/BatchPicker'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
+import { useInwardHistory, type InwardHistoryRow } from '@/hooks/useInwardHistory'
 import { useProductPicker } from '@/hooks/useProductPicker'
 import { useSaveInward } from '@/hooks/useSaveMovement'
 import { toUserMessage } from '@/lib/errors'
@@ -67,6 +73,24 @@ export function Inward() {
   const [purchaseOrder, setPurchaseOrder] = useState('')
   const [broughtBy, setBroughtBy] = useState('')
   const [notes, setNotes] = useState('')
+  const [batchSelection, setBatchSelection] = useState<BatchSelection | null>(null)
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'product'>('all')
+  const [showForm, setShowForm] = useState(false)
+  const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string } | null>(null)
+  
+  useEffect(() => {
+    // We do not auto-fill batch selection anymore based on picker picked because 
+    // we want explicit batch selection/creation for Inward
+    if (!picker.picked) {
+      setBatchSelection(null)
+    }
+  }, [picker.picked])
+
+  const { session } = useAuth()
+  
+  const historyProductId = historyFilter === 'product' ? picker.picked?.id : undefined
+  const { data: historyData, isLoading: historyLoading, error: historyError } = useInwardHistory(historyProductId)
 
   const [errors, setErrors] = useState<Errors>({})
   const [saved, setSaved] = useState<Saved | null>(null)
@@ -93,6 +117,8 @@ export function Inward() {
     setPurchaseOrder('')
     setBroughtBy('')
     setNotes('')
+    setBatchSelection(null)
+    setInvoiceFile(null)
     setErrors({})
     setSaved(null)
     // A new submission is a new transaction, so it gets a new id. This is the ONLY place a
@@ -117,7 +143,7 @@ export function Inward() {
     return found
   }
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (picker.picked === null) return
 
@@ -126,6 +152,27 @@ export function Inward() {
     if (Object.keys(found).length > 0) {
       formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
       return
+    }
+
+    let invoiceFilePath = null
+    if (invoiceFile && session?.user.id) {
+      try {
+        const { data: profile } = await supabase.from('profiles').select('office_id').eq('id', session.user.id).single()
+        if (profile?.office_id) {
+          const ext = invoiceFile.name.split('.').pop()
+          const fileName = `${profile.office_id}/${crypto.randomUUID()}.${ext}`
+          const { error: uploadError } = await supabase.storage.from('invoices').upload(fileName, invoiceFile)
+          if (uploadError) throw uploadError
+          invoiceFilePath = fileName
+        } else {
+          throw new Error("You must be assigned to an office to upload invoices.")
+        }
+      } catch (err: any) {
+        console.error("Upload error details:", err)
+        const errMsg = err.message || 'Failed to upload invoice file.'
+        setErrors({ ...found, supplierName: `Upload Error: ${errMsg}` })
+        return
+      }
     }
 
     saveInward.mutate(
@@ -140,7 +187,11 @@ export function Inward() {
         invoiceDate: orNull(invoiceDate),
         purchaseOrder: orNull(purchaseOrder),
         broughtBy: orNull(broughtBy),
-        notes: orNull(notes)
+        notes: orNull(notes),
+        batchId: batchSelection?.batchId || null,
+        batchCode: batchSelection?.batchCode || null,
+        barcodes: batchSelection?.barcodes || null,
+        invoiceFilePath: invoiceFilePath || null
       },
       {
         onSuccess: (result) => {
@@ -193,11 +244,117 @@ export function Inward() {
 
   const isSaveable = picker.picked !== null
 
+  if (!showForm && saved === null) {
+    return (
+      <div className="flex flex-col gap-gutter">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-h1 text-on-surface">Inwards</h1>
+            <p className="text-body-sm text-on-surface-variant/60">
+              {historyLoading ? 'Loading…' : `${historyData?.length ?? 0} recent inward entries`}
+            </p>
+          </div>
+          <Button
+            icon={<Plus aria-hidden="true" className="size-[18px]" strokeWidth={1.5} />}
+            onClick={() => setShowForm(true)}
+          >
+            Generate Inward entry
+          </Button>
+        </div>
+
+        <Card>
+          <div className="flex items-end gap-3 hairline-b p-4">
+            <div className="flex flex-col">
+              <label className="mb-1.5 ml-1 block text-label-caps uppercase text-on-surface-variant">
+                History Filter
+              </label>
+              <div className="flex gap-2">
+                <Button
+                  variant={historyFilter === 'all' ? 'primary' : 'outline'}
+                  onClick={() => setHistoryFilter('all')}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={historyFilter === 'product' ? 'primary' : 'outline'}
+                  onClick={() => setHistoryFilter('product')}
+                  disabled={!picker.picked}
+                >
+                  Selected Product
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DataTable<InwardHistoryRow>
+            columns={[
+              {
+                header: 'Date',
+                cell: (row) => new Date(row.received_at).toLocaleDateString()
+              },
+              {
+                header: 'Product',
+                cell: (row) => row.product_name
+              },
+              {
+                header: 'Batch',
+                cell: (row) => 
+                  row.batch_code ? (
+                    <button
+                      onClick={() => setBatchModalData({ productId: row.product_id, productName: row.product_name, batchCode: row.batch_code! })}
+                      className="text-primary hover:underline hover:text-primary-focus font-medium transition-colors"
+                    >
+                      {row.batch_code}
+                    </button>
+                  ) : '—'
+              },
+              {
+                header: 'Quantity (on that batch)',
+                align: 'right',
+                cell: (row) => row.inward_qty
+              },
+              {
+                header: 'Remaining Quantity',
+                align: 'right',
+                cell: (row) => row.remaining_qty
+              },
+              {
+                header: 'Total Quantity',
+                align: 'right',
+                cell: (row) => row.total_qty
+              },
+              {
+                header: 'Brought By',
+                cell: (row) => row.brought_by || '—'
+              }
+            ]}
+            data={historyData}
+            isLoading={historyLoading}
+            error={historyError ? toUserMessage(historyError) : undefined}
+          />
+        </Card>
+
+        {batchModalData && (
+          <BatchBarcodesModal
+            productId={batchModalData.productId}
+            productName={batchModalData.productName}
+            batchCode={batchModalData.batchCode}
+            onClose={() => setBatchModalData(null)}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-gutter">
-      <div>
-        <h1 className="text-h1 text-on-surface">Inward</h1>
-        <p className="text-body-sm text-on-surface-variant/60">Receive stock into the store.</p>
+      <div className="flex items-start gap-4">
+        <Button variant="outline" icon={<ChevronLeft className="size-[18px]" />} onClick={() => setShowForm(false)}>
+          Back
+        </Button>
+        <div>
+          <h1 className="text-h1 text-on-surface">Generate Inward Entry</h1>
+          <p className="text-body-sm text-on-surface-variant/60">Receive stock into the store.</p>
+        </div>
       </div>
 
       <form className="flex flex-col gap-gutter" noValidate onSubmit={handleSubmit} ref={formRef}>
@@ -208,7 +365,7 @@ export function Inward() {
           title="Product"
         >
           <div className="flex flex-col gap-4">
-            <ProductPicker picker={picker} />
+            <ProductPicker picker={picker} hideScanner />
 
             <Field
               containerClassName="max-w-xs"
@@ -222,6 +379,15 @@ export function Inward() {
               type="number"
               value={qty}
             />
+            {picker.picked && (
+              <BatchPicker 
+                productId={picker.picked.id} 
+                qty={Number(qty) || 0}
+                value={batchSelection} 
+                onChange={setBatchSelection}
+                allowCreate={true}
+              />
+            )}
           </div>
         </Section>
 
@@ -281,6 +447,17 @@ export function Inward() {
               onChange={(event) => setPurchaseOrder(event.target.value)}
               value={purchaseOrder}
             />
+            <div className="col-span-3">
+              <label className="mb-1.5 ml-1 block text-label-caps uppercase text-on-surface-variant">
+                Invoice PDF
+              </label>
+              <input 
+                type="file" 
+                accept="application/pdf,image/*"
+                onChange={(e) => setInvoiceFile(e.target.files?.[0] || null)}
+                className="w-full text-body-md text-on-surface file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-container file:text-on-primary-container hover:file:bg-primary/10"
+              />
+            </div>
           </div>
         </Section>
 
@@ -320,6 +497,7 @@ export function Inward() {
           </Button>
         </div>
       </form>
+
     </div>
   )
 }

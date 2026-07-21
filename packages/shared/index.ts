@@ -58,12 +58,14 @@ export type ScanLookupResult =
       product: ScannedProduct
       unit: ScannedUnit | null
       stock: ScannedStock
+      batch_no: string | null
     }
   | {
       found: false
       match_type: 'UNKNOWN'
       product: null
       stock: null
+      batch_no: null
     }
 
 export type SaveResult = {

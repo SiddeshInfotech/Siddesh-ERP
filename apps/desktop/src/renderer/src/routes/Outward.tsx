@@ -1,6 +1,7 @@
 import { ArrowUpFromLine, CheckCircle2, FileText, School, UserCheck } from 'lucide-react'
-import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useRef, useState, useEffect, type FormEvent, type ReactNode } from 'react'
 import { ProductPicker } from '@/components/movement/ProductPicker'
+import { BatchPicker, type BatchSelection } from '@/components/movement/BatchPicker'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -80,7 +81,16 @@ export function Outward() {
   const [salesOrderNo, setSalesOrderNo] = useState('')
   const [handedOverBy, setHandedOverBy] = useState('')
   const [receivedBy, setReceivedBy] = useState('')
+  const [deliveryMethod, setDeliveryMethod] = useState('')
   const [notes, setNotes] = useState('')
+  const [batchSelection, setBatchSelection] = useState<BatchSelection | null>(null)
+
+  useEffect(() => {
+    // No auto-select, wait for explicit
+    if (!picker.picked) {
+      setBatchSelection(null)
+    }
+  }, [picker.picked])
 
   const [errors, setErrors] = useState<Errors>({})
   const [saved, setSaved] = useState<Saved | null>(null)
@@ -102,7 +112,9 @@ export function Outward() {
     setSalesOrderNo('')
     setHandedOverBy('')
     setReceivedBy('')
+    setDeliveryMethod('')
     setNotes('')
+    setBatchSelection(null)
     setErrors({})
     setSaved(null)
     clientTxnId.current = crypto.randomUUID()
@@ -154,7 +166,9 @@ export function Outward() {
         salesOrderNo: orNull(salesOrderNo),
         handedOverBy: orNull(handedOverBy),
         receivedBy: orNull(receivedBy),
-        notes: orNull(notes)
+        deliveryMethod: orNull(deliveryMethod),
+        notes: orNull(notes),
+        batchId: batchSelection?.batchId || null
       },
       {
         onSuccess: (result) => {
@@ -250,6 +264,16 @@ export function Outward() {
                 value={outwardType}
               />
             </div>
+            
+            {picker.picked && (
+              <BatchPicker 
+                productId={picker.picked.id} 
+                qty={Number(qty) || 0}
+                value={batchSelection} 
+                onChange={setBatchSelection} 
+                allowCreate={false}
+              />
+            )}
 
             {looksShort ? (
               <Alert tone="warning">
@@ -342,6 +366,13 @@ export function Outward() {
               label="Received by"
               onChange={(event) => setReceivedBy(event.target.value)}
               value={receivedBy}
+            />
+            <Field
+              containerClassName="col-span-2"
+              hint="e.g. By Road, Courier, Train, Air"
+              label="Delivery Method"
+              onChange={(event) => setDeliveryMethod(event.target.value)}
+              value={deliveryMethod}
             />
             <Textarea
               containerClassName="col-span-2"

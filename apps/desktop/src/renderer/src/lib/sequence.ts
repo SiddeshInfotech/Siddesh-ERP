@@ -13,6 +13,29 @@ export function extractSequenceNumber(barcode: string): number {
 }
 
 /**
+ * Given the last generated barcode (e.g. 'ST000210' or 'LAP-260721-00210'),
+ * extracts the trailing number, increments it, and returns an array of the next `count` barcodes.
+ */
+export function generateNextBarcodes(lastBarcode: string, count: number): string[] {
+  if (!lastBarcode) return generateBarcodeRange(1, count)
+  
+  const match = lastBarcode.match(/(\d+)$/)
+  if (!match) return generateBarcodeRange(1, count) // Fallback if no digits found
+
+  const prefix = lastBarcode.slice(0, match.index)
+  const numStr = match[1]
+  const padLength = numStr.length
+  const startNum = parseInt(numStr, 10) + 1
+
+  const result: string[] = []
+  for (let i = 0; i < count; i++) {
+    const seqNum = startNum + i
+    result.push(`${prefix}${String(seqNum).padStart(padLength, '0')}`)
+  }
+  return result
+}
+
+/**
  * Formats a numeric sequence into standard 8-digit zero-padded ST barcode string.
  * Example: 5 -> "ST00000005"
  */

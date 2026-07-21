@@ -12,6 +12,8 @@ interface ProductPickerProps {
   picker: ProductPickerState
   /** Outward makes availability the hero; inward only needs it for reference. */
   emphasiseStock?: boolean
+  /** Hide the barcode scanner input (e.g. for Inward where it is not needed) */
+  hideScanner?: boolean
 }
 
 /**
@@ -20,7 +22,7 @@ interface ProductPickerProps {
  * Presentational: all state lives in `useProductPicker`, so Inward and Outward share one
  * interaction rather than two that drift.
  */
-export function ProductPicker({ picker, emphasiseStock = false }: ProductPickerProps) {
+export function ProductPicker({ picker, emphasiseStock = false, hideScanner = false }: ProductPickerProps) {
   const { picked, typedCode, setTypedCode, scan, choose, isNotFound, isLooking, lookupError } =
     picker
 
@@ -35,47 +37,49 @@ export function ProductPicker({ picker, emphasiseStock = false }: ProductPickerP
 
   return (
     <div className="flex flex-col gap-4">
-      <form onSubmit={handleScan}>
-        <label
-          className="mb-1.5 ml-1 block text-label-caps uppercase text-on-surface-variant"
-          htmlFor="scan-input"
-        >
-          Scan barcode
-        </label>
-        <div className="relative">
-          <ScanLine
-            aria-hidden="true"
-            className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-outline"
-            strokeWidth={1.5}
-          />
-          <input
-            // The scanner types wherever the caret is, and this screen exists to receive it.
-            autoFocus
-            className={cn(
-              'h-14 w-full rounded-xl border-2 bg-surface-container-lowest/50 pl-12 pr-12',
-              'font-mono text-h2 tracking-wide text-on-surface',
-              'transition-all placeholder:font-sans placeholder:text-body-md placeholder:text-outline',
-              'focus:border-primary-container',
-              isNotFound ? 'border-tertiary/60' : 'border-border'
-            )}
-            id="scan-input"
-            onChange={(event) => setTypedCode(event.target.value)}
-            placeholder="Scan the box, or type the barcode and press Enter"
-            spellCheck={false}
-            value={typedCode}
-          />
-          {isLooking ? (
-            <span className="absolute right-4 top-1/2 -translate-y-1/2">
-              <Spinner label="Looking up the barcode" size="sm" />
-            </span>
-          ) : null}
-        </div>
-      </form>
+      {!hideScanner && (
+        <form onSubmit={handleScan}>
+          <label
+            className="mb-1.5 ml-1 block text-label-caps uppercase text-on-surface-variant"
+            htmlFor="scan-input"
+          >
+            Scan barcode
+          </label>
+          <div className="relative">
+            <ScanLine
+              aria-hidden="true"
+              className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-outline"
+              strokeWidth={1.5}
+            />
+            <input
+              // The scanner types wherever the caret is, and this screen exists to receive it.
+              autoFocus
+              className={cn(
+                'h-14 w-full rounded-xl border-2 bg-surface-container-lowest/50 pl-12 pr-12',
+                'font-mono text-h2 tracking-wide text-on-surface',
+                'transition-all placeholder:font-sans placeholder:text-body-md placeholder:text-outline',
+                'focus:border-primary-container',
+                isNotFound ? 'border-tertiary/60' : 'border-border'
+              )}
+              id="scan-input"
+              onChange={(event) => setTypedCode(event.target.value)}
+              placeholder="Scan the box, or type the barcode and press Enter"
+              spellCheck={false}
+              value={typedCode}
+            />
+            {isLooking ? (
+              <span className="absolute right-4 top-1/2 -translate-y-1/2">
+                <Spinner label="Looking up the barcode" size="sm" />
+              </span>
+            ) : null}
+          </div>
+        </form>
+      )}
 
       {lookupError === null ? null : <Alert tone="error">{toUserMessage(lookupError)}</Alert>}
 
       {/* SRD §13: an unknown barcode is not a failure — it is an offer to create the product. */}
-      {isNotFound ? (
+      {!hideScanner && isNotFound ? (
         <Alert
           action={
             <Link
@@ -93,7 +97,7 @@ export function ProductPicker({ picker, emphasiseStock = false }: ProductPickerP
 
       <Select
         hint="No barcode on the box? Find it by name."
-        label="Or choose the product"
+        label="Product"
         onChange={choose}
         options={(picker.products.data?.items ?? []).map((item) => ({
           value: item.id,

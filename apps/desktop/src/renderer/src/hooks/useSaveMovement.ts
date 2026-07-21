@@ -33,6 +33,10 @@ export interface SaveInwardInput {
   purchaseOrder: string | null
   broughtBy: string | null
   notes: string | null
+  invoiceFilePath?: string | null
+  batchId?: string | null
+  batchCode?: string | null
+  barcodes?: string[] | null
 }
 
 /**
@@ -61,7 +65,11 @@ export function useSaveInward() {
         ...(input.invoiceDate === null ? {} : { p_invoice_date: input.invoiceDate }),
         ...(input.purchaseOrder === null ? {} : { p_purchase_order: input.purchaseOrder }),
         ...(input.broughtBy === null ? {} : { p_brought_by: input.broughtBy }),
-        ...(input.notes === null ? {} : { p_notes: input.notes })
+        ...(input.notes === null ? {} : { p_notes: input.notes }),
+        ...(input.invoiceFilePath ? { p_invoice_file_path: input.invoiceFilePath } : {}),
+        ...(input.batchId ? { p_batch_id: input.batchId } : {}),
+        ...(input.batchCode ? { p_batch_code: input.batchCode } : {}),
+        ...(input.barcodes ? { p_barcodes: input.barcodes } : {})
       })
 
       if (error) {
@@ -100,6 +108,8 @@ export interface SaveOutwardInput {
   handedOverBy: string | null
   receivedBy: string | null
   notes: string | null
+  deliveryMethod: string | null
+  batchId?: string | null
 }
 
 /**
@@ -132,7 +142,9 @@ export function useSaveOutward() {
         ...(input.salesOrderNo === null ? {} : { p_sales_order_no: input.salesOrderNo }),
         ...(input.handedOverBy === null ? {} : { p_handed_over_by: input.handedOverBy }),
         ...(input.receivedBy === null ? {} : { p_received_by: input.receivedBy }),
-        ...(input.notes === null ? {} : { p_notes: input.notes })
+        ...(input.notes === null ? {} : { p_notes: input.notes }),
+        ...(input.deliveryMethod === null ? {} : { p_delivery_method: input.deliveryMethod }),
+        ...(input.batchId ? { p_batch_id: input.batchId } : {})
       })
 
       if (error) {
