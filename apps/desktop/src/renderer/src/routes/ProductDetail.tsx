@@ -6,6 +6,7 @@ import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { SpinnerPane } from '@/components/ui/Spinner'
+import { Timeline } from '@/components/ui/Timeline'
 import { useProduct } from '@/hooks/useProduct'
 import { useSetProductActive } from '@/hooks/useProductMutations'
 import { useProductStock } from '@/hooks/useProducts'
@@ -226,6 +227,12 @@ export function ProductDetail() {
           <LabelPrintPanel code={product.skuBarcode} productName={product.name} />
         </Card>
       </div>
+
+      {/* Timeline Section */}
+      <Card className="mt-6 p-6">
+        <h2 className="text-h2 text-on-surface mb-6">Product Timeline</h2>
+        <Timeline productId={product.id} />
+      </Card>
     </div>
   )
 }

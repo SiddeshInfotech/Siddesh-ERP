@@ -68,6 +68,11 @@ export function orNull(raw: string): string | null {
   return trimmed.length === 0 ? null : trimmed
 }
 
+/** Display fallback for optional text in history tables — an em dash beats a blank cell. */
+export function orDash(value: string | null | undefined): string {
+  return value !== null && value !== undefined && value.trim().length > 0 ? value : '—'
+}
+
 /** GST is stored upper-case; the CHECK only accepts upper-case. */
 export function normaliseGst(raw: string): string | null {
   const value = raw.trim().toUpperCase()

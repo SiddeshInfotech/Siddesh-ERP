@@ -12,10 +12,18 @@ export interface ReportColumn<Row> {
   align?: 'left' | 'right'
 }
 
+/** A labelled fact shown in the report header, e.g. { label: 'View', value: 'Low stock' }. */
+export interface ReportDetail {
+  label: string
+  value: string
+}
+
 export interface ReportMeta {
   title: string
   /** Shown under the title, e.g. "01 Jan 2026 – 31 Jan 2026". */
   subtitle?: string
+  /** Report facts printed in the header block (office, filter, totals, who ran it). */
+  details?: ReportDetail[]
 }
 
 /** Escapes text for the HTML print document. A product name containing `<` must not break it. */
@@ -77,7 +85,10 @@ export function buildReportDocument<Row>(
       @page { size: A4 landscape; margin: 12mm; }
       body { font-family: system-ui, -apple-system, sans-serif; color: #000; margin: 0; }
       h1 { font-size: 16pt; margin: 0 0 2px; }
-      .sub { font-size: 9pt; color: #444; margin-bottom: 10px; }
+      .sub { font-size: 9pt; color: #444; margin-bottom: 6px; }
+      .meta { display: flex; flex-wrap: wrap; gap: 3px 20px; font-size: 8.5pt; color: #333;
+              border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 6px 0; margin-bottom: 10px; }
+      .meta b { color: #000; font-weight: 600; }
       table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
       th, td { border: 1px solid #bbb; padding: 4px 6px; text-align: left; vertical-align: top; }
       th { background: #eee; font-weight: 700; }
@@ -93,6 +104,13 @@ export function buildReportDocument<Row>(
   <body>
     <h1>${escapeHtml(meta.title)}</h1>
     <div class="sub">Siddesh Technologies${meta.subtitle ? ` — ${escapeHtml(meta.subtitle)}` : ''}</div>
+    ${
+      meta.details && meta.details.length > 0
+        ? `<div class="meta">${meta.details
+            .map((d) => `<span><b>${escapeHtml(d.label)}:</b> ${escapeHtml(d.value)}</span>`)
+            .join('')}</div>`
+        : ''
+    }
     ${
       rows.length === 0
         ? '<div class="empty">No records for this selection.</div>'

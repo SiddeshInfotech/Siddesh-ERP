@@ -1,13 +1,16 @@
-import { ArrowUpFromLine, CheckCircle2, FileText, School, UserCheck } from 'lucide-react'
+import { ArrowUpFromLine, CheckCircle2, ChevronLeft, FileText, Plus, School, UserCheck } from 'lucide-react'
 import { useRef, useState, useEffect, type FormEvent, type ReactNode } from 'react'
 import { ProductPicker } from '@/components/movement/ProductPicker'
 import { BatchPicker, type BatchSelection } from '@/components/movement/BatchPicker'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { DataTable, type Column } from '@/components/ui/DataTable'
 import { Field } from '@/components/ui/Field'
+import { HistoryTab } from '@/components/ui/HistoryTab'
 import { Select, type SelectOption } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
+import { useOutwardHistory, type OutwardHistoryRow } from '@/hooks/useOutwardHistory'
 import { useProductPicker } from '@/hooks/useProductPicker'
 import { useSaveOutward, type OutwardType } from '@/hooks/useSaveMovement'
 import { isInsufficientStock, toUserMessage } from '@/lib/errors'
@@ -16,6 +19,7 @@ import {
   findMobileProblem,
   findQtyProblem,
   normaliseGst,
+  orDash,
   orNull
 } from '@/lib/movementForm'
 
@@ -39,6 +43,11 @@ const OUTWARD_TYPES: SelectOption[] = [
   { value: 'SERVICE', label: 'Service', description: 'Out for repair or servicing' },
   { value: 'SAMPLE', label: 'Sample', description: 'Given as a sample' }
 ]
+
+/** Friendly label for an outward_type code, for the history table. */
+function outwardTypeLabel(value: string): string {
+  return OUTWARD_TYPES.find((t) => t.value === value)?.label ?? value
+}
 
 interface Errors {
   qty?: string
@@ -84,6 +93,13 @@ export function Outward() {
   const [deliveryMethod, setDeliveryMethod] = useState('')
   const [notes, setNotes] = useState('')
   const [batchSelection, setBatchSelection] = useState<BatchSelection | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'product'>('all')
+  const [historyTab, setHistoryTab] = useState<'stock' | 'party' | 'other'>('stock')
+
+  const historyProductId = historyFilter === 'product' ? picker.picked?.id : undefined
+  const { data: historyData, isLoading: historyLoading, error: historyError } =
+    useOutwardHistory(historyProductId)
 
   useEffect(() => {
     // No auto-select, wait for explicit
@@ -216,6 +232,104 @@ export function Outward() {
     )
   }
 
+  // Landing list + tabbed history, mirroring Inward. Same rows (one per Date + Product +
+  // Batch), three column sets: what left and from which batch / who received it / the rest.
+  if (!showForm && saved === null) {
+    const stockColumns: Column<OutwardHistoryRow>[] = [
+      { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
+      { header: 'Product', cell: (row) => row.product_name },
+      { header: 'Batch', cell: (row) => orDash(row.batch_code) },
+      { header: 'Type', cell: (row) => outwardTypeLabel(row.outward_type) },
+      { header: 'Quantity (given out)', align: 'right', cell: (row) => row.outward_qty },
+      { header: 'Remaining Quantity', align: 'right', cell: (row) => row.remaining_qty },
+      { header: 'Total Quantity', align: 'right', cell: (row) => row.total_qty }
+    ]
+
+    const partyColumns: Column<OutwardHistoryRow>[] = [
+      { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
+      { header: 'Product', cell: (row) => row.product_name },
+      { header: 'School / Party', cell: (row) => orDash(row.party_name) },
+      { header: 'Contact', cell: (row) => orDash(row.contact_person) },
+      { header: 'Mobile', cell: (row) => orDash(row.party_mobile) },
+      { header: 'GST No', cell: (row) => orDash(row.party_gst) },
+      { header: 'Invoice No', cell: (row) => orDash(row.invoice_no) },
+      { header: 'SO No', cell: (row) => orDash(row.sales_order_no) },
+      { header: 'Address', cell: (row) => orDash(row.party_address) }
+    ]
+
+    const otherColumns: Column<OutwardHistoryRow>[] = [
+      { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
+      { header: 'Product', cell: (row) => row.product_name },
+      { header: 'Type', cell: (row) => outwardTypeLabel(row.outward_type) },
+      { header: 'Handed Over By', cell: (row) => orDash(row.handed_over_by) },
+      { header: 'Received By', cell: (row) => orDash(row.received_by) },
+      { header: 'Delivery Method', cell: (row) => orDash(row.delivery_method) },
+      { header: 'Notes', cell: (row) => orDash(row.notes) }
+    ]
+
+    const columns =
+      historyTab === 'stock' ? stockColumns : historyTab === 'party' ? partyColumns : otherColumns
+
+    return (
+      <div className="flex flex-col gap-gutter">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-h1 text-on-surface">Outward</h1>
+            <p className="text-body-sm text-on-surface-variant/60">
+              {historyLoading ? 'Loading…' : `${historyData?.length ?? 0} recent outward entries`}
+            </p>
+          </div>
+          <Button
+            icon={<Plus aria-hidden="true" className="size-[18px]" strokeWidth={1.5} />}
+            onClick={() => setShowForm(true)}
+          >
+            Generate Outward entry
+          </Button>
+        </div>
+
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-3 hairline-b px-2 py-2">
+            <div className="flex gap-1" role="tablist" aria-label="Outward history view">
+              <HistoryTab active={historyTab === 'stock'} onClick={() => setHistoryTab('stock')}>
+                Stock &amp; Batches
+              </HistoryTab>
+              <HistoryTab active={historyTab === 'party'} onClick={() => setHistoryTab('party')}>
+                Party
+              </HistoryTab>
+              <HistoryTab active={historyTab === 'other'} onClick={() => setHistoryTab('other')}>
+                Other Details
+              </HistoryTab>
+            </div>
+            <div className="flex gap-2 pr-2">
+              <Button
+                size="sm"
+                variant={historyFilter === 'all' ? 'primary' : 'secondary'}
+                onClick={() => setHistoryFilter('all')}
+              >
+                All
+              </Button>
+              <Button
+                size="sm"
+                variant={historyFilter === 'product' ? 'primary' : 'secondary'}
+                onClick={() => setHistoryFilter('product')}
+                disabled={!picker.picked}
+              >
+                Selected Product
+              </Button>
+            </div>
+          </div>
+          <DataTable<OutwardHistoryRow>
+            columns={columns}
+            data={historyData}
+            isLoading={historyLoading}
+            error={historyError ? toUserMessage(historyError) : undefined}
+            emptyMessage="No outward entries yet."
+          />
+        </Card>
+      </div>
+    )
+  }
+
   const requestedQty = Number(qty.trim())
   // A warning, never a block (DSK-313). The client's idea of "available" is already stale —
   // only save_outward, holding the row lock, may actually refuse. Blocking here would also
@@ -230,9 +344,18 @@ export function Outward() {
 
   return (
     <div className="flex flex-col gap-gutter">
-      <div>
-        <h1 className="text-h1 text-on-surface">Outward</h1>
-        <p className="text-body-sm text-on-surface-variant/60">Give out or sell stock.</p>
+      <div className="flex items-start gap-4">
+        <Button
+          variant="secondary"
+          icon={<ChevronLeft className="size-[18px]" />}
+          onClick={() => setShowForm(false)}
+        >
+          Back
+        </Button>
+        <div>
+          <h1 className="text-h1 text-on-surface">Generate Outward Entry</h1>
+          <p className="text-body-sm text-on-surface-variant/60">Give out or sell stock.</p>
+        </div>
       </div>
 
       <form className="flex flex-col gap-gutter" noValidate onSubmit={handleSubmit} ref={formRef}>
@@ -243,7 +366,7 @@ export function Outward() {
           title="Product"
         >
           <div className="flex flex-col gap-4">
-            <ProductPicker emphasiseStock picker={picker} />
+            <ProductPicker emphasiseStock hideScanner picker={picker} />
 
             <div className="grid grid-cols-2 gap-4">
               <Field

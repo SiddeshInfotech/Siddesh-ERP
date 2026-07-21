@@ -40,12 +40,16 @@ function endExclusive(to: string): string {
 
 export interface StockRow {
   productId: string
+  productCode: string
   productName: string
   skuBarcode: string
   categoryName: string | null
   brandName: string | null
   uomCode: string | null
   officeName: string | null
+  openingQty: number
+  inwardQty: number
+  outwardQty: number
   qtyOnHand: number
   qtyReserved: number
   qtyAvailable: number
@@ -66,9 +70,9 @@ export function useCurrentStock() {
     staleTime: REPORT_STALE_TIME,
     queryFn: async (): Promise<StockRow[]> => {
       const { data, error } = await supabase
-        .from('v_current_stock')
+        .from('v_stock_dashboard')
         .select(
-          'product_id, product_name, sku_barcode, category_name, brand_name, uom_code, office_name, qty_on_hand, qty_reserved, qty_available, min_stock, is_low_stock'
+          'product_id, product_code, product_name, sku_barcode, category_name, brand_name, uom_code, office_name, opening_qty, inward_qty, outward_qty, qty_on_hand, qty_reserved, qty_available, min_stock, is_low_stock'
         )
         .order('product_name')
         .limit(REPORT_LIMIT)
@@ -82,12 +86,16 @@ export function useCurrentStock() {
         .filter((row) => row.product_id !== null)
         .map((row) => ({
           productId: row.product_id ?? '',
+          productCode: row.product_code ?? '',
           productName: row.product_name ?? '',
           skuBarcode: row.sku_barcode ?? '',
           categoryName: row.category_name,
           brandName: row.brand_name,
           uomCode: row.uom_code,
           officeName: row.office_name,
+          openingQty: row.opening_qty ?? 0,
+          inwardQty: row.inward_qty ?? 0,
+          outwardQty: row.outward_qty ?? 0,
           qtyOnHand: row.qty_on_hand ?? 0,
           qtyReserved: row.qty_reserved ?? 0,
           qtyAvailable: row.qty_available ?? 0,
@@ -157,6 +165,43 @@ export function useProductLedger(productId: string | null, range: DateRange) {
   })
 }
 
+/**
+ * Recent transactions across all products for the Dashboard (SRD §12).
+ */
+export function useRecentTransactions(limit = 10) {
+  return useQuery({
+    queryKey: ['report', 'recent-transactions', limit],
+    staleTime: REPORT_STALE_TIME,
+    queryFn: async (): Promise<LedgerRow[]> => {
+      const { data, error } = await supabase
+        .from('v_product_ledger')
+        .select(
+          'id, occurred_at, product_name, sku_barcode, txn_type, qty_delta, balance_after, party_name, created_by_name, notes'
+        )
+        .order('occurred_at', { ascending: false })
+        .limit(limit)
+
+      if (error) {
+        logger.error('Recent transactions failed', toLogContext(error))
+        throw error
+      }
+
+      return data.map((row) => ({
+        id: row.id ?? '',
+        occurredAt: row.occurred_at ?? '',
+        productName: row.product_name ?? '',
+        skuBarcode: row.sku_barcode ?? '',
+        txnType: row.txn_type ?? '',
+        qtyDelta: row.qty_delta ?? 0,
+        balanceAfter: row.balance_after ?? 0,
+        partyName: row.party_name,
+        createdByName: row.created_by_name,
+        notes: row.notes
+      }))
+    }
+  })
+}
+
 export interface InwardRow {
   id: string
   inwardNo: string
@@ -172,9 +217,9 @@ export interface InwardRow {
 }
 
 /** Receipts, date/supplier/product-wise (SRD §11; DSK-409). */
-export function useInwardReport(range: DateRange) {
+export function useInwardReport(range: DateRange, supplierName?: string, productId?: string) {
   return useQuery({
-    queryKey: ['report', 'inward', range.from, range.to],
+    queryKey: ['report', 'inward', range.from, range.to, supplierName, productId],
     staleTime: REPORT_STALE_TIME,
     queryFn: async (): Promise<InwardRow[]> => {
       // !inner so a filter on the parent actually restricts the rows rather than nulling the
@@ -191,6 +236,8 @@ export function useInwardReport(range: DateRange) {
         query = query.gte('inwards.received_at', `${range.from}T00:00:00`)
       }
       if (range.to !== '') query = query.lt('inwards.received_at', endExclusive(range.to))
+      if (supplierName) query = query.ilike('inwards.suppliers.name', `%${supplierName}%`)
+      if (productId) query = query.eq('product_id', productId)
 
       const { data, error } = await query
       if (error) {
@@ -231,9 +278,9 @@ export interface OutwardRow {
 }
 
 /** Dispatches, school/invoice/date/salesperson-wise (SRD §11; DSK-410). */
-export function useOutwardReport(range: DateRange) {
+export function useOutwardReport(range: DateRange, partyName?: string, invoiceNo?: string, handedOverBy?: string) {
   return useQuery({
-    queryKey: ['report', 'outward', range.from, range.to],
+    queryKey: ['report', 'outward', range.from, range.to, partyName, invoiceNo, handedOverBy],
     staleTime: REPORT_STALE_TIME,
     queryFn: async (): Promise<OutwardRow[]> => {
       let query = supabase
@@ -246,6 +293,9 @@ export function useOutwardReport(range: DateRange) {
 
       if (range.from !== '') query = query.gte('outwards.issued_at', `${range.from}T00:00:00`)
       if (range.to !== '') query = query.lt('outwards.issued_at', endExclusive(range.to))
+      if (partyName) query = query.ilike('outwards.customers.name', `%${partyName}%`)
+      if (invoiceNo) query = query.ilike('outwards.invoice_no', `%${invoiceNo}%`)
+      if (handedOverBy) query = query.ilike('outwards.handed_over_by', `%${handedOverBy}%`)
 
       const { data, error } = await query
       if (error) {
@@ -267,6 +317,53 @@ export function useOutwardReport(range: DateRange) {
         handedOverBy: row.outwards.handed_over_by,
         receivedBy: row.outwards.received_by
       }))
+    }
+  })
+}
+
+export interface ReportLookups {
+  suppliers: string[]
+  customers: string[]
+  executives: string[]
+  invoices: string[]
+}
+
+/** Fetches unique values for autocomplete dropdowns on the report filters. */
+export function useReportLookups() {
+  return useQuery({
+    queryKey: ['report', 'lookups'],
+    staleTime: REPORT_STALE_TIME,
+    queryFn: async (): Promise<ReportLookups> => {
+      // We can fetch unique names directly from the tables.
+      const [suppliersReq, customersReq, inwardsReq, outwardsReq] = await Promise.all([
+        supabase.from('suppliers').select('name').order('name'),
+        supabase.from('customers').select('name').order('name'),
+        supabase.from('inwards').select('brought_by, invoice_no'),
+        supabase.from('outwards').select('handed_over_by, invoice_no')
+      ])
+
+      const suppliers = (suppliersReq.data ?? []).map((s) => s.name).filter((n): n is string => !!n)
+      const customers = (customersReq.data ?? []).map((c) => c.name).filter((n): n is string => !!n)
+      
+      const executivesSet = new Set<string>()
+      const invoicesSet = new Set<string>()
+
+      for (const row of inwardsReq.data ?? []) {
+        if (row.brought_by) executivesSet.add(row.brought_by)
+        if (row.invoice_no) invoicesSet.add(row.invoice_no)
+      }
+      
+      for (const row of outwardsReq.data ?? []) {
+        if (row.handed_over_by) executivesSet.add(row.handed_over_by)
+        if (row.invoice_no) invoicesSet.add(row.invoice_no)
+      }
+
+      return {
+        suppliers,
+        customers,
+        executives: Array.from(executivesSet).sort(),
+        invoices: Array.from(invoicesSet).sort()
+      }
     }
   })
 }

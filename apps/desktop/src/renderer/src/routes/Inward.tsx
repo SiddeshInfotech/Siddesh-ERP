@@ -9,6 +9,7 @@ import { DatePicker } from '@/components/ui/DatePicker'
 import { Field } from '@/components/ui/Field'
 import { Textarea } from '@/components/ui/Textarea'
 import { DataTable, type Column } from '@/components/ui/DataTable'
+import { HistoryTab } from '@/components/ui/HistoryTab'
 import { BatchPicker, type BatchSelection } from '@/components/movement/BatchPicker'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -21,6 +22,7 @@ import {
   findMobileProblem,
   findQtyProblem,
   normaliseGst,
+  orDash,
   orNull
 } from '@/lib/movementForm'
 
@@ -76,6 +78,7 @@ export function Inward() {
   const [batchSelection, setBatchSelection] = useState<BatchSelection | null>(null)
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
   const [historyFilter, setHistoryFilter] = useState<'all' | 'product'>('all')
+  const [historyTab, setHistoryTab] = useState<'stock' | 'supplier'>('stock')
   const [showForm, setShowForm] = useState(false)
   const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string } | null>(null)
   
@@ -245,6 +248,54 @@ export function Inward() {
   const isSaveable = picker.picked !== null
 
   if (!showForm && saved === null) {
+    // Two views over the same inward rows (grain: one row per Date + Product + Batch).
+    // The stock tab answers "how much and which batch"; the supplier tab answers
+    // "who supplied it and how it arrived".
+    const stockColumns: Column<InwardHistoryRow>[] = [
+      { header: 'Date', cell: (row) => new Date(row.received_at).toLocaleDateString() },
+      { header: 'Product', cell: (row) => row.product_name },
+      {
+        header: 'Batch',
+        cell: (row) =>
+          row.batch_code ? (
+            <button
+              className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline"
+              onClick={() =>
+                setBatchModalData({
+                  productId: row.product_id,
+                  productName: row.product_name,
+                  batchCode: row.batch_code!
+                })
+              }
+            >
+              {row.batch_code}
+            </button>
+          ) : (
+            '—'
+          )
+      },
+      { header: 'Quantity (on that batch)', align: 'right', cell: (row) => row.inward_qty },
+      { header: 'Remaining Quantity', align: 'right', cell: (row) => row.remaining_qty },
+      { header: 'Total Quantity', align: 'right', cell: (row) => row.total_qty },
+      { header: 'Brought By', cell: (row) => orDash(row.brought_by) }
+    ]
+
+    const supplierColumns: Column<InwardHistoryRow>[] = [
+      { header: 'Date', cell: (row) => new Date(row.received_at).toLocaleDateString() },
+      { header: 'Product', cell: (row) => row.product_name },
+      { header: 'Supplier', cell: (row) => orDash(row.supplier_name) },
+      { header: 'Mobile', cell: (row) => orDash(row.supplier_mobile) },
+      { header: 'GST No', cell: (row) => orDash(row.supplier_gst) },
+      { header: 'Invoice No', cell: (row) => orDash(row.invoice_no) },
+      {
+        header: 'Invoice Date',
+        cell: (row) => (row.invoice_date ? new Date(row.invoice_date).toLocaleDateString() : '—')
+      },
+      { header: 'PO No', cell: (row) => orDash(row.purchase_order_no) },
+      { header: 'Brought By', cell: (row) => orDash(row.brought_by) },
+      { header: 'Notes', cell: (row) => orDash(row.notes) }
+    ]
+
     return (
       <div className="flex flex-col gap-gutter">
         <div className="flex items-start justify-between gap-4">
@@ -263,73 +314,39 @@ export function Inward() {
         </div>
 
         <Card>
-          <div className="flex items-end gap-3 hairline-b p-4">
-            <div className="flex flex-col">
-              <label className="mb-1.5 ml-1 block text-label-caps uppercase text-on-surface-variant">
-                History Filter
-              </label>
-              <div className="flex gap-2">
-                <Button
-                  variant={historyFilter === 'all' ? 'primary' : 'outline'}
-                  onClick={() => setHistoryFilter('all')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={historyFilter === 'product' ? 'primary' : 'outline'}
-                  onClick={() => setHistoryFilter('product')}
-                  disabled={!picker.picked}
-                >
-                  Selected Product
-                </Button>
-              </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 hairline-b px-2 py-2">
+            <div className="flex gap-1" role="tablist" aria-label="Inward history view">
+              <HistoryTab active={historyTab === 'stock'} onClick={() => setHistoryTab('stock')}>
+                Stock &amp; Batches
+              </HistoryTab>
+              <HistoryTab active={historyTab === 'supplier'} onClick={() => setHistoryTab('supplier')}>
+                Supplier &amp; Delivery
+              </HistoryTab>
+            </div>
+            <div className="flex gap-2 pr-2">
+              <Button
+                size="sm"
+                variant={historyFilter === 'all' ? 'primary' : 'secondary'}
+                onClick={() => setHistoryFilter('all')}
+              >
+                All
+              </Button>
+              <Button
+                size="sm"
+                variant={historyFilter === 'product' ? 'primary' : 'secondary'}
+                onClick={() => setHistoryFilter('product')}
+                disabled={!picker.picked}
+              >
+                Selected Product
+              </Button>
             </div>
           </div>
           <DataTable<InwardHistoryRow>
-            columns={[
-              {
-                header: 'Date',
-                cell: (row) => new Date(row.received_at).toLocaleDateString()
-              },
-              {
-                header: 'Product',
-                cell: (row) => row.product_name
-              },
-              {
-                header: 'Batch',
-                cell: (row) => 
-                  row.batch_code ? (
-                    <button
-                      onClick={() => setBatchModalData({ productId: row.product_id, productName: row.product_name, batchCode: row.batch_code! })}
-                      className="text-primary hover:underline hover:text-primary-focus font-medium transition-colors"
-                    >
-                      {row.batch_code}
-                    </button>
-                  ) : '—'
-              },
-              {
-                header: 'Quantity (on that batch)',
-                align: 'right',
-                cell: (row) => row.inward_qty
-              },
-              {
-                header: 'Remaining Quantity',
-                align: 'right',
-                cell: (row) => row.remaining_qty
-              },
-              {
-                header: 'Total Quantity',
-                align: 'right',
-                cell: (row) => row.total_qty
-              },
-              {
-                header: 'Brought By',
-                cell: (row) => row.brought_by || '—'
-              }
-            ]}
+            columns={historyTab === 'stock' ? stockColumns : supplierColumns}
             data={historyData}
             isLoading={historyLoading}
             error={historyError ? toUserMessage(historyError) : undefined}
+            emptyMessage="No inward entries yet."
           />
         </Card>
 
@@ -348,7 +365,7 @@ export function Inward() {
   return (
     <div className="flex flex-col gap-gutter">
       <div className="flex items-start gap-4">
-        <Button variant="outline" icon={<ChevronLeft className="size-[18px]" />} onClick={() => setShowForm(false)}>
+        <Button variant="secondary" icon={<ChevronLeft className="size-[18px]" />} onClick={() => setShowForm(false)}>
           Back
         </Button>
         <div>

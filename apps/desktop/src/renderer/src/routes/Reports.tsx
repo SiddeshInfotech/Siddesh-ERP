@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ExportButtons } from '@/components/reports/ExportButtons'
 import { Alert } from '@/components/ui/Alert'
+import { Autocomplete } from '@/components/ui/Autocomplete'
 import { Card } from '@/components/ui/Card'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { DatePicker } from '@/components/ui/DatePicker'
@@ -20,6 +21,7 @@ import {
 import { cn } from '@/lib/cn'
 import { toUserMessage } from '@/lib/errors'
 import type { ReportColumn } from '@/lib/reportDocument'
+import { useReportLookups } from '@/hooks/useReports'
 
 /**
  * Reports — inward, outward and the product ledger (SRD §11; DSK-409 → DSK-414).
@@ -88,12 +90,23 @@ const LEDGER_EXPORT: ReportColumn<LedgerRow>[] = [
 export function Reports() {
   const [tab, setTab] = useState<Tab>('inward')
   const [range, setRange] = useState<DateRange>({ from: '', to: '' })
+  
+  // Ledger / Inward
   const [productId, setProductId] = useState('')
+  
+  // Inward
+  const [supplierFilter, setSupplierFilter] = useState('')
+  
+  // Outward
+  const [schoolFilter, setSchoolFilter] = useState('')
+  const [invoiceFilter, setInvoiceFilter] = useState('')
+  const [executiveFilter, setExecutiveFilter] = useState('')
 
   const products = useProducts()
-  const inward = useInwardReport(range)
-  const outward = useOutwardReport(range)
+  const inward = useInwardReport(range, supplierFilter, productId === '' ? undefined : productId)
+  const outward = useOutwardReport(range, schoolFilter, invoiceFilter, executiveFilter)
   const ledger = useProductLedger(productId === '' ? null : productId, range)
+  const lookups = useReportLookups()
   const { exportExcel, exportPdf, isExporting, error: exportError } = useExportReport()
 
   const subtitle =
@@ -223,10 +236,10 @@ export function Reports() {
             value={range.to}
           />
 
-          {tab === 'ledger' ? (
+          {tab === 'ledger' || tab === 'inward' ? (
             <Select
-              containerClassName="flex-1"
-              hint="The ledger is one product's full history."
+              containerClassName="flex-1 min-w-[200px]"
+              hint={tab === 'ledger' ? "The ledger is one product's full history." : undefined}
               label="Product"
               onChange={setProductId}
               options={(products.data?.items ?? []).map((item) => ({
@@ -234,9 +247,49 @@ export function Reports() {
                 label: item.name,
                 description: item.skuBarcode
               }))}
-              placeholder={products.isPending ? 'Loading…' : 'Choose a product'}
+              placeholder={products.isPending ? 'Loading…' : 'All products'}
               value={productId}
             />
+          ) : null}
+
+          {tab === 'inward' ? (
+            <Autocomplete
+              containerClassName="flex-1 min-w-[200px]"
+              label="Supplier"
+              onChange={setSupplierFilter}
+              placeholder="Search supplier..."
+              value={supplierFilter}
+              options={lookups.data?.suppliers ?? []}
+            />
+          ) : null}
+
+          {tab === 'outward' ? (
+            <>
+              <Autocomplete
+                containerClassName="flex-1 min-w-[150px]"
+                label="School / Customer"
+                onChange={setSchoolFilter}
+                placeholder="Search school..."
+                value={schoolFilter}
+                options={lookups.data?.customers ?? []}
+              />
+              <Autocomplete
+                containerClassName="flex-1 min-w-[150px]"
+                label="Invoice no"
+                onChange={setInvoiceFilter}
+                placeholder="Search invoice..."
+                value={invoiceFilter}
+                options={lookups.data?.invoices ?? []}
+              />
+              <Autocomplete
+                containerClassName="flex-1 min-w-[150px]"
+                label="Executive"
+                onChange={setExecutiveFilter}
+                placeholder="Handed over by..."
+                value={executiveFilter}
+                options={lookups.data?.executives ?? []}
+              />
+            </>
           ) : null}
         </div>
 

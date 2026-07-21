@@ -13,6 +13,15 @@ export interface InwardHistoryRow {
   inward_qty: number
   remaining_qty: number
   total_qty: number
+  // Supplier & Delivery tab
+  supplier_name: string | null
+  supplier_mobile: string | null
+  supplier_gst: string | null
+  supplier_address: string | null
+  invoice_no: string | null
+  invoice_date: string | null
+  purchase_order_no: string | null
+  notes: string | null
 }
 
 export function useInwardHistory(productId?: string | null) {
@@ -44,7 +53,15 @@ export function useInwardHistory(productId?: string | null) {
         product_name: row.product_name ?? '',
         batch_code: row.batch_code ?? null,
         remaining_qty: row.remaining_qty ?? 0,
-        total_qty: row.total_qty ?? 0
+        total_qty: row.total_qty ?? 0,
+        supplier_name: row.supplier_name ?? null,
+        supplier_mobile: row.supplier_mobile ?? null,
+        supplier_gst: row.supplier_gst ?? null,
+        supplier_address: row.supplier_address ?? null,
+        invoice_no: row.invoice_no ?? null,
+        invoice_date: row.invoice_date ?? null,
+        purchase_order_no: row.purchase_order_no ?? null,
+        notes: row.notes ?? null
       })) as InwardHistoryRow[]
     }
   })

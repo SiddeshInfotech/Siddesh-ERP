@@ -9,9 +9,17 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Alert } from '@/components/ui/Alert'
 import { Card } from '@/components/ui/Card'
+import { DataTable } from '@/components/ui/DataTable'
 import { useDashboard } from '@/hooks/useDashboard'
+import { useRecentTransactions, type LedgerRow } from '@/hooks/useReports'
 import { cn } from '@/lib/cn'
 import { toUserMessage } from '@/lib/errors'
+
+const DATE_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric'
+})
 
 /**
  * Dashboard — the home screen (SRD §12; DSK-401 → DSK-405).
@@ -76,9 +84,10 @@ function StatCard({ label, value, unit, icon, tone = 'default', hint, to, isLoad
 
 export function Dashboard() {
   const { data, isPending, error, refetch } = useDashboard()
+  const { data: recentTransactions, isLoading: transactionsLoading } = useRecentTransactions(10)
 
   return (
-    <div className="flex flex-col gap-gutter">
+    <div className="flex flex-col gap-10 pb-10">
       <div>
         <h1 className="text-h1 text-on-surface">Dashboard</h1>
         <p className="text-body-sm text-on-surface-variant/60">
@@ -172,6 +181,79 @@ export function Dashboard() {
           </span>
         </Alert>
       ) : null}
+
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-h3 text-on-surface">Recent Transactions</h2>
+          <Link to="/reports" className="text-body-sm font-semibold text-primary hover:underline">
+            View all reports &rarr;
+          </Link>
+        </div>
+        <Card className="overflow-hidden">
+          {transactionsLoading ? (
+            <div className="p-8 text-center text-on-surface-variant">Loading transactions...</div>
+          ) : (
+            <DataTable<LedgerRow>
+              columns={[
+                {
+                  accessorKey: 'date',
+                  header: 'Date',
+                  cell: (row) => DATE_FORMATTER.format(new Date(row.occurredAt))
+                },
+                {
+                  accessorKey: 'product',
+                  header: 'Product',
+                  cell: (row) => row.productName
+                },
+                {
+                  accessorKey: 'type',
+                  header: 'Type',
+                  cell: (row) => (
+                    <span
+                      className={cn(
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider',
+                        row.txnType === 'INWARD'
+                          ? 'bg-success/10 text-success'
+                          : row.txnType === 'OUTWARD'
+                            ? 'bg-tertiary/10 text-tertiary'
+                            : 'bg-on-surface/10 text-on-surface-variant'
+                      )}
+                    >
+                      {row.txnType}
+                    </span>
+                  )
+                },
+                {
+                  accessorKey: 'qty',
+                  header: 'Qty',
+                  cell: (row) => (
+                    <span
+                      className={cn(
+                        'tabular-nums font-medium',
+                        row.qtyDelta > 0 ? 'text-success' : row.qtyDelta < 0 ? 'text-tertiary' : ''
+                      )}
+                    >
+                      {row.qtyDelta > 0 ? '+' : ''}
+                      {row.qtyDelta}
+                    </span>
+                  )
+                },
+                {
+                  accessorKey: 'party',
+                  header: 'Party',
+                  cell: (row) => (
+                    <span className="text-on-surface-variant">
+                      {row.partyName || '—'}
+                    </span>
+                  )
+                }
+              ]}
+              data={recentTransactions ?? []}
+              emptyMessage="No recent transactions found."
+            />
+          )}
+        </Card>
+      </div>
     </div>
   )
 }
