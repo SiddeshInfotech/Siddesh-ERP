@@ -30,11 +30,11 @@ export interface ProductDetail {
   /** Optimistic-concurrency counter. Carried so an edit can detect a concurrent write. */
   version: number
   /** Every code that resolves to this product: our ST-code plus any manufacturer codes. */
-  barcodes: { id: string; code: string; isPrimary: boolean }[]
+  barcodes: { id: string; code: string; isPrimary: boolean; status: string }[]
 }
 
 const DETAIL_SELECT =
-  'id, name, sku_barcode, category_id, brand_id, uom_id, model_number, description, min_stock, hsn_code, gst_percent, tracking_mode, is_kit, is_active, created_at, version, categories(name), brands(name), uoms(code), product_barcodes(id, code, is_primary)'
+  'id, name, sku_barcode, category_id, brand_id, uom_id, model_number, description, min_stock, hsn_code, gst_percent, tracking_mode, is_kit, is_active, created_at, version, categories(name), brands(name), uoms(code), product_barcodes(id, code, is_primary, status)'
 
 /**
  * Loads a single product by id.
@@ -87,7 +87,8 @@ export function useProduct(id: string | undefined) {
         barcodes: data.product_barcodes.map((barcode) => ({
           id: barcode.id,
           code: barcode.code,
-          isPrimary: barcode.is_primary
+          isPrimary: barcode.is_primary,
+          status: barcode.status
         }))
       }
     }

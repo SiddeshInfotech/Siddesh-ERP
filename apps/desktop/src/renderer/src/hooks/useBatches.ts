@@ -54,6 +54,7 @@ export function useLastBarcode(productId: string | null, batchId: string | null)
         .select('code, created_at')
         .eq('product_id', productId)
         .order('created_at', { ascending: false })
+        .order('code', { ascending: false })
         .limit(1)
 
       if (batchId) {

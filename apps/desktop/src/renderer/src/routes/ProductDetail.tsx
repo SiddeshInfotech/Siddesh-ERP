@@ -1,5 +1,5 @@
-import { ChevronRight, Pencil, PowerOff, Power } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ChevronRight, ChevronDown, Pencil, PowerOff, Power, Package, ArrowDownToLine, ArrowUpFromLine, Ban, Scan, User, MapPin } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { LabelPrintPanel } from '@/components/products/LabelPrintPanel'
 import { Alert } from '@/components/ui/Alert'
@@ -10,8 +10,113 @@ import { Timeline } from '@/components/ui/Timeline'
 import { useProduct } from '@/hooks/useProduct'
 import { useSetProductActive } from '@/hooks/useProductMutations'
 import { useProductStock } from '@/hooks/useProducts'
+import { useBarcodeTimeline } from '@/hooks/useBarcodeTimeline'
+import { Spinner } from '@/components/ui/Spinner'
 import { cn } from '@/lib/cn'
 import { toUserMessage } from '@/lib/errors'
+
+interface BarcodeTimelineProps {
+  barcodeId: string
+}
+
+const BARCODE_ICONS = {
+  GENERATED: Package,
+  RECEIVE: ArrowDownToLine,
+  ISSUE: ArrowUpFromLine,
+  VOID: Ban
+}
+
+const BARCODE_COLORS = {
+  GENERATED: 'text-primary bg-primary/10 border-primary/20',
+  RECEIVE: 'text-success bg-success/10 border-success/20',
+  ISSUE: 'text-amber-600 bg-amber-500/10 border-amber-500/20',
+  VOID: 'text-error bg-error/10 border-error/20'
+}
+
+function BarcodeTimeline({ barcodeId }: BarcodeTimelineProps) {
+  const { data: events, isPending } = useBarcodeTimeline(barcodeId)
+
+  const formatTime = (d: Date) => 
+    new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).format(d)
+    
+  const formatDate = (d: Date) =>
+    new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(d)
+
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center py-6">
+        <Spinner className="size-4 text-primary" />
+        <span className="text-body-sm text-on-surface-variant ml-2">Loading barcode history...</span>
+      </div>
+    )
+  }
+
+  if (!events || events.length === 0) {
+    return (
+      <div className="py-4 text-center text-body-sm text-on-surface-variant/60">
+        No scan history available for this barcode.
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative pl-6 mt-2 pb-2">
+      {/* Vertical Line */}
+      <div className="absolute left-2 top-2 bottom-2 w-px bg-border/60" />
+
+      <div className="flex flex-col gap-5">
+        {events.map((event) => {
+          const Icon = BARCODE_ICONS[event.action]
+          const colorClass = BARCODE_COLORS[event.action]
+          const date = new Date(event.timestamp)
+
+          let actionTitle = ''
+          if (event.action === 'GENERATED') actionTitle = 'Barcode Registered'
+          else if (event.action === 'RECEIVE') actionTitle = 'Physically Received'
+          else if (event.action === 'ISSUE') actionTitle = 'Dispatched (Outward)'
+          else if (event.action === 'VOID') actionTitle = 'Barcode Voided'
+
+          return (
+            <div key={event.id} className="relative flex flex-col gap-1 pl-4">
+              {/* Dot Icon */}
+              <div className={`absolute -left-[23px] top-0.5 mt-0.5 flex size-[14px] items-center justify-center rounded-full border shadow-sm ${colorClass}`}>
+                <Icon className="size-2" />
+              </div>
+
+              {/* Event Info */}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className="font-semibold text-body-sm text-on-surface">{actionTitle}</span>
+                <span className="text-label-sm text-on-surface-variant/60 font-mono">
+                  {formatDate(date)} {formatTime(date)}
+                </span>
+              </div>
+
+              {/* Subdetails */}
+              <div className="flex flex-wrap gap-x-4 text-label-md text-on-surface-variant/80">
+                <div className="flex items-center gap-1">
+                  <User className="size-3 text-outline" />
+                  <span>{event.byName}</span>
+                </div>
+                {event.officeName && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="size-3 text-outline" />
+                    <span>{event.officeName}</span>
+                  </div>
+                )}
+                {event.deviceSource && (
+                  <div className="flex items-center gap-1">
+                    <Scan className="size-3 text-outline" />
+                    <span>via {event.deviceSource}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 /**
  * Read-only view of one product, plus its live stock and its label (DSK-219).
@@ -32,6 +137,7 @@ function DetailRow({ label, children }: { label: string; children: ReactNode }) 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [expandedBarcodeId, setExpandedBarcodeId] = useState<string | null>(null)
 
   const { data: product, isPending, error, refetch } = useProduct(id)
   const stock = useProductStock(id)
@@ -200,20 +306,54 @@ export function ProductDetail() {
 
           <Card>
             <CardHeader title="Barcodes" />
-            <div className="flex flex-col gap-2 p-5">
+            <div className="flex flex-col gap-3 p-5">
               {product.barcodes.map((barcode) => (
                 <div
-                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
+                  className="rounded-xl border border-border overflow-hidden bg-surface-container-lowest/20"
                   key={barcode.id}
                 >
-                  <span className="font-mono text-mono-id text-on-surface">{barcode.code}</span>
-                  <span className="text-body-sm text-on-surface-variant/60">
-                    {barcode.isPrimary ? 'Generated — printed on our label' : "Manufacturer's code"}
-                  </span>
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between px-4 py-3 hover:bg-surface-container-lowest/60 transition-colors text-left"
+                    onClick={() => setExpandedBarcodeId(expandedBarcodeId === barcode.id ? null : barcode.id)}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono text-mono-id text-on-surface font-semibold">{barcode.code}</span>
+                      <span className="text-body-sm text-on-surface-variant/60 hidden sm:inline">
+                        {barcode.isPrimary ? 'Primary Code' : "Manufacturer's Code"}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      {/* Status Badge */}
+                      <span className={cn(
+                        'text-label-sm font-semibold rounded-full px-2.5 py-0.5 border capitalize',
+                        barcode.status === 'IN_STOCK' && 'text-success bg-success/10 border-success/20',
+                        barcode.status === 'OUTWARD' && 'text-amber-600 bg-amber-500/10 border-amber-500/20',
+                        barcode.status === 'VOID' && 'text-error bg-error/10 border-error/20'
+                      )}>
+                        {barcode.status === 'IN_STOCK' ? 'In Stock' : barcode.status === 'OUTWARD' ? 'Dispatched' : barcode.status.toLowerCase().replace('_', ' ')}
+                      </span>
+
+                      <ChevronDown
+                        className={cn(
+                          'size-4 text-outline transition-transform duration-200',
+                          expandedBarcodeId === barcode.id && 'rotate-180'
+                        )}
+                        strokeWidth={2}
+                      />
+                    </div>
+                  </button>
+
+                  {expandedBarcodeId === barcode.id && (
+                    <div className="border-t border-border/60 bg-surface-container-lowest/40 p-4">
+                      <BarcodeTimeline barcodeId={barcode.id} />
+                    </div>
+                  )}
                 </div>
               ))}
               {aliases.length === 0 ? (
-                <p className="text-body-sm text-on-surface-variant/60">
+                <p className="text-body-sm text-on-surface-variant/60 mt-1 pl-1">
                   Scanning the manufacturer&apos;s own barcode will not find this product. Edit it
                   to add that code.
                 </p>
