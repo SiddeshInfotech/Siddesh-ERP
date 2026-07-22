@@ -53,6 +53,15 @@ export function BatchPicker({ productId, qty, value, onChange, allowCreate = fal
     }
   }, [selectedBatchId, lastBarcode, qty, batches, allowCreate])
 
+  // Sync selectedBatchId with external value
+  useEffect(() => {
+    if (!value) {
+      setSelectedBatchId('')
+    } else if (value.batchId && value.batchId !== selectedBatchId) {
+      setSelectedBatchId(value.batchId)
+    }
+  }, [value, selectedBatchId])
+
   function handleScan(e: FormEvent) {
     e.preventDefault()
     setScanError(null)
@@ -150,7 +159,14 @@ export function BatchPicker({ productId, qty, value, onChange, allowCreate = fal
             onChange={(val) => {
               if (val === 'custom_new') return // Handled by generator
               setSelectedBatchId(val || '')
-              if (!val && !allowCreate) {
+              if (val) {
+                const batch = batches?.find((b) => b.id === val)
+                onChange({
+                  batchId: val,
+                  batchCode: batch?.code || null,
+                  barcodes: []
+                })
+              } else {
                 onChange(null)
               }
             }}
@@ -161,7 +177,7 @@ export function BatchPicker({ productId, qty, value, onChange, allowCreate = fal
         {allowCreate && (
           <Button 
             type="button" 
-            variant="outline" 
+            variant="secondary" 
             onClick={() => setIsGeneratorOpen(true)}
             className="mb-6 h-14 whitespace-nowrap"
           >

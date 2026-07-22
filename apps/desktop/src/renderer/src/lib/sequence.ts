@@ -22,8 +22,8 @@ export function generateNextBarcodes(lastBarcode: string, count: number): string
   const match = lastBarcode.match(/(\d+)$/)
   if (!match) return generateBarcodeRange(1, count) // Fallback if no digits found
 
-  const prefix = lastBarcode.slice(0, match.index)
-  const numStr = match[1]
+  const prefix = lastBarcode.slice(0, match.index ?? 0)
+  const numStr = match[1] || '0'
   const padLength = numStr.length
   const startNum = parseInt(numStr, 10) + 1
 

@@ -2,6 +2,7 @@ import { ArrowUpFromLine, CheckCircle2, ChevronLeft, FileText, Plus, School, Use
 import { useRef, useState, useEffect, type FormEvent, type ReactNode } from 'react'
 import { ProductPicker } from '@/components/movement/ProductPicker'
 import { BatchPicker, type BatchSelection } from '@/components/movement/BatchPicker'
+import { BatchBarcodesModal } from '@/components/barcode/BatchBarcodesModal'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -96,17 +97,15 @@ export function Outward() {
   const [showForm, setShowForm] = useState(false)
   const [historyFilter, setHistoryFilter] = useState<'all' | 'product'>('all')
   const [historyTab, setHistoryTab] = useState<'stock' | 'party' | 'other'>('stock')
+  const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string } | null>(null)
 
   const historyProductId = historyFilter === 'product' ? picker.picked?.id : undefined
   const { data: historyData, isLoading: historyLoading, error: historyError } =
     useOutwardHistory(historyProductId)
 
   useEffect(() => {
-    // No auto-select, wait for explicit
-    if (!picker.picked) {
-      setBatchSelection(null)
-    }
-  }, [picker.picked])
+    setBatchSelection(null)
+  }, [picker.picked?.id])
 
   const [errors, setErrors] = useState<Errors>({})
   const [saved, setSaved] = useState<Saved | null>(null)
@@ -238,7 +237,26 @@ export function Outward() {
     const stockColumns: Column<OutwardHistoryRow>[] = [
       { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
       { header: 'Product', cell: (row) => row.product_name },
-      { header: 'Batch', cell: (row) => orDash(row.batch_code) },
+      {
+        header: 'Batch',
+        cell: (row) =>
+          row.batch_code ? (
+            <button
+              className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline"
+              onClick={() =>
+                setBatchModalData({
+                  productId: row.product_id,
+                  productName: row.product_name,
+                  batchCode: row.batch_code!
+                })
+              }
+            >
+              {row.batch_code}
+            </button>
+          ) : (
+            '—'
+          )
+      },
       { header: 'Type', cell: (row) => outwardTypeLabel(row.outward_type) },
       { header: 'Quantity (given out)', align: 'right', cell: (row) => row.outward_qty },
       { header: 'Remaining Quantity', align: 'right', cell: (row) => row.remaining_qty },
@@ -326,6 +344,15 @@ export function Outward() {
             emptyMessage="No outward entries yet."
           />
         </Card>
+
+        {batchModalData && (
+          <BatchBarcodesModal
+            productId={batchModalData.productId}
+            productName={batchModalData.productName}
+            batchCode={batchModalData.batchCode}
+            onClose={() => setBatchModalData(null)}
+          />
+        )}
       </div>
     )
   }

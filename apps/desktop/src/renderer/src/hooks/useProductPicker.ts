@@ -42,7 +42,7 @@ export function useProductPicker() {
         uom: product.unit,
         qtyOnHand: stock.qty_on_hand,
         qtyAvailable: stock.qty_available,
-        batchCode: lookup.data.batch?.code
+        batchCode: lookup.data.batch_no
       }
     }
 

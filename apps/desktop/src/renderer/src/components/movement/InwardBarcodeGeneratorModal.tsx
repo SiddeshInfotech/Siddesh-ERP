@@ -49,7 +49,7 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
     if (lastBarcode?.code) {
       const match = lastBarcode.code.match(/(\d+)$/)
       if (match) {
-        setStartSeq(parseInt(match[1], 10) + 1)
+        setStartSeq(parseInt(match[1] || '0', 10) + 1)
       }
     }
   }, [lastBarcode])
@@ -84,7 +84,7 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
               Generating {qty} sequential barcodes for {product?.name || 'this product'}.
             </p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+          <Button variant="ghost" size="sm" onClick={onClose} className="rounded-full">
             <X className="size-5" />
           </Button>
         </div>

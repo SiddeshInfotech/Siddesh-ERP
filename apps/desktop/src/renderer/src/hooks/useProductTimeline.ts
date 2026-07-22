@@ -45,7 +45,7 @@ export function useProductTimeline(productId: string) {
 
       // 5. Fetch Notes
       const { data: notesData } = await supabase
-        .from('product_notes')
+        .from('product_notes' as any)
         .select('id, note_text, created_at, created_by, profiles!product_notes_created_by_fkey(full_name)')
         .eq('product_id', productId)
 
@@ -96,7 +96,7 @@ export function useProductTimeline(productId: string) {
         })
       }
 
-      for (const n of notesData ?? []) {
+      for (const n of (notesData as any) ?? []) {
         events.push({
           id: `note-${n.id}`,
           type: 'NOTE',
@@ -120,8 +120,8 @@ export function useAddProductNote() {
   return useMutation({
     mutationFn: async ({ productId, noteText }: { productId: string; noteText: string }) => {
       const { error } = await supabase
-        .from('product_notes')
-        .insert({ product_id: productId, note_text: noteText })
+        .from('product_notes' as any)
+        .insert({ product_id: productId, note_text: noteText } as any)
 
       if (error) throw new Error(toUserMessage(error))
     },

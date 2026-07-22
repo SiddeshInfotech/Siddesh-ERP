@@ -83,12 +83,8 @@ export function Inward() {
   const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string } | null>(null)
   
   useEffect(() => {
-    // We do not auto-fill batch selection anymore based on picker picked because 
-    // we want explicit batch selection/creation for Inward
-    if (!picker.picked) {
-      setBatchSelection(null)
-    }
-  }, [picker.picked])
+    setBatchSelection(null)
+  }, [picker.picked?.id])
 
   const { session } = useAuth()
   
