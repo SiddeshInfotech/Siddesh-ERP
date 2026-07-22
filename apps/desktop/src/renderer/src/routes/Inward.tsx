@@ -1,5 +1,5 @@
 import { ArrowDownToLine, CheckCircle2, FileText, Truck, User, Plus, ChevronLeft } from 'lucide-react'
-import { useRef, useState, useEffect, type FormEvent, type ReactNode } from 'react'
+import { useRef, useState, useEffect, useMemo, type FormEvent, type ReactNode } from 'react'
 import { ProductPicker } from '@/components/movement/ProductPicker'
 import { BatchBarcodesModal } from '@/components/barcode/BatchBarcodesModal'
 import { Alert } from '@/components/ui/Alert'
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { DatePicker } from '@/components/ui/DatePicker'
 import { Field } from '@/components/ui/Field'
+import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { HistoryTab } from '@/components/ui/HistoryTab'
@@ -16,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useInwardHistory, type InwardHistoryRow } from '@/hooks/useInwardHistory'
 import { useProductPicker } from '@/hooks/useProductPicker'
 import { useSaveInward } from '@/hooks/useSaveMovement'
+import { useSuppliers } from '@/hooks/useSuppliers'
 import { toUserMessage } from '@/lib/errors'
 import {
   findGstProblem,
@@ -70,6 +72,18 @@ export function Inward() {
   const [supplierName, setSupplierName] = useState('')
   const [supplierMobile, setSupplierMobile] = useState('')
   const [supplierGst, setSupplierGst] = useState('')
+  const [selectedSupplierId, setSelectedSupplierId] = useState('')
+
+  const { data: suppliers } = useSuppliers()
+
+  const supplierOptions = useMemo(() => {
+    return (suppliers || []).map((s) => ({
+      value: s.id,
+      label: s.name,
+      description: s.gst_no ? `GST: ${s.gst_no}` : undefined
+    }))
+  }, [suppliers])
+
   const [invoiceNo, setInvoiceNo] = useState('')
   const [invoiceDate, setInvoiceDate] = useState('')
   const [purchaseOrder, setPurchaseOrder] = useState('')
@@ -129,7 +143,13 @@ export function Inward() {
     const found: Errors = {}
 
     const qtyProblem = findQtyProblem(qty)
-    if (qtyProblem !== null) found.qty = qtyProblem
+    if (qtyProblem !== null) {
+      found.qty = qtyProblem
+    } else if (batchSelection && batchSelection.barcodes && batchSelection.barcodes.length > 0) {
+      if (batchSelection.barcodes.length !== Number(qty)) {
+        found.qty = `Quantity (${qty}) must match the number of generated barcodes (${batchSelection.barcodes.length}). Regenerate barcodes to match.`
+      }
+    }
 
     if (supplierName.trim().length === 0) found.supplierName = 'Enter the supplier name.'
 
@@ -409,11 +429,35 @@ export function Inward() {
           title="Supplier"
         >
           <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Select
+                label="Select Existing Supplier (Optional)"
+                placeholder="Choose a supplier to autofill their details..."
+                options={supplierOptions}
+                value={selectedSupplierId}
+                onChange={(val) => {
+                  setSelectedSupplierId(val)
+                  const supplier = suppliers?.find((s) => s.id === val)
+                  if (supplier) {
+                    setSupplierName(supplier.name)
+                    setSupplierMobile(supplier.mobile || '')
+                    setSupplierGst(supplier.gst_no || '')
+                  } else {
+                    setSupplierName('')
+                    setSupplierMobile('')
+                    setSupplierGst('')
+                  }
+                }}
+              />
+            </div>
             <Field
               error={errors.supplierName}
               hint="Reused if this supplier already exists."
               label="Supplier name"
-              onChange={(event) => setSupplierName(event.target.value)}
+              onChange={(event) => {
+                setSupplierName(event.target.value)
+                setSelectedSupplierId('')
+              }}
               required
               value={supplierName}
             />
@@ -422,7 +466,10 @@ export function Inward() {
               hint="Optional. 10 digits."
               inputMode="numeric"
               label="Supplier mobile"
-              onChange={(event) => setSupplierMobile(event.target.value)}
+              onChange={(event) => {
+                setSupplierMobile(event.target.value)
+                setSelectedSupplierId('')
+              }}
               value={supplierMobile}
             />
             <Field
@@ -431,7 +478,10 @@ export function Inward() {
               hint="Optional. 15 characters, e.g. 27AAAAA0000A1Z5."
               label="GST number"
               mono
-              onChange={(event) => setSupplierGst(event.target.value.toUpperCase())}
+              onChange={(event) => {
+                setSupplierGst(event.target.value.toUpperCase())
+                setSelectedSupplierId('')
+              }}
               value={supplierGst}
             />
           </div>

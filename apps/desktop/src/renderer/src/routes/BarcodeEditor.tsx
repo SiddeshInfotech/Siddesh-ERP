@@ -18,15 +18,18 @@ import { Field } from '@/components/ui/Field'
 import { Select, type SelectOption } from '@/components/ui/Select'
 import { SpinnerPane } from '@/components/ui/Spinner'
 import { useProducts, type ProductListItem } from '@/hooks/useProducts'
+import { useBatches, useLastBarcode } from '@/hooks/useBatches'
 import { generateCode128Svg } from '@/lib/code128'
 import { toUserMessage } from '@/lib/errors'
 import {
   BARCODE_FORMAT_OPTIONS,
   generateCustomBarcodeSequence,
+  generateNextBatchCode,
   type BarcodeFormatId
 } from '@/lib/sequence'
 import { supabase } from '@/lib/supabase'
 import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 
 interface BatchRecord {
   id: string
@@ -52,15 +55,9 @@ export function BarcodeEditor() {
   // Flow State
   const [selectedProductId, setSelectedProductId] = useState<string>(id || '')
   const [quantity, setQuantity] = useState<number>(10)
-  const [batchCode, setBatchCode] = useState<string>(() => {
-    const d = new Date()
-    const yymmdd = [
-      String(d.getFullYear()).slice(2),
-      String(d.getMonth() + 1).padStart(2, '0'),
-      String(d.getDate()).padStart(2, '0')
-    ].join('')
-    return `BATCH-${yymmdd}-001`
-  })
+  const [batchCode, setBatchCode] = useState<string>('')
+  const [createNewBatch, setCreateNewBatch] = useState<boolean>(true)
+  const [selectedBatchId, setSelectedBatchId] = useState<string>('')
 
   // Barcode Mode State
   const [mode, setMode] = useState<'A' | 'B'>('A')
@@ -69,6 +66,51 @@ export function BarcodeEditor() {
   const [customManufacturerBarcode, setCustomManufacturerBarcode] = useState<string>('')
   const [startSeq, setStartSeq] = useState<number>(1)
   const [showInfo, setShowInfo] = useState<boolean>(false)
+
+  // Selected Target Product
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.id === (selectedProductId || id)) || products[0] || null,
+    [products, selectedProductId, id]
+  )
+
+  const { data: batches } = useBatches(selectedProduct?.id || null)
+  const { data: lastBarcode } = useLastBarcode(
+    selectedProduct?.id || null,
+    createNewBatch ? null : (selectedBatchId || null)
+  )
+
+  // Auto-generate/suggest batch code based on batches
+  useEffect(() => {
+    if (batches && batches.length > 0) {
+      const latestBatch = batches[0]
+      if (latestBatch?.code) {
+        setBatchCode(generateNextBatchCode(latestBatch.code))
+        setSelectedBatchId(latestBatch.id)
+        return
+      }
+    }
+
+    const d = new Date()
+    const yymmdd = [
+      String(d.getFullYear()).slice(2),
+      String(d.getMonth() + 1).padStart(2, '0'),
+      String(d.getDate()).padStart(2, '0')
+    ].join('')
+    setBatchCode(`BATCH-${yymmdd}-001`)
+    setSelectedBatchId('')
+  }, [batches])
+
+  // Auto-guess next barcode sequence based on lastBarcode
+  useEffect(() => {
+    if (lastBarcode?.code) {
+      const match = lastBarcode.code.match(/(\d+)$/)
+      if (match) {
+        setStartSeq(parseInt(match[1] || '0', 10) + 1)
+      }
+    } else {
+      setStartSeq(1)
+    }
+  }, [lastBarcode])
 
   // Status & Print Canvas State
   const [isSaving, setIsSaving] = useState(false)
@@ -91,11 +133,14 @@ export function BarcodeEditor() {
     }))
   }, [])
 
-  // Selected Target Product
-  const selectedProduct = useMemo(
-    () => products.find((p) => p.id === (selectedProductId || id)) || products[0] || null,
-    [products, selectedProductId, id]
-  )
+  const batchOptions: SelectOption[] = useMemo(() => {
+    if (!batches || batches.length === 0) return []
+    return batches.map((b, index) => ({
+      value: b.id,
+      label: index === 0 ? `🟢 ${b.code || 'Unknown'} (Latest)` : (b.code || 'Unknown'),
+      description: `Created: ${new Date(b.created_at).toLocaleDateString()}`
+    }))
+  }, [batches])
 
   // Format option metadata
   const currentFormatOption = useMemo(
@@ -141,14 +186,65 @@ export function BarcodeEditor() {
     setSubmitError(null)
 
     try {
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ sku_barcode: primaryBarcode })
-        .eq('id', selectedProduct.id)
+      let resolvedBatchId: string | null = null
 
-      if (updateError) throw updateError
+      if (createNewBatch) {
+        if (!batchCode.trim()) {
+          throw new Error('Batch code is required when creating a new batch.')
+        }
+        // Insert new batch
+        const { data: newBatch, error: batchError } = await supabase
+          .from('product_batches')
+          .insert({
+            product_id: selectedProduct.id,
+            code: batchCode.trim()
+          })
+          .select()
+          .single()
 
+        if (batchError) throw batchError
+        resolvedBatchId = newBatch.id
+      } else {
+        resolvedBatchId = selectedBatchId || null
+      }
+
+      // Insert all generated barcodes (deduplicated to prevent duplicate key errors in Option B mode)
+      const uniqueBarcodes = Array.from(new Set(generatedSequence))
+      const { error: barcodesError } = await supabase
+        .from('product_barcodes')
+        .insert(
+          uniqueBarcodes.map((code, idx) => ({
+            product_id: selectedProduct.id,
+            code,
+            batch_id: mode === 'B' ? null : (resolvedBatchId || null), // Option B doesn't use batches
+            symbology: 'CODE128',
+            is_primary: idx === 0 && !selectedProduct.skuBarcode
+          }))
+        )
+
+      if (barcodesError) {
+        // If it's a duplicate code constraint violation, customize the error message
+        if (barcodesError.code === '23505') {
+          throw new Error('One or more of the generated barcodes already exists in the system.')
+        }
+        throw barcodesError
+      }
+
+      // Also update the product's primary SKU barcode if it doesn't already have one
+      if (!selectedProduct.skuBarcode) {
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ sku_barcode: primaryBarcode })
+          .eq('id', selectedProduct.id)
+
+        if (updateError) throw updateError
+      }
+
+      // Invalidate React Query caches
+      await queryClient.invalidateQueries({ queryKey: ['batches', selectedProduct.id] })
       await queryClient.invalidateQueries({ queryKey: ['products'] })
+      await queryClient.invalidateQueries({ queryKey: ['last_barcode', selectedProduct.id] })
+
       void navigate('/barcodes')
     } catch (err: any) {
       setSubmitError(toUserMessage(err))
@@ -238,14 +334,42 @@ export function BarcodeEditor() {
             </div>
           </div>
 
-          {/* Batch Code Input */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field
-              label="Batch Code"
-              value={batchCode}
-              onChange={(e) => setBatchCode(e.target.value)}
-              placeholder="e.g. BATCH-20260720-001"
-            />
+          {/* Batch Selection & Creation */}
+          <div className="space-y-4 pt-2 border-t border-border/20">
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-2 text-body-sm font-semibold text-on-surface cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={createNewBatch}
+                  onChange={(e) => setCreateNewBatch(e.target.checked)}
+                  className="rounded border-border text-primary focus:ring-primary size-4"
+                />
+                Create New Batch
+              </label>
+            </div>
+
+            {createNewBatch ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field
+                  label="New Batch Code"
+                  value={batchCode}
+                  onChange={(e) => setBatchCode(e.target.value)}
+                  placeholder="e.g. BATCH-20260720-001"
+                  required
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  label="Select Existing Batch"
+                  options={batchOptions}
+                  value={selectedBatchId}
+                  onChange={(val) => setSelectedBatchId(val)}
+                  placeholder={batchOptions.length === 0 ? "No batches available" : "Choose a batch"}
+                  disabled={batchOptions.length === 0}
+                />
+              </div>
+            )}
           </div>
 
           {/* Mode Selection Tabs */}
@@ -312,6 +436,19 @@ export function BarcodeEditor() {
                     placeholder="e.g. SIDD"
                   />
                 )}
+
+                {/* Starting Sequence Number Field */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field
+                    label="Starting Sequence Number"
+                    type="number"
+                    min={1}
+                    value={startSeq}
+                    onChange={(e) => setStartSeq(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    placeholder="e.g. 1"
+                    hint="Auto-suggested from the latest barcode in database to maintain sequence accountability."
+                  />
+                </div>
 
                 {/* MONOCHROME FORMAT STRUCTURE BREAKDOWN INFO POPUP */}
                 {showInfo && (

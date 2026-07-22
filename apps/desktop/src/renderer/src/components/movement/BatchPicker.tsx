@@ -107,9 +107,9 @@ export function BatchPicker({ productId, qty, value, onChange, allowCreate = fal
     )
   }
 
-  const options = (batches || []).map((b) => ({
+  const options = (batches || []).map((b, index) => ({
     value: b.id,
-    label: b.code || 'Unknown',
+    label: index === 0 ? `🟢 ${b.code || 'Unknown'} (Latest)` : (b.code || 'Unknown'),
     description: `Created: ${new Date(b.created_at).toLocaleDateString()}`
   }))
   options.unshift({ value: '', label: 'No batch (generic)', description: '' })

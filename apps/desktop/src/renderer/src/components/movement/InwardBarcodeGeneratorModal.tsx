@@ -4,9 +4,9 @@ import { Plus, X, ListOrdered } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Select } from '@/components/ui/Select'
-import { BARCODE_FORMAT_OPTIONS, generateCustomBarcodeSequence, type BarcodeFormatId } from '@/lib/sequence'
+import { BARCODE_FORMAT_OPTIONS, generateCustomBarcodeSequence, generateNextBatchCode, type BarcodeFormatId } from '@/lib/sequence'
 import { useProducts } from '@/hooks/useProducts'
-import { useLastBarcode } from '@/hooks/useBatches'
+import { useLastBarcode, useBatches } from '@/hooks/useBatches'
 
 export interface InwardGeneratorResult {
   batchCode: string
@@ -25,24 +25,31 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
   const product = productsData?.items.find(p => p.id === productId)
   
   const { data: lastBarcode } = useLastBarcode(productId, null) // Get very last barcode for this product to find startSeq
+  const { data: batches } = useBatches(productId)
 
   const [batchCode, setBatchCode] = useState<string>('')
   const [selectedFormatId, setSelectedFormatId] = useState<BarcodeFormatId>('SKU_DATE_SEQ')
   const [customPrefix, setCustomPrefix] = useState<string>('SIDD')
   const [startSeq, setStartSeq] = useState<number>(1)
 
-  // Auto-generate batch code on mount
+  // Auto-generate or suggest next batch code based on previous batch
   useEffect(() => {
+    if (batches && batches.length > 0) {
+      const latestBatch = batches[0]
+      if (latestBatch?.code) {
+        setBatchCode(generateNextBatchCode(latestBatch.code))
+        return
+      }
+    }
+
     const d = new Date()
     const yymmdd = [
       String(d.getFullYear()).slice(2),
       String(d.getMonth() + 1).padStart(2, '0'),
       String(d.getDate()).padStart(2, '0')
     ].join('')
-    // Ideally we would fetch the next sequence from the server, but for now we suggest this
-    // The server will actually override this or create it if we pass it down
     setBatchCode(`BATCH-${yymmdd}-001`)
-  }, [])
+  }, [batches])
 
   // Auto-guess next sequence based on last barcode
   useEffect(() => {

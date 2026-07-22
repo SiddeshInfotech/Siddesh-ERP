@@ -36,6 +36,22 @@ export function generateNextBarcodes(lastBarcode: string, count: number): string
 }
 
 /**
+ * Increments the trailing sequence number of a batch code.
+ * Example: "BATCH-260722-001" -> "BATCH-260722-002"
+ */
+export function generateNextBatchCode(lastBatchCode: string): string {
+  if (!lastBatchCode) return ''
+  const match = lastBatchCode.match(/(\d+)$/)
+  if (!match) return lastBatchCode + '-001' // Fallback
+  
+  const prefix = lastBatchCode.slice(0, match.index ?? 0)
+  const numStr = match[1] || '0'
+  const padLength = numStr.length
+  const nextNum = parseInt(numStr, 10) + 1
+  return `${prefix}${String(nextNum).padStart(padLength, '0')}`
+}
+
+/**
  * Formats a numeric sequence into standard 8-digit zero-padded ST barcode string.
  * Example: 5 -> "ST00000005"
  */

@@ -181,4 +181,7 @@ function invalidateStock(queryClient: ReturnType<typeof useQueryClient>) {
   void queryClient.invalidateQueries({ queryKey: ['products'] })
   void queryClient.invalidateQueries({ queryKey: ['product-stock'] })
   void queryClient.invalidateQueries({ queryKey: ['scan-lookup'] })
+  void queryClient.invalidateQueries({ queryKey: ['batches'] })
+  void queryClient.invalidateQueries({ queryKey: ['last_barcode'] })
+  void queryClient.invalidateQueries({ queryKey: ['suppliers'] })
 }
