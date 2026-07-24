@@ -59,6 +59,7 @@ export type ScanLookupResult =
       unit: ScannedUnit | null
       stock: ScannedStock
       batch_no: string | null
+      batch?: { id: string; code: string } | null
     }
   | {
       found: false
@@ -66,6 +67,7 @@ export type ScanLookupResult =
       product: null
       stock: null
       batch_no: null
+      batch?: null
     }
 
 export type SaveResult = {

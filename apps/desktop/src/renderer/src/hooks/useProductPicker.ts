@@ -42,7 +42,7 @@ export function useProductPicker() {
         uom: product.unit,
         qtyOnHand: stock.qty_on_hand,
         qtyAvailable: stock.qty_available,
-        batchCode: lookup.data.batch_no
+        batchCode: lookup.data.batch?.code || lookup.data.batch_no
       }
     }
 
@@ -58,7 +58,7 @@ export function useProductPicker() {
       uom: match.uomCode,
       qtyOnHand: match.qtyOnHand,
       qtyAvailable: match.qtyAvailable,
-      batchNo: null // Choosing by name does not imply a batch
+      batchCode: null // Choosing by name does not imply a batch
     }
   }, [lookup.data, chosenId, products.data])
 
