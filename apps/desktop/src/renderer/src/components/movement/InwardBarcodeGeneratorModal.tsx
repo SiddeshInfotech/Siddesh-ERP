@@ -31,6 +31,7 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
   const [selectedFormatId, setSelectedFormatId] = useState<BarcodeFormatId>('SKU_DATE_SEQ')
   const [customPrefix, setCustomPrefix] = useState<string>('SIDD')
   const [startSeq, setStartSeq] = useState<number>(1)
+  const [localQty, setLocalQty] = useState<number>(Math.max(1, qty || 10))
 
   // Auto-generate or suggest next batch code based on previous batch
   useEffect(() => {
@@ -62,13 +63,13 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
   }, [lastBarcode])
 
   const generatedSequence = useMemo(() => {
-    return generateCustomBarcodeSequence(selectedFormatId, startSeq, qty, {
+    return generateCustomBarcodeSequence(selectedFormatId, startSeq, localQty, {
       skuCode: product?.name ? product.name.slice(0, 4) : 'PROD',
       categoryName: product?.categoryName || 'GEN',
       customPrefix,
       date: new Date()
     })
-  }, [selectedFormatId, startSeq, qty, product, customPrefix])
+  }, [selectedFormatId, startSeq, localQty, product, customPrefix])
 
   const handleSave = () => {
     if (!batchCode.trim()) return
@@ -88,7 +89,7 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
               Create Batch & Barcodes
             </h2>
             <p className="text-body-sm text-on-surface-variant mt-1">
-              Generating {qty} sequential barcodes for {product?.name || 'this product'}.
+              Generating {localQty} sequential barcodes for {product?.name || 'this product'}.
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose} className="rounded-full">
@@ -97,7 +98,7 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
         </div>
 
         <div className="p-6 overflow-y-auto flex flex-col gap-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Field
               label="Batch Number"
               value={batchCode}
@@ -105,11 +106,19 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
               required
             />
             <Field
-              label="Starting Sequence Number"
+              label="Starting Seq Number"
               type="number"
               min={1}
               value={startSeq}
               onChange={(e) => setStartSeq(parseInt(e.target.value) || 1)}
+            />
+            <Field
+              label="Barcode Quantity"
+              type="number"
+              min={1}
+              value={localQty}
+              onChange={(e) => setLocalQty(parseInt(e.target.value) || 1)}
+              required
             />
           </div>
 
@@ -140,14 +149,14 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
           <div className="bg-surface-container-lowest border border-border rounded-xl p-4 mt-2">
             <h3 className="text-label-sm text-on-surface-variant mb-3 flex items-center justify-between">
               <span>Preview (First & Last)</span>
-              <span className="font-mono text-primary bg-primary/10 px-2 py-0.5 rounded">Qty: {qty}</span>
+              <span className="font-mono text-primary bg-primary/10 px-2 py-0.5 rounded">Qty: {localQty}</span>
             </h3>
             <div className="flex flex-col gap-2 font-mono text-body-lg">
               <div className="flex items-center gap-3">
                 <span className="text-on-surface-variant text-sm w-12">Start:</span>
                 <span className="font-semibold text-on-surface">{generatedSequence[0]}</span>
               </div>
-              {qty > 1 && (
+              {localQty > 1 && (
                 <>
                   <div className="flex flex-col items-start gap-1 text-outline/50 pl-16">
                     <span className="h-1 w-1 rounded-full bg-current" />

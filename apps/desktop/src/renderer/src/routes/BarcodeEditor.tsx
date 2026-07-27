@@ -230,20 +230,12 @@ export function BarcodeEditor() {
         throw barcodesError
       }
 
-      // Also update the product's primary SKU barcode if it doesn't already have one
-      if (!selectedProduct.skuBarcode) {
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ sku_barcode: primaryBarcode })
-          .eq('id', selectedProduct.id)
-
-        if (updateError) throw updateError
-      }
-
       // Invalidate React Query caches
       await queryClient.invalidateQueries({ queryKey: ['batches', selectedProduct.id] })
       await queryClient.invalidateQueries({ queryKey: ['products'] })
       await queryClient.invalidateQueries({ queryKey: ['last_barcode', selectedProduct.id] })
+      await queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
+      await queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
 
       void navigate('/barcodes')
     } catch (err: any) {

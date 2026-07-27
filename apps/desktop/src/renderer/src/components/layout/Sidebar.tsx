@@ -10,7 +10,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sun,
-  Warehouse
+  Warehouse,
+  Settings as SettingsIcon
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
@@ -33,7 +34,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/inward', label: 'Inward', icon: ArrowDownToLine },
   { to: '/outward', label: 'Outward', icon: ArrowUpFromLine },
   { to: '/stock', label: 'Stock', icon: Warehouse },
-  { to: '/reports', label: 'Reports', icon: BarChart3 }
+  { to: '/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/settings', label: 'Settings', icon: SettingsIcon }
 ]
 
 interface RailButtonProps {

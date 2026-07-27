@@ -227,7 +227,7 @@ export function useInwardReport(range: DateRange, supplierName?: string, product
       let query = supabase
         .from('inward_items')
         .select(
-          'id, quantity, products!inner(name, sku_barcode), inwards!inner(inward_no, received_at, invoice_no, invoice_date, purchase_order_no, brought_by, suppliers(name))'
+          'id, quantity, products!inner(name, product_code, product_barcodes(code, is_primary)), inwards!inner(inward_no, received_at, invoice_no, invoice_date, purchase_order_no, brought_by, suppliers(name))'
         )
         .order('received_at', { ascending: false, referencedTable: 'inwards' })
         .limit(REPORT_LIMIT)
@@ -245,19 +245,25 @@ export function useInwardReport(range: DateRange, supplierName?: string, product
         throw error
       }
 
-      return data.map((row) => ({
-        id: row.id,
-        inwardNo: row.inwards.inward_no,
-        receivedAt: row.inwards.received_at,
-        supplierName: row.inwards.suppliers?.name ?? null,
-        productName: row.products.name,
-        skuBarcode: row.products.sku_barcode,
-        quantity: row.quantity,
-        invoiceNo: row.inwards.invoice_no,
-        invoiceDate: row.inwards.invoice_date,
-        purchaseOrderNo: row.inwards.purchase_order_no,
-        broughtBy: row.inwards.brought_by
-      }))
+      return data.map((row) => {
+        const prod = row.products as any
+        const primaryCode = prod.product_barcodes?.find((b: any) => b.is_primary)?.code
+        const anyCode = prod.product_barcodes?.[0]?.code
+
+        return {
+          id: row.id,
+          inwardNo: row.inwards.inward_no,
+          receivedAt: row.inwards.received_at,
+          supplierName: row.inwards.suppliers?.name ?? null,
+          productName: row.products.name,
+          skuBarcode: primaryCode ?? anyCode ?? prod.product_code ?? '',
+          quantity: row.quantity,
+          invoiceNo: row.inwards.invoice_no,
+          invoiceDate: row.inwards.invoice_date,
+          purchaseOrderNo: row.inwards.purchase_order_no,
+          broughtBy: row.inwards.brought_by
+        }
+      })
     }
   })
 }
@@ -286,7 +292,7 @@ export function useOutwardReport(range: DateRange, partyName?: string, invoiceNo
       let query = supabase
         .from('outward_items')
         .select(
-          'id, quantity, products!inner(name, sku_barcode), outwards!inner(outward_no, issued_at, outward_type, invoice_no, sales_order_no, handed_over_by, received_by, customers(name))'
+          'id, quantity, products!inner(name, product_code, product_barcodes(code, is_primary)), outwards!inner(outward_no, issued_at, outward_type, invoice_no, sales_order_no, handed_over_by, received_by, customers(name))'
         )
         .order('issued_at', { ascending: false, referencedTable: 'outwards' })
         .limit(REPORT_LIMIT)
@@ -303,20 +309,26 @@ export function useOutwardReport(range: DateRange, partyName?: string, invoiceNo
         throw error
       }
 
-      return data.map((row) => ({
-        id: row.id,
-        outwardNo: row.outwards.outward_no,
-        issuedAt: row.outwards.issued_at,
-        partyName: row.outwards.customers?.name ?? null,
-        outwardType: row.outwards.outward_type,
-        productName: row.products.name,
-        skuBarcode: row.products.sku_barcode,
-        quantity: row.quantity,
-        invoiceNo: row.outwards.invoice_no,
-        salesOrderNo: row.outwards.sales_order_no,
-        handedOverBy: row.outwards.handed_over_by,
-        receivedBy: row.outwards.received_by
-      }))
+      return data.map((row) => {
+        const prod = row.products as any
+        const primaryCode = prod.product_barcodes?.find((b: any) => b.is_primary)?.code
+        const anyCode = prod.product_barcodes?.[0]?.code
+
+        return {
+          id: row.id,
+          outwardNo: row.outwards.outward_no,
+          issuedAt: row.outwards.issued_at,
+          partyName: row.outwards.customers?.name ?? null,
+          outwardType: row.outwards.outward_type,
+          productName: row.products.name,
+          skuBarcode: primaryCode ?? anyCode ?? prod.product_code ?? '',
+          quantity: row.quantity,
+          invoiceNo: row.outwards.invoice_no,
+          salesOrderNo: row.outwards.sales_order_no,
+          handedOverBy: row.outwards.handed_over_by,
+          receivedBy: row.outwards.received_by
+        }
+      })
     }
   })
 }

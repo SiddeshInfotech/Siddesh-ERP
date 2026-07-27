@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import { ExportButtons } from '@/components/reports/ExportButtons'
 import { Alert } from '@/components/ui/Alert'
 import { Autocomplete } from '@/components/ui/Autocomplete'
@@ -9,6 +10,9 @@ import { Field } from '@/components/ui/Field'
 import { Select } from '@/components/ui/Select'
 import { useExportReport } from '@/hooks/useExportReport'
 import { useProducts } from '@/hooks/useProducts'
+import { useDeleteInward, useDeleteOutward, useDeleteLedgerEntry } from '@/hooks/useSaveMovement'
+import { useConfirm } from '@/hooks/useConfirm'
+import { useAlert } from '@/hooks/useAlert'
 import {
   useInwardReport,
   useOutwardReport,
@@ -108,6 +112,68 @@ export function Reports() {
   const ledger = useProductLedger(productId === '' ? null : productId, range)
   const lookups = useReportLookups()
   const { exportExcel, exportPdf, isExporting, error: exportError } = useExportReport()
+  const deleteInward = useDeleteInward()
+  const deleteOutward = useDeleteOutward()
+  const deleteLedgerEntry = useDeleteLedgerEntry()
+  const confirm = useConfirm()
+  const showAlert = useAlert()
+
+  async function handleDeleteInward(row: InwardRow) {
+    const ok = await confirm({
+      title: 'Delete Inward Record',
+      description: `Are you sure you want to delete inward report entry "${row.inwardNo}" for ${row.productName}?\n\nStock balance will be adjusted automatically.`,
+      confirmText: 'Delete Inward'
+    })
+    if (!ok) return
+    try {
+      await deleteInward.mutateAsync(row.id)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete inward entry.'
+      void showAlert({
+        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
+        description: msg,
+        tone: 'warning'
+      })
+    }
+  }
+
+  async function handleDeleteOutward(row: OutwardRow) {
+    const ok = await confirm({
+      title: 'Delete Outward Record',
+      description: `Are you sure you want to delete outward report entry "${row.outwardNo}" for ${row.productName}?\n\nStock balance will be restored automatically.`,
+      confirmText: 'Delete Outward'
+    })
+    if (!ok) return
+    try {
+      await deleteOutward.mutateAsync(row.id)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete outward entry.'
+      void showAlert({
+        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
+        description: msg,
+        tone: 'warning'
+      })
+    }
+  }
+
+  async function handleDeleteLedger(row: LedgerRow) {
+    const ok = await confirm({
+      title: 'Delete Ledger Transaction',
+      description: `Are you sure you want to delete ledger entry of ${row.qtyDelta >= 0 ? '+' : ''}${row.qtyDelta} for ${row.productName}?`,
+      confirmText: 'Delete Transaction'
+    })
+    if (!ok) return
+    try {
+      await deleteLedgerEntry.mutateAsync(row.id)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete ledger entry.'
+      void showAlert({
+        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
+        description: msg,
+        tone: 'warning'
+      })
+    }
+  }
 
   const subtitle =
     range.from === '' && range.to === ''
@@ -130,7 +196,26 @@ export function Reports() {
     },
     { id: 'qty', header: 'Qty', align: 'right', width: 'w-20', cell: (r) => <span className="font-semibold tabular-nums text-success">+{r.quantity}</span> },
     { id: 'invoice', header: 'Invoice', width: 'w-32', cell: (r) => <span className="text-on-surface-variant">{r.invoiceNo ?? '—'}</span> },
-    { id: 'brought', header: 'Brought by', width: 'w-32', cell: (r) => <span className="text-on-surface-variant">{r.broughtBy ?? '—'}</span> }
+    { id: 'brought', header: 'Brought by', width: 'w-32', cell: (r) => <span className="text-on-surface-variant">{r.broughtBy ?? '—'}</span> },
+    {
+      id: 'actions',
+      header: 'Actions',
+      align: 'right',
+      width: 'w-20',
+      cell: (r) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            void handleDeleteInward(r)
+          }}
+          disabled={deleteInward.isPending}
+          className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+          title="Delete inward entry"
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+        </button>
+      )
+    }
   ]
 
   const outwardColumns: Column<OutwardRow>[] = [
@@ -149,7 +234,26 @@ export function Reports() {
       )
     },
     { id: 'qty', header: 'Qty', align: 'right', width: 'w-20', cell: (r) => <span className="font-semibold tabular-nums text-on-surface">−{r.quantity}</span> },
-    { id: 'invoice', header: 'Invoice', width: 'w-32', cell: (r) => <span className="text-on-surface-variant">{r.invoiceNo ?? '—'}</span> }
+    { id: 'invoice', header: 'Invoice', width: 'w-32', cell: (r) => <span className="text-on-surface-variant">{r.invoiceNo ?? '—'}</span> },
+    {
+      id: 'actions',
+      header: 'Actions',
+      align: 'right',
+      width: 'w-20',
+      cell: (r) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            void handleDeleteOutward(r)
+          }}
+          disabled={deleteOutward.isPending}
+          className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+          title="Delete outward entry"
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+        </button>
+      )
+    }
   ]
 
   const ledgerColumns: Column<LedgerRow>[] = [
@@ -168,7 +272,26 @@ export function Reports() {
     },
     { id: 'balance', header: 'Balance after', align: 'right', width: 'w-28', cell: (r) => <span className="font-semibold tabular-nums text-on-surface">{r.balanceAfter}</span> },
     { id: 'party', header: 'Party', cell: (r) => <span className="text-on-surface-variant">{r.partyName ?? '—'}</span> },
-    { id: 'by', header: 'By', width: 'w-32', cell: (r) => <span className="text-on-surface-variant/70">{r.createdByName ?? '—'}</span> }
+    { id: 'by', header: 'By', width: 'w-32', cell: (r) => <span className="text-on-surface-variant/70">{r.createdByName ?? '—'}</span> },
+    {
+      id: 'actions',
+      header: 'Actions',
+      align: 'right',
+      width: 'w-20',
+      cell: (r) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            void handleDeleteLedger(r)
+          }}
+          disabled={deleteLedgerEntry.isPending}
+          className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+          title="Delete ledger entry"
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+        </button>
+      )
+    }
   ]
 
   const active =

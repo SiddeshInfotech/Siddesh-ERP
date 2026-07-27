@@ -184,4 +184,66 @@ function invalidateStock(queryClient: ReturnType<typeof useQueryClient>) {
   void queryClient.invalidateQueries({ queryKey: ['batches'] })
   void queryClient.invalidateQueries({ queryKey: ['last_barcode'] })
   void queryClient.invalidateQueries({ queryKey: ['suppliers'] })
+  void queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
+  void queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
+  void queryClient.invalidateQueries({ queryKey: ['inward_history_v2'] })
+  void queryClient.invalidateQueries({ queryKey: ['outward_history_v1'] })
+  void queryClient.invalidateQueries({ queryKey: ['report'] })
+  void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+  void queryClient.invalidateQueries({ queryKey: ['product_timeline'] })
 }
+
+export function useDeleteInward() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (inwardId: string): Promise<void> => {
+      const { error } = await supabase.rpc('delete_inward', { p_inward_id: inwardId })
+      if (error) {
+        logger.error('Failed to delete inward movement', { inwardId, ...toLogContext(error) })
+        throw error
+      }
+      logger.info('Inward movement deleted', { inwardId })
+    },
+    onSuccess: () => {
+      invalidateStock(queryClient)
+    }
+  })
+}
+
+export function useDeleteOutward() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (outwardId: string): Promise<void> => {
+      const { error } = await supabase.rpc('delete_outward', { p_outward_id: outwardId })
+      if (error) {
+        logger.error('Failed to delete outward movement', { outwardId, ...toLogContext(error) })
+        throw error
+      }
+      logger.info('Outward movement deleted', { outwardId })
+    },
+    onSuccess: () => {
+      invalidateStock(queryClient)
+    }
+  })
+}
+
+export function useDeleteLedgerEntry() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (ledgerId: string): Promise<void> => {
+      const { error } = await supabase.rpc('delete_ledger_entry', { p_ledger_id: ledgerId })
+      if (error) {
+        logger.error('Failed to delete ledger entry', { ledgerId, ...toLogContext(error) })
+        throw error
+      }
+      logger.info('Ledger entry deleted', { ledgerId })
+    },
+    onSuccess: () => {
+      invalidateStock(queryClient)
+    }
+  })
+}
+

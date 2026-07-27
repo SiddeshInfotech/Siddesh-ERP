@@ -1,4 +1,4 @@
-import { Barcode, Package, Percent, Sparkles, Warehouse } from 'lucide-react'
+import { Package, Percent, Sparkles, Warehouse } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/Card'
 import { Field } from '@/components/ui/Field'
 import { Select, type SelectOption } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
-import { BarcodeLabel } from './BarcodeLabel'
 import { cn } from '@/lib/cn'
 import {
   validateProductForm,
@@ -31,8 +30,6 @@ interface ProductFormProps {
   brands: SelectOption[]
   uoms: SelectOption[]
   isEditing: boolean
-  /** The product's existing ST-code. Edit only — it is already printed on boxes. */
-  skuBarcode?: string
   isSaving: boolean
   /** Safe sentence for a failure that is not tied to one field. */
   submitError?: string | null
@@ -41,12 +38,6 @@ interface ProductFormProps {
   onSubmit: (values: ProductFormValues) => void
   onCancel: () => void
 }
-
-/**
- * Stand-in for the preview before the database assigns the real code. Deliberately all
- * zeroes: it is obviously not a real SKU, so nobody writes it on a box.
- */
-const SAMPLE_SKU = 'ST00000000'
 
 /** SRD §18B. The label is the word a storekeeper would use; the detail goes underneath. */
 const TRACKING_MODE_OPTIONS: SelectOption[] = [
@@ -142,7 +133,6 @@ export function ProductForm({
   brands,
   uoms,
   isEditing,
-  skuBarcode,
   isSaving,
   submitError,
   serverErrors,
@@ -196,20 +186,6 @@ export function ProductForm({
 
     onSubmit(values)
   }
-
-  const isManufacturerCode = values.barcodeSource === 'MANUFACTURER'
-
-  // On a new product the real code does not exist yet: `sku_barcode` defaults to
-  // app.next_product_barcode(), so the database mints it at INSERT and nothing else may
-  // guess it — peeking at the sequence would be a race and could hand out a code that
-  // another clerk's save takes first. So the preview shows the true label with a clearly
-  // marked sample number, rather than inventing one that looks real.
-  const previewCode = isManufacturerCode
-    ? values.manufacturerBarcode.trim()
-    : (skuBarcode ?? SAMPLE_SKU)
-
-  const isSamplePreview = !isManufacturerCode && skuBarcode === undefined
-  const hasPreview = previewCode.length > 0
 
   return (
     <form className="flex flex-col gap-gutter" noValidate onSubmit={handleSubmit} ref={formRef}>
@@ -351,86 +327,6 @@ export function ProductForm({
       </Section>
 
       <Section
-        icon={<Barcode aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />}
-        title="Barcode"
-      >
-        <div className="grid grid-cols-2 gap-5">
-          <div className="flex flex-col gap-4">
-            <fieldset>
-              <legend className="mb-1.5 ml-1 text-label-caps uppercase text-on-surface-variant">
-                Source
-              </legend>
-              <div className="flex flex-col gap-2">
-                <BarcodeSourceOption
-                  checked={!isManufacturerCode}
-                  description={
-                    isEditing
-                      ? 'Keep the code this product already has.'
-                      : 'The app assigns the next code, e.g. ST00000123.'
-                  }
-                  label="Generate a barcode"
-                  onSelect={() => update('barcodeSource', 'GENERATE')}
-                />
-                <BarcodeSourceOption
-                  checked={isManufacturerCode}
-                  description="Scan or type the barcode already printed on the box."
-                  label="Use the manufacturer's barcode"
-                  onSelect={() => update('barcodeSource', 'MANUFACTURER')}
-                />
-              </div>
-            </fieldset>
-
-            {isManufacturerCode ? (
-              <Field
-                error={allErrors.manufacturerBarcode}
-                hint="Scan it with the USB scanner, or type it exactly as printed."
-                label="Manufacturer barcode"
-                mono
-                onChange={(event) => update('manufacturerBarcode', event.target.value)}
-                placeholder="8901234567890"
-                required
-                value={values.manufacturerBarcode}
-              />
-            ) : null}
-
-            {isEditing && skuBarcode !== undefined ? (
-              <Field
-                disabled
-                hint="Assigned by the app and already printed on boxes — it never changes."
-                label="Current barcode"
-                mono
-                readOnly
-                value={skuBarcode}
-              />
-            ) : null}
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <span className="ml-1 text-label-caps uppercase text-on-surface-variant">
-              Label preview
-            </span>
-
-            {hasPreview ? (
-              <>
-                <BarcodeLabel code={previewCode} productName={values.name || 'Product name'} />
-                <p className="ml-1 text-body-sm text-on-surface-variant/60">
-                  {isSamplePreview
-                    ? 'Sample number — the real barcode is assigned when you save.'
-                    : 'This is exactly what prints.'}
-                </p>
-              </>
-            ) : (
-              <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-border p-6 text-center">
-                <p className="text-body-sm text-on-surface-variant/60">
-                  Enter the barcode from the box to preview the label.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </Section>
-
-      <Section
         icon={<Percent aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />}
         title="Taxation & compliance"
       >
@@ -489,41 +385,5 @@ export function ProductForm({
         </Button>
       </div>
     </form>
-  )
-}
-
-interface BarcodeSourceOptionProps {
-  checked: boolean
-  label: string
-  description: string
-  onSelect: () => void
-}
-
-/**
- * One radio in the SRD §4 Option A / Option B choice.
- *
- * A real `<input type="radio">` drives it — the card is only a label around it — so arrow-key
- * navigation and the accessible name come from the platform rather than a reimplementation.
- */
-function BarcodeSourceOption({ checked, label, description, onSelect }: BarcodeSourceOptionProps) {
-  return (
-    <label
-      className={cn(
-        'flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors',
-        checked ? 'border-primary-container bg-primary-container/10' : 'border-border'
-      )}
-    >
-      <input
-        checked={checked}
-        className="mt-0.5 accent-primary-container"
-        name="barcode-source"
-        onChange={onSelect}
-        type="radio"
-      />
-      <span className="flex flex-col gap-0.5">
-        <span className="text-body-md font-semibold text-on-surface">{label}</span>
-        <span className="text-body-sm text-on-surface-variant/70">{description}</span>
-      </span>
-    </label>
   )
 }

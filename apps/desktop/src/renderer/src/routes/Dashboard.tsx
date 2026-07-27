@@ -3,7 +3,8 @@ import {
   ArrowUpFromLine,
   PackageX,
   TriangleAlert,
-  Warehouse
+  Warehouse,
+  Trash2
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -12,6 +13,9 @@ import { Card } from '@/components/ui/Card'
 import { DataTable } from '@/components/ui/DataTable'
 import { useDashboard } from '@/hooks/useDashboard'
 import { useRecentTransactions, type LedgerRow } from '@/hooks/useReports'
+import { useDeleteLedgerEntry } from '@/hooks/useSaveMovement'
+import { useConfirm } from '@/hooks/useConfirm'
+import { useAlert } from '@/hooks/useAlert'
 import { cn } from '@/lib/cn'
 import { toUserMessage } from '@/lib/errors'
 
@@ -85,6 +89,28 @@ function StatCard({ label, value, unit, icon, tone = 'default', hint, to, isLoad
 export function Dashboard() {
   const { data, isPending, error, refetch } = useDashboard()
   const { data: recentTransactions, isLoading: transactionsLoading } = useRecentTransactions(10)
+  const deleteLedgerEntry = useDeleteLedgerEntry()
+  const confirm = useConfirm()
+  const showAlert = useAlert()
+
+  async function handleDelete(row: LedgerRow) {
+    const ok = await confirm({
+      title: 'Delete Transaction',
+      description: `Are you sure you want to delete ledger entry of ${row.qtyDelta >= 0 ? '+' : ''}${row.qtyDelta} for ${row.productName}?`,
+      confirmText: 'Delete Transaction'
+    })
+    if (!ok) return
+    try {
+      await deleteLedgerEntry.mutateAsync(row.id)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete ledger entry.'
+      void showAlert({
+        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
+        description: msg,
+        tone: 'warning'
+      })
+    }
+  }
 
   return (
     <div className="flex flex-col gap-10 pb-10">
@@ -245,6 +271,25 @@ export function Dashboard() {
                     <span className="text-on-surface-variant">
                       {row.partyName || '—'}
                     </span>
+                  )
+                },
+                {
+                  id: 'actions',
+                  header: 'Actions',
+                  align: 'right',
+                  width: 'w-20',
+                  cell: (row) => (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        void handleDelete(row)
+                      }}
+                      disabled={deleteLedgerEntry.isPending}
+                      className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+                      title="Delete transaction"
+                    >
+                      <Trash2 aria-hidden="true" className="size-4" />
+                    </button>
                   )
                 }
               ]}

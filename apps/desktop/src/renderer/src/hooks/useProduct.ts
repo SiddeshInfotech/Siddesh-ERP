@@ -34,7 +34,7 @@ export interface ProductDetail {
 }
 
 const DETAIL_SELECT =
-  'id, name, sku_barcode, category_id, brand_id, uom_id, model_number, description, min_stock, hsn_code, gst_percent, tracking_mode, is_kit, is_active, created_at, version, categories(name), brands(name), uoms(code), product_barcodes(id, code, is_primary, status)'
+  'id, name, product_code, category_id, brand_id, uom_id, model_number, description, min_stock, hsn_code, gst_percent, tracking_mode, is_kit, is_active, created_at, version, categories(name), brands(name), uoms(code), product_barcodes(id, code, is_primary, status)'
 
 /**
  * Loads a single product by id.
@@ -64,10 +64,13 @@ export function useProduct(id: string | undefined) {
 
       if (data === null) return null
 
+      const primaryCode = (data.product_barcodes as any[])?.find((b) => b.is_primary)?.code
+      const anyCode = (data.product_barcodes as any[])?.[0]?.code
+
       return {
         id: data.id,
         name: data.name,
-        skuBarcode: data.sku_barcode,
+        skuBarcode: primaryCode ?? anyCode ?? (data as any).product_code ?? '',
         categoryId: data.category_id,
         categoryName: data.categories?.name ?? null,
         brandId: data.brand_id,
@@ -121,8 +124,6 @@ export function toFormValues(product: ProductDetail): ProductFormValues {
     hsnCode: product.hsnCode ?? '',
     gstPercent: isCustomGst ? 'OTHER' : rawGst,
     customGst: isCustomGst ? rawGst : '',
-    trackingMode: product.trackingMode,
-    barcodeSource: 'GENERATE',
-    manufacturerBarcode: ''
+    trackingMode: product.trackingMode
   }
 }

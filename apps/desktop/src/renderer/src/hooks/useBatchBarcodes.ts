@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { supabase } from '@/lib/supabase'
 
@@ -59,6 +59,50 @@ export function useBatchBarcodes(productId?: string | null, batchCode?: string |
         scanned_by_name: row.scanned_by_name,
         device_source: row.device_source as ScanSource | null
       })) as BatchBarcodeRow[]
+    }
+  })
+}
+
+export function useDeleteBatch() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (batchId: string) => {
+      const { error } = await supabase.from('product_batches').delete().eq('id', batchId)
+      if (error) {
+        if (error.code === '23503') {
+          throw new Error('Cannot delete this batch because it has already been used in stock inward or outward movements.')
+        }
+        throw error
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
+      void queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
+      void queryClient.invalidateQueries({ queryKey: ['batches'] })
+      void queryClient.invalidateQueries({ queryKey: ['products'] })
+      void queryClient.invalidateQueries({ queryKey: ['last_barcode'] })
+    }
+  })
+}
+
+export function useDeleteBarcode() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (barcodeId: string) => {
+      const { error } = await supabase.from('product_barcodes').delete().eq('id', barcodeId)
+      if (error) {
+        if (error.code === '23503') {
+          throw new Error('Cannot delete this barcode because it is referenced in active scan transactions.')
+        }
+        throw error
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
+      void queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
+      void queryClient.invalidateQueries({ queryKey: ['batches'] })
+      void queryClient.invalidateQueries({ queryKey: ['products'] })
+      void queryClient.invalidateQueries({ queryKey: ['last_barcode'] })
     }
   })
 }

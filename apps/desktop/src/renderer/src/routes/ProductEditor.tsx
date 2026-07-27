@@ -8,8 +8,6 @@ import { SpinnerPane } from '@/components/ui/Spinner'
 import { toFormValues, useProduct } from '@/hooks/useProduct'
 import { useBrands, useCategories, useUoms } from '@/hooks/useProductLookups'
 import {
-  BarcodeNotLinkedError,
-  DuplicateBarcodeError,
   StaleProductError,
   useCreateProduct,
   useUpdateProduct
@@ -52,19 +50,6 @@ export function ProductEditor() {
    * generic banner, because a raw Postgres error is unreadable and leaks the schema.
    */
   function handleSaveError(error: unknown) {
-    if (error instanceof DuplicateBarcodeError) {
-      setServerErrors({ manufacturerBarcode: 'Another product already uses this barcode.' })
-      return
-    }
-
-    if (error instanceof BarcodeNotLinkedError) {
-      // The product IS saved — say so plainly rather than implying the whole save failed.
-      setSubmitError(
-        'The product was saved, but that barcode was taken a moment ago and could not be ' +
-          'linked. Open the product and add a different one.'
-      )
-      return
-    }
 
     if (error instanceof StaleProductError) {
       setSubmitError(
@@ -163,7 +148,6 @@ export function ProductEditor() {
         onCancel={() => void navigate(-1)}
         onSubmit={handleSubmit}
         serverErrors={serverErrors}
-        skuBarcode={product.data?.skuBarcode}
         submitError={submitError}
         uoms={uoms.data ?? []}
       />

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import { ExportButtons } from '@/components/reports/ExportButtons'
 import { Alert } from '@/components/ui/Alert'
 import { Card } from '@/components/ui/Card'
@@ -7,6 +8,9 @@ import { Select, type SelectOption } from '@/components/ui/Select'
 import { useAuth } from '@/hooks/useAuth'
 import { useExportReport } from '@/hooks/useExportReport'
 import { useCurrentStock, type StockRow } from '@/hooks/useReports'
+import { useDeleteProduct } from '@/hooks/useProductMutations'
+import { useConfirm } from '@/hooks/useConfirm'
+import { useAlert } from '@/hooks/useAlert'
 import { cn } from '@/lib/cn'
 import { toUserMessage } from '@/lib/errors'
 import type { ReportColumn, ReportMeta } from '@/lib/reportDocument'
@@ -53,7 +57,30 @@ export function Stock() {
   const { data, isPending, error, refetch } = useCurrentStock()
   const { exportExcel, exportPdf, isExporting, error: exportError } = useExportReport()
   const { session } = useAuth()
+  const deleteProduct = useDeleteProduct()
+  const confirm = useConfirm()
+  const showAlert = useAlert()
   const [view, setView] = useState<View>('all')
+
+  async function handleDelete(event: React.MouseEvent, row: StockRow) {
+    event.stopPropagation()
+    const ok = await confirm({
+      title: 'Delete Product',
+      description: `Are you sure you want to delete product "${row.productName}"? This action cannot be undone.`,
+      confirmText: 'Delete Product'
+    })
+    if (!ok) return
+    try {
+      await deleteProduct.mutateAsync(row.productId)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete product.'
+      void showAlert({
+        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
+        description: msg,
+        tone: 'warning'
+      })
+    }
+  }
 
   const rows = useMemo(() => {
     const all = data ?? []
@@ -185,6 +212,22 @@ export function Stock() {
       width: 'w-24',
       // Colour alone never carries meaning — this column states the same fact as a number.
       cell: (row) => <span className="tabular-nums text-on-surface-variant/70">{row.minStock}</span>
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      align: 'right',
+      width: 'w-20',
+      cell: (row) => (
+        <button
+          onClick={(e) => void handleDelete(e, row)}
+          disabled={deleteProduct.isPending}
+          className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+          title="Delete product"
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+        </button>
+      )
     }
   ]
 

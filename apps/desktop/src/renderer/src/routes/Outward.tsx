@@ -1,4 +1,4 @@
-import { ArrowUpFromLine, CheckCircle2, ChevronLeft, FileText, Plus, School, UserCheck } from 'lucide-react'
+import { ArrowUpFromLine, CheckCircle2, ChevronLeft, FileText, Plus, School, UserCheck, Trash2 } from 'lucide-react'
 import { useRef, useState, useEffect, type FormEvent, type ReactNode } from 'react'
 import { ProductPicker } from '@/components/movement/ProductPicker'
 import { BatchPicker, type BatchSelection } from '@/components/movement/BatchPicker'
@@ -13,7 +13,9 @@ import { Select, type SelectOption } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { useOutwardHistory, type OutwardHistoryRow } from '@/hooks/useOutwardHistory'
 import { useProductPicker } from '@/hooks/useProductPicker'
-import { useSaveOutward, type OutwardType } from '@/hooks/useSaveMovement'
+import { useSaveOutward, useDeleteOutward, type OutwardType } from '@/hooks/useSaveMovement'
+import { useConfirm } from '@/hooks/useConfirm'
+import { useAlert } from '@/hooks/useAlert'
 import { isInsufficientStock, toUserMessage } from '@/lib/errors'
 import {
   findGstProblem,
@@ -79,6 +81,28 @@ interface Saved {
 export function Outward() {
   const picker = useProductPicker()
   const saveOutward = useSaveOutward()
+  const deleteOutward = useDeleteOutward()
+  const confirm = useConfirm()
+  const showAlert = useAlert()
+
+  async function handleDelete(row: OutwardHistoryRow) {
+    const ok = await confirm({
+      title: 'Delete Outward Entry',
+      description: `Are you sure you want to delete outward entry of ${row.outward_qty} x "${row.product_name}" from ${row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—'}?\n\nStock balance will be restored automatically.`,
+      confirmText: 'Delete Outward Entry'
+    })
+    if (!ok) return
+    try {
+      await deleteOutward.mutateAsync(row.id)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete outward entry.'
+      void showAlert({
+        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
+        description: msg,
+        tone: 'warning'
+      })
+    }
+  }
 
   const [qty, setQty] = useState('')
   const [outwardType, setOutwardType] = useState<OutwardType>('SALE')
@@ -260,7 +284,25 @@ export function Outward() {
       { header: 'Type', cell: (row) => outwardTypeLabel(row.outward_type) },
       { header: 'Quantity (given out)', align: 'right', cell: (row) => row.outward_qty },
       { header: 'Remaining Quantity', align: 'right', cell: (row) => row.remaining_qty },
-      { header: 'Total Quantity', align: 'right', cell: (row) => row.total_qty }
+      { header: 'Total Quantity', align: 'right', cell: (row) => row.total_qty },
+      {
+        header: 'Actions',
+        align: 'right',
+        width: 'w-20',
+        cell: (row) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleDelete(row)
+            }}
+            disabled={deleteOutward.isPending}
+            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            title="Delete outward entry"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+          </button>
+        )
+      }
     ]
 
     const partyColumns: Column<OutwardHistoryRow>[] = [
@@ -272,7 +314,25 @@ export function Outward() {
       { header: 'GST No', cell: (row) => orDash(row.party_gst) },
       { header: 'Invoice No', cell: (row) => orDash(row.invoice_no) },
       { header: 'SO No', cell: (row) => orDash(row.sales_order_no) },
-      { header: 'Address', cell: (row) => orDash(row.party_address) }
+      { header: 'Address', cell: (row) => orDash(row.party_address) },
+      {
+        header: 'Actions',
+        align: 'right',
+        width: 'w-20',
+        cell: (row) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleDelete(row)
+            }}
+            disabled={deleteOutward.isPending}
+            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            title="Delete outward entry"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+          </button>
+        )
+      }
     ]
 
     const otherColumns: Column<OutwardHistoryRow>[] = [
@@ -282,7 +342,25 @@ export function Outward() {
       { header: 'Handed Over By', cell: (row) => orDash(row.handed_over_by) },
       { header: 'Received By', cell: (row) => orDash(row.received_by) },
       { header: 'Delivery Method', cell: (row) => orDash(row.delivery_method) },
-      { header: 'Notes', cell: (row) => orDash(row.notes) }
+      { header: 'Notes', cell: (row) => orDash(row.notes) },
+      {
+        header: 'Actions',
+        align: 'right',
+        width: 'w-20',
+        cell: (row) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleDelete(row)
+            }}
+            disabled={deleteOutward.isPending}
+            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            title="Delete outward entry"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+          </button>
+        )
+      }
     ]
 
     const columns =

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Search, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Alert } from '@/components/ui/Alert'
@@ -7,7 +7,10 @@ import { Card } from '@/components/ui/Card'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { Select, type SelectOption } from '@/components/ui/Select'
 import { useCategories } from '@/hooks/useProductLookups'
+import { useDeleteProduct } from '@/hooks/useProductMutations'
 import { PRODUCT_LIMIT, useProducts, type ProductListItem } from '@/hooks/useProducts'
+import { useConfirm } from '@/hooks/useConfirm'
+import { useAlert } from '@/hooks/useAlert'
 import { cn } from '@/lib/cn'
 import { toUserMessage } from '@/lib/errors'
 
@@ -64,6 +67,29 @@ export function Products() {
   const navigate = useNavigate()
   const { data, isPending, error, refetch } = useProducts()
   const { data: categories } = useCategories()
+  const deleteProduct = useDeleteProduct()
+  const confirm = useConfirm()
+  const showAlert = useAlert()
+
+  async function handleDelete(event: React.MouseEvent, product: ProductListItem) {
+    event.stopPropagation()
+    const ok = await confirm({
+      title: 'Delete Product',
+      description: `Are you sure you want to delete product "${product.name}"? This action cannot be undone.`,
+      confirmText: 'Delete Product'
+    })
+    if (!ok) return
+    try {
+      await deleteProduct.mutateAsync(product.id)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete product.'
+      void showAlert({
+        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
+        description: msg,
+        tone: 'warning'
+      })
+    }
+  }
 
   const [search, setSearch] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -176,6 +202,22 @@ export function Products() {
             Inactive
           </span>
         )
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      align: 'right',
+      width: 'w-20',
+      cell: (product) => (
+        <button
+          onClick={(e) => void handleDelete(e, product)}
+          disabled={deleteProduct.isPending}
+          className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+          title="Delete product"
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+        </button>
+      )
     }
   ]
 

@@ -185,9 +185,8 @@ export function InwardScanTracker({
 
         {scanFeedback && (
           <p
-            className={`text-xs font-semibold mt-1 flex items-center gap-1.5 ${
-              scanFeedback.isError ? 'text-rose-600' : 'text-emerald-600'
-            }`}
+            className={`text-xs font-semibold mt-1 flex items-center gap-1.5 ${scanFeedback.isError ? 'text-rose-600' : 'text-emerald-600'
+              }`}
           >
             {scanFeedback.isError && <AlertCircle className="w-3.5 h-3.5" />}
             {scanFeedback.message}
@@ -212,9 +211,8 @@ export function InwardScanTracker({
             {units.map((unit, idx) => (
               <tr
                 key={unit.id}
-                className={`transition-colors ${
-                  unit.isScanned ? 'bg-emerald-50/40 hover:bg-emerald-50' : 'hover:bg-slate-50'
-                }`}
+                className={`transition-colors ${unit.isScanned ? 'bg-emerald-50/40 hover:bg-emerald-50' : 'hover:bg-slate-50'
+                  }`}
               >
                 <td className="py-2.5 px-3 text-center font-mono font-medium text-slate-500">
                   {idx + 1}

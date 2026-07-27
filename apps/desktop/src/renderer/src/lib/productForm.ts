@@ -1,17 +1,3 @@
-import { describeBarcodeProblem, findBarcodeProblem } from './barcode'
-
-/**
- * Product form values and validation (SRD §3, §4).
- *
- * Pure: no React, no I/O, no Supabase. Every rule here mirrors a CHECK constraint in
- * 03_products.sql, and that duplication is deliberate — this exists to tell the storekeeper
- * which box is wrong before a round-trip. The server still decides (rule 0.4); if these two
- * ever disagree, the database wins and the user sees a generic failure.
- */
-
-/** SRD §4: generate our own ST-code, or store the one already printed on the box. */
-export type BarcodeSource = 'GENERATE' | 'MANUFACTURER'
-
 export type TrackingMode = 'QUANTITY' | 'SERIAL'
 
 /**
@@ -34,8 +20,6 @@ export interface ProductFormValues {
   gstPercent: string
   customGst: string
   trackingMode: TrackingMode
-  barcodeSource: BarcodeSource
-  manufacturerBarcode: string
 }
 
 export type ProductFormErrors = Partial<Record<keyof ProductFormValues, string>>
@@ -65,9 +49,7 @@ export const EMPTY_PRODUCT_FORM: ProductFormValues = {
   hsnCode: '',
   gstPercent: '',
   customGst: '',
-  trackingMode: 'QUANTITY',
-  barcodeSource: 'GENERATE',
-  manufacturerBarcode: ''
+  trackingMode: 'QUANTITY'
 }
 
 /**
@@ -124,11 +106,6 @@ export function validateProductForm(values: ProductFormValues): ProductFormError
   } else {
     const gstError = validateGst(values.gstPercent)
     if (gstError !== null) errors.gstPercent = gstError
-  }
-
-  if (values.barcodeSource === 'MANUFACTURER') {
-    const problem = findBarcodeProblem(values.manufacturerBarcode)
-    if (problem !== null) errors.manufacturerBarcode = describeBarcodeProblem(problem)
   }
 
   return errors

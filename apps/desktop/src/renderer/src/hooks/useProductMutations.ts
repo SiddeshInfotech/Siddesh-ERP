@@ -14,73 +14,6 @@ import { supabase } from '@/lib/supabase'
  * STORE_MANAGER, and `tg_set_audit` stamps created_by/updated_by from the JWT server-side.
  */
 
-/** Raised when the pasted barcode already belongs to another product (SRD §4, DSK-210). */
-export class DuplicateBarcodeError extends Error {
-  constructor(public readonly code: string) {
-    super(`DUPLICATE_BARCODE: ${code}`)
-    this.name = 'DuplicateBarcodeError'
-  }
-}
-
-/**
- * Raised when the product saved but its manufacturer barcode did not.
- *
- * This is a genuinely partial outcome and it is reported rather than hidden. PostgREST gives
- * no transaction across two statements, so the product insert and the barcode insert cannot
- * be atomic without an RPC. The product itself is complete and usable — it always has its own
- * generated ST-code — so the honest thing is to say the alias is missing and let the user add
- * it again, not to delete a valid product behind their back.
- */
-export class BarcodeNotLinkedError extends Error {
-  constructor(
-    public readonly productId: string,
-    public readonly code: string
-  ) {
-    super(`BARCODE_NOT_LINKED: ${code}`)
-    this.name = 'BarcodeNotLinkedError'
-  }
-}
-
-/**
- * Checks whether a barcode is free before we try to use it.
- *
- * @throws DuplicateBarcodeError when the code already exists.
- *
- * This is a courtesy, not the guarantee: two clerks can pass this check in the same
- * millisecond and only `uq_product_barcode_code` decides. Its job is to turn the common case
- * into a clear message on the field instead of a failed save.
- */
-async function assertBarcodeFree(code: string): Promise<void> {
-  const { data, error } = await supabase
-    .from('product_barcodes')
-    .select('id')
-    .eq('code', code)
-    .maybeSingle()
-
-  if (error) {
-    logger.error('Barcode availability check failed', toLogContext(error))
-    throw error
-  }
-
-  if (data !== null) throw new DuplicateBarcodeError(code)
-}
-
-/** Attaches a manufacturer code as an alias (SRD §4 Option B). */
-async function linkManufacturerBarcode(productId: string, code: string): Promise<void> {
-  // is_primary stays false: the generated ST-code remains the code we print (SRD §9), and
-  // uq_product_barcode_primary allows exactly one primary per product. Both codes resolve to
-  // this product on a scan, which is the whole point of the alias.
-  const { error } = await supabase
-    .from('product_barcodes')
-    .insert({ product_id: productId, code, symbology: 'CODE128', is_primary: false })
-
-  if (error) {
-    logger.error('Could not link manufacturer barcode', { productId, ...toLogContext(error) })
-    if (isUniqueViolation(error)) throw new BarcodeNotLinkedError(productId, code)
-    throw error
-  }
-}
-
 export interface SavedProduct {
   id: string
   name: string
@@ -219,17 +152,12 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: async (values: ProductFormValues): Promise<SavedProduct> => {
-      const manufacturerCode =
-        values.barcodeSource === 'MANUFACTURER' ? values.manufacturerBarcode.trim() : null
-
-      if (manufacturerCode !== null) await assertBarcodeFree(manufacturerCode)
-
       const resolvedValues = await resolveLookupIds(values)
 
       const { data, error } = await supabase
         .from('products')
         .insert(toProductRow(resolvedValues))
-        .select('id, name, sku_barcode')
+        .select('id, name, product_code')
         .single()
 
       if (error) {
@@ -237,16 +165,15 @@ export function useCreateProduct() {
         throw error
       }
 
-      if (manufacturerCode !== null) await linkManufacturerBarcode(data.id, manufacturerCode)
-
       logger.info('Product created', { productId: data.id })
-      return { id: data.id, name: data.name, skuBarcode: data.sku_barcode }
+      return { id: data.id, name: data.name, skuBarcode: (data as any).product_code ?? '' }
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['categories'] })
       void queryClient.invalidateQueries({ queryKey: ['brands'] })
       void queryClient.invalidateQueries({ queryKey: ['uoms'] })
       void queryClient.invalidateQueries({ queryKey: ['products'] })
+      void queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
     }
   })
 }
@@ -281,11 +208,6 @@ export function useUpdateProduct() {
 
   return useMutation({
     mutationFn: async ({ id, version, values }: UpdateProductInput): Promise<SavedProduct> => {
-      const manufacturerCode =
-        values.barcodeSource === 'MANUFACTURER' ? values.manufacturerBarcode.trim() : null
-
-      if (manufacturerCode !== null) await assertBarcodeFree(manufacturerCode)
-
       const resolvedValues = await resolveLookupIds(values)
 
       const { data, error } = await supabase
@@ -293,7 +215,7 @@ export function useUpdateProduct() {
         .update(toProductRow(resolvedValues))
         .eq('id', id)
         .eq('version', version)
-        .select('id, name, sku_barcode')
+        .select('id, name, product_code')
         .maybeSingle()
 
       if (error) {
@@ -308,10 +230,8 @@ export function useUpdateProduct() {
         throw new StaleProductError()
       }
 
-      if (manufacturerCode !== null) await linkManufacturerBarcode(id, manufacturerCode)
-
       logger.info('Product updated', { productId: id })
-      return { id: data.id, name: data.name, skuBarcode: data.sku_barcode }
+      return { id: data.id, name: data.name, skuBarcode: (data as any).product_code ?? '' }
     },
     onSuccess: (product) => {
       void queryClient.invalidateQueries({ queryKey: ['categories'] })
@@ -319,6 +239,7 @@ export function useUpdateProduct() {
       void queryClient.invalidateQueries({ queryKey: ['uoms'] })
       void queryClient.invalidateQueries({ queryKey: ['products'] })
       void queryClient.invalidateQueries({ queryKey: ['product', product.id] })
+      void queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
     }
   })
 }
@@ -347,6 +268,37 @@ export function useSetProductActive() {
     onSuccess: (_result, { id }) => {
       void queryClient.invalidateQueries({ queryKey: ['products'] })
       void queryClient.invalidateQueries({ queryKey: ['product', id] })
+      void queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
     }
   })
 }
+
+/**
+ * Deletes a product from the system. If the product has stock movements or batches,
+ * Postgres foreign key constraints will prevent deletion and raise error 23503.
+ */
+export function useDeleteProduct() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (productId: string): Promise<void> => {
+      const { error } = await supabase.from('products').delete().eq('id', productId)
+      if (error) {
+        if (error.code === '23503') {
+          throw new Error('Cannot delete this product because it has associated batches or stock movements. You can deactivate it instead.')
+        }
+        logger.error('Failed to delete product', { productId, ...toLogContext(error) })
+        throw error
+      }
+      logger.info('Product deleted', { productId })
+    },
+    onSuccess: (_result, productId) => {
+      void queryClient.invalidateQueries({ queryKey: ['products'] })
+      void queryClient.invalidateQueries({ queryKey: ['product', productId] })
+      void queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
+      void queryClient.invalidateQueries({ queryKey: ['product-stock'] })
+      void queryClient.invalidateQueries({ queryKey: ['scan-lookup'] })
+    }
+  })
+}
+

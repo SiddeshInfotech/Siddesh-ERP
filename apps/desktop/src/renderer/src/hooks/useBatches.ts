@@ -88,6 +88,8 @@ export function useCreateBatch() {
     },
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['batches', variables.productId] })
+      void queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
+      void queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
     }
   })
 }

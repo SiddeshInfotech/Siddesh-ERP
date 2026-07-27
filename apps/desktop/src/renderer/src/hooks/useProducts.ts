@@ -130,7 +130,7 @@ export function useProductStock(productId: string | undefined) {
 }
 
 const LIST_SELECT =
-  'id, name, sku_barcode, model_number, min_stock, is_active, tracking_mode, category_id, categories(name), brands(name), uoms(code)'
+  'id, name, product_code, model_number, min_stock, is_active, tracking_mode, category_id, categories(name), brands(name), uoms(code), product_barcodes(code, is_primary)'
 
 /**
  * Loads every product the user may see, with current stock merged in.
@@ -162,11 +162,13 @@ export function useProducts() {
 
       const items = data.map((row): ProductListItem => {
         const stock = stockByProduct.get(row.id) ?? { qtyOnHand: 0, qtyAvailable: 0 }
+        const primaryCode = (row.product_barcodes as any[])?.find((b) => b.is_primary)?.code
+        const anyCode = (row.product_barcodes as any[])?.[0]?.code
 
         return {
           id: row.id,
           name: row.name,
-          skuBarcode: row.sku_barcode,
+          skuBarcode: primaryCode ?? anyCode ?? (row as any).product_code ?? '',
           categoryId: row.category_id,
           categoryName: row.categories?.name ?? null,
           brandName: row.brands?.name ?? null,

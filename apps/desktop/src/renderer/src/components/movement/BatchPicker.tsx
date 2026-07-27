@@ -1,14 +1,14 @@
-import { useState, type FormEvent, useEffect } from 'react'
+import { useState, useMemo, type FormEvent, useEffect } from 'react'
 import { Plus, ScanLine } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { Spinner } from '@/components/ui/Spinner'
 import { useBatches, useLastBarcode } from '@/hooks/useBatches'
+import { useBatchBarcodes } from '@/hooks/useBatchBarcodes'
 import { Alert } from '@/components/ui/Alert'
 import { toUserMessage } from '@/lib/errors'
 import { InwardBarcodeGeneratorModal, type InwardGeneratorResult } from './InwardBarcodeGeneratorModal'
-import { generateNextBarcodes } from '@/lib/sequence'
 
 export interface BatchSelection {
   batchId: string | null
@@ -33,25 +33,28 @@ export function BatchPicker({ productId, qty, value, onChange, allowCreate = fal
   
   // Fetch last barcode for auto-generation on existing batch
   const { data: lastBarcode } = useLastBarcode(productId, selectedBatchId || null)
+  
+  const selectedBatch = useMemo(() => batches?.find(b => b.id === selectedBatchId), [batches, selectedBatchId])
+  const { data: batchBarcodes } = useBatchBarcodes(productId, selectedBatch?.code || null)
 
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false)
   const [scanCode, setScanCode] = useState('')
   const [scanError, setScanError] = useState<string | null>(null)
 
-  // Auto-generate barcodes when an existing batch is selected and qty is present
+  // When an existing batch is selected in allowCreate (Inward) mode, load its pre-generated barcodes from the DB
   useEffect(() => {
-    if (selectedBatchId && allowCreate && qty > 0) {
-      const batch = batches?.find(b => b.id === selectedBatchId)
-      const lastCode = lastBarcode?.code || ''
-      const newBarcodes = generateNextBarcodes(lastCode, qty)
+    if (selectedBatchId && selectedBatch && allowCreate && batchBarcodes) {
+      // Prioritize barcodes waiting in GENERATED state; if none have status yet, take all in the batch
+      const generatedOnly = batchBarcodes.filter(b => b.status === 'GENERATED')
+      const codesToUse = (generatedOnly.length > 0 ? generatedOnly : batchBarcodes).map(b => b.code)
       
       onChange({
         batchId: selectedBatchId,
-        batchCode: batch?.code || null,
-        barcodes: newBarcodes
+        batchCode: selectedBatch.code || null,
+        barcodes: codesToUse
       })
     }
-  }, [selectedBatchId, lastBarcode, qty, batches, allowCreate])
+  }, [selectedBatchId, selectedBatch, batchBarcodes, allowCreate])
 
   // Sync selectedBatchId with external value
   useEffect(() => {

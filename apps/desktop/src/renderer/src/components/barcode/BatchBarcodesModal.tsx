@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, ScanLine, X } from 'lucide-react'
+import { Activity, ScanLine, X, Trash2 } from 'lucide-react'
 
 import { cn } from '@/lib/cn'
-import { useBatchBarcodes, type BarcodeStatus, type BatchBarcodeRow } from '@/hooks/useBatchBarcodes'
+import { useBatchBarcodes, useDeleteBarcode, type BarcodeStatus, type BatchBarcodeRow } from '@/hooks/useBatchBarcodes'
 import { useScanReceive } from '@/hooks/useScanReceive'
+import { useConfirm } from '@/hooks/useConfirm'
+import { useAlert } from '@/hooks/useAlert'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { DataTable } from '../ui/DataTable'
+
 
 interface BatchBarcodesModalProps {
   productId: string
@@ -53,6 +56,28 @@ type ScanFeedback =
 export function BatchBarcodesModal({ productId, productName, batchCode, onClose }: BatchBarcodesModalProps) {
   const { data: barcodes, isLoading, isError, error } = useBatchBarcodes(productId, batchCode)
   const scanReceive = useScanReceive()
+  const deleteBarcode = useDeleteBarcode()
+  const confirm = useConfirm()
+  const showAlert = useAlert()
+
+  async function handleDelete(barcode: BatchBarcodeRow) {
+    const ok = await confirm({
+      title: 'Delete Barcode Sticker',
+      description: `Are you sure you want to delete barcode sticker "${barcode.code}"?`,
+      confirmText: 'Delete Sticker'
+    })
+    if (!ok) return
+    try {
+      await deleteBarcode.mutateAsync(barcode.id)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete barcode sticker.'
+      void showAlert({
+        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
+        description: msg,
+        tone: 'warning'
+      })
+    }
+  }
 
   const [scanValue, setScanValue] = useState('')
   const [feedback, setFeedback] = useState<ScanFeedback>(null)
@@ -193,7 +218,21 @@ export function BatchBarcodesModal({ productId, productName, batchCode, onClose 
                 },
                 { header: 'Performed By', cell: (row) => row.scanned_by_name ?? '—' },
                 { header: 'Device', cell: (row) => row.device_source ?? '—' },
-                { header: 'Symbology', cell: (row) => row.symbology }
+                { header: 'Symbology', cell: (row) => row.symbology },
+                {
+                  header: 'Actions',
+                  align: 'right',
+                  cell: (row) => (
+                    <button
+                      onClick={() => void handleDelete(row)}
+                      disabled={deleteBarcode.isPending}
+                      className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+                      title="Delete barcode sticker"
+                    >
+                      <Trash2 aria-hidden="true" className="size-4" />
+                    </button>
+                  )
+                }
               ]}
               data={barcodes || []}
               emptyMessage="No barcodes generated for this batch."

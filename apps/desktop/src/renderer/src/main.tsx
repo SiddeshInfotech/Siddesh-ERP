@@ -6,6 +6,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { AppShell } from '@/components/layout/AppShell'
 import { AuthProvider } from '@/hooks/useAuth'
+import { AlertProvider } from '@/hooks/useAlert'
+import { ConfirmProvider } from '@/hooks/useConfirm'
 import { SidebarProvider } from '@/hooks/useSidebar'
 import { ThemeProvider } from '@/hooks/useTheme'
 import { BarcodeEditor } from '@/routes/BarcodeEditor'
@@ -18,6 +20,7 @@ import { ProductDetail } from '@/routes/ProductDetail'
 import { ProductEditor } from '@/routes/ProductEditor'
 import { Products } from '@/routes/Products'
 import { Reports } from '@/routes/Reports'
+import { Settings } from '@/routes/Settings'
 import { Stock } from '@/routes/Stock'
 import './styles.css'
 
@@ -47,7 +50,8 @@ const router = createHashRouter([
       { path: 'inward', element: <Inward /> },
       { path: 'outward', element: <Outward /> },
       { path: 'stock', element: <Stock /> },
-      { path: 'reports', element: <Reports /> }
+      { path: 'reports', element: <Reports /> },
+      { path: 'settings', element: <Settings /> }
     ]
   }
 ])
@@ -76,7 +80,11 @@ createRoot(rootElement).render(
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <SidebarProvider>
-              <RouterProvider router={router} />
+              <AlertProvider>
+                <ConfirmProvider>
+                  <RouterProvider router={router} />
+                </ConfirmProvider>
+              </AlertProvider>
             </SidebarProvider>
           </AuthProvider>
         </QueryClientProvider>

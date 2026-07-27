@@ -45,6 +45,7 @@ export function useScanReceive() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
+      void queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
     }
   })
 }

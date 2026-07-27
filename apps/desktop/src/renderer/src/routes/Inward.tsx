@@ -1,4 +1,4 @@
-import { ArrowDownToLine, CheckCircle2, FileText, Truck, User, Plus, ChevronLeft } from 'lucide-react'
+import { ArrowDownToLine, CheckCircle2, FileText, Truck, User, Plus, ChevronLeft, Trash2 } from 'lucide-react'
 import { useRef, useState, useEffect, useMemo, type FormEvent, type ReactNode } from 'react'
 import { ProductPicker } from '@/components/movement/ProductPicker'
 import { BatchBarcodesModal } from '@/components/barcode/BatchBarcodesModal'
@@ -16,7 +16,9 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useInwardHistory, type InwardHistoryRow } from '@/hooks/useInwardHistory'
 import { useProductPicker } from '@/hooks/useProductPicker'
-import { useSaveInward } from '@/hooks/useSaveMovement'
+import { useSaveInward, useDeleteInward } from '@/hooks/useSaveMovement'
+import { useConfirm } from '@/hooks/useConfirm'
+import { useAlert } from '@/hooks/useAlert'
 import { useSuppliers } from '@/hooks/useSuppliers'
 import { toUserMessage } from '@/lib/errors'
 import {
@@ -67,6 +69,28 @@ interface Saved {
 export function Inward() {
   const picker = useProductPicker()
   const saveInward = useSaveInward()
+  const deleteInward = useDeleteInward()
+  const confirm = useConfirm()
+  const showAlert = useAlert()
+
+  async function handleDelete(row: InwardHistoryRow) {
+    const ok = await confirm({
+      title: 'Delete Inward Entry',
+      description: `Are you sure you want to delete inward entry of ${row.inward_qty} x "${row.product_name}" from ${new Date(row.received_at).toLocaleDateString()}?\n\nStock balance will be adjusted automatically.`,
+      confirmText: 'Delete Inward Entry'
+    })
+    if (!ok) return
+    try {
+      await deleteInward.mutateAsync(row.id)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete inward entry.'
+      void showAlert({
+        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
+        description: msg,
+        tone: 'warning'
+      })
+    }
+  }
 
   const [qty, setQty] = useState('')
   const [supplierName, setSupplierName] = useState('')
@@ -95,13 +119,20 @@ export function Inward() {
   const [historyTab, setHistoryTab] = useState<'stock' | 'supplier'>('stock')
   const [showForm, setShowForm] = useState(false)
   const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string } | null>(null)
-  
+
   useEffect(() => {
     setBatchSelection(null)
   }, [picker.picked?.id])
 
+  // Automatically sync Quantity received from selected batch barcodes
+  useEffect(() => {
+    if (batchSelection && batchSelection.barcodes && batchSelection.barcodes.length > 0) {
+      setQty(String(batchSelection.barcodes.length))
+    }
+  }, [batchSelection])
+
   const { session } = useAuth()
-  
+
   const historyProductId = historyFilter === 'product' ? picker.picked?.id : undefined
   const { data: historyData, isLoading: historyLoading, error: historyError } = useInwardHistory(historyProductId)
 
@@ -293,7 +324,25 @@ export function Inward() {
       { header: 'Quantity (on that batch)', align: 'right', cell: (row) => row.inward_qty },
       { header: 'Remaining Quantity', align: 'right', cell: (row) => row.remaining_qty },
       { header: 'Total Quantity', align: 'right', cell: (row) => row.total_qty },
-      { header: 'Brought By', cell: (row) => orDash(row.brought_by) }
+      { header: 'Brought By', cell: (row) => orDash(row.brought_by) },
+      {
+        header: 'Actions',
+        align: 'right',
+        width: 'w-20',
+        cell: (row) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleDelete(row)
+            }}
+            disabled={deleteInward.isPending}
+            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            title="Delete inward entry"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+          </button>
+        )
+      }
     ]
 
     const supplierColumns: Column<InwardHistoryRow>[] = [
@@ -309,7 +358,25 @@ export function Inward() {
       },
       { header: 'PO No', cell: (row) => orDash(row.purchase_order_no) },
       { header: 'Brought By', cell: (row) => orDash(row.brought_by) },
-      { header: 'Notes', cell: (row) => orDash(row.notes) }
+      { header: 'Notes', cell: (row) => orDash(row.notes) },
+      {
+        header: 'Actions',
+        align: 'right',
+        width: 'w-20',
+        cell: (row) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              void handleDelete(row)
+            }}
+            disabled={deleteInward.isPending}
+            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            title="Delete inward entry"
+          >
+            <Trash2 aria-hidden="true" className="size-4" />
+          </button>
+        )
+      }
     ]
 
     return (
@@ -403,20 +470,25 @@ export function Inward() {
             <Field
               containerClassName="max-w-xs"
               error={errors.qty}
-              hint="How many units arrived."
+              hint={
+                batchSelection && batchSelection.barcodes && batchSelection.barcodes.length > 0
+                  ? `Autofilled from selected batch (${batchSelection.barcodes.length} pre-generated barcodes).`
+                  : "How many units arrived."
+              }
               inputMode="numeric"
               label="Quantity received"
               min={1}
               onChange={(event) => setQty(event.target.value)}
+              readOnly={Boolean(batchSelection && batchSelection.barcodes && batchSelection.barcodes.length > 0)}
               required
               type="number"
               value={qty}
             />
             {picker.picked && (
-              <BatchPicker 
-                productId={picker.picked.id} 
+              <BatchPicker
+                productId={picker.picked.id}
                 qty={Number(qty) || 0}
-                value={batchSelection} 
+                value={batchSelection}
                 onChange={setBatchSelection}
                 allowCreate={true}
               />
@@ -514,8 +586,8 @@ export function Inward() {
               <label className="mb-1.5 ml-1 block text-label-caps uppercase text-on-surface-variant">
                 Invoice PDF
               </label>
-              <input 
-                type="file" 
+              <input
+                type="file"
                 accept="application/pdf,image/*"
                 onChange={(e) => setInvoiceFile(e.target.files?.[0] || null)}
                 className="w-full text-body-md text-on-surface file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-container file:text-on-primary-container hover:file:bg-primary/10"
