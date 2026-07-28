@@ -1,0 +1,365 @@
+
+===== PAGE 1 =====
+Software Requirement Document (SRD)
+Inventory Management System
+For Siddesh Technologies Pvt. Ltd.
+Version: 1.0
+1. Objective
+Develop an Inventory Management System to maintain complete records of all inventory
+movement within the organization.
+The system should support
+• Product Master
+• Barcode Generation
+• Barcode Scanning
+• Inward Entry
+• Outward Entry
+• Current Stock
+• Inventory History
+• Reports
+The application should eliminate manual register entries and maintain complete traceability of
+every product.
+2. User Roles
+Initially only one Admin login.
+Later support
+• Admin
+• Store Manager
+• Sales Executive
+3. Product Master
+Admin should be able to create products.
+Fields
+• Product Name
+• Product Category
+===== PAGE 2 =====
+• Brand
+• Model Number
+• Unit
+• Product Description
+• Minimum Stock Alert
+• HSN Code (optional)
+• GST Percentage (optional)
+Example
+AI Lab
+• Arduino UNO
+• Servo Motor
+• RFID Module
+• Drone Kit
+• Robotics Kit
+• VR Headset
+Digital Products
+• 64 GB Pen Drive
+• 128 GB Pen Drive
+Office Items
+• Mouse
+• Keyboard
+• HDMI Cable
+4. Barcode Management
+Every physical product should have a unique barcode.
+Two options
+Option A
+Generate barcode from software.
+Example
+ST00000001
+ST00000002
+===== PAGE 3 =====
+ST00000003
+Software prints barcode label.
+Option B
+User pastes manufacturer barcode already available.
+Software stores it.
+Both methods should be supported.
+5. Inward Process
+Workflow
+Step 1
+Select Product
+or
+Create New Product
+Step 2
+Scan Barcode
+If barcode not available
+Generate barcode.
+Step 3
+Enter Quantity
+Example
+20 Pen Drives
+Step 4
+Enter Supplier Details
+Fields
+Supplier Name
+Supplier Mobile
+GST No (optional)
+===== PAGE 4 =====
+Invoice Number
+Invoice Date
+Purchase Order Number
+Step 5
+Enter Person Who Brought Material
+Examples
+Atharva Birari
+Courier
+Blue Dart
+DTDC
+Supplier Representative
+Step 6
+Upload Invoice (optional)
+PDF
+Image
+Step 7
+Click
+Save Inward
+Software should
+Increase Stock
+Store complete inward history
+6. Outward Process
+Workflow
+Step 1
+Scan Barcode
+or
+===== PAGE 5 =====
+Search Product
+Step 2
+System automatically displays
+Product Name
+Current Stock
+Available Quantity
+Step 3
+Enter Quantity
+Step 4
+Select Outward Type
+• Sale
+• Demo
+• Replacement
+• Internal Use
+• Service
+• Sample
+Step 5
+Enter Party Details
+School Name
+Contact Person
+Mobile Number
+GST Number (optional)
+Address
+Invoice Number
+Sales Order Number
+Step 6
+===== PAGE 6 =====
+Enter Person Handing Over Material
+Step 7
+Receiver Name
+Who collected material.
+Step 8
+Optional Signature
+Digital Signature
+or
+Photo Capture
+Step 9
+Click
+Save
+Software should reduce stock.
+7. Current Stock
+Dashboard showing
+Product
+Opening Stock
+Inward
+Outward
+Current Stock
+Reserved Stock (future)
+Available Stock
+8. Barcode Scanner Support
+Software should support
+USB Barcode Scanner
+Bluetooth Barcode Scanner
+===== PAGE 7 =====
+Camera Scanner (future)
+When barcode is scanned
+Cursor automatically searches product.
+9. Barcode Label Printing
+Support
+Standard Barcode Labels
+Example
+---------------------
+Arduino UNO
+ST00012345
+|||||||||||||
+---------------------
+Print multiple labels.
+10. Search
+Search by
+Barcode
+Product Name
+Category
+Supplier
+Invoice Number
+School Name
+Date
+11. Reports
+Inward Report
+Date-wise
+===== PAGE 8 =====
+Supplier-wise
+Product-wise
+Outward Report
+School-wise
+Invoice-wise
+Date-wise
+Sales Executive-wise
+Stock Report
+Current Stock
+Low Stock
+Out of Stock
+Product Ledger
+Shows complete history
+Example
+01 Jan
+Inward
++20
+Supplier ABC
+---------------
+05 Jan
+Outward
+===== PAGE 9 =====
+-2
+XYZ School
+---------------
+10 Jan
+Outward
+-5
+ABC School
+---------------
+Current
+13
+12. Dashboard
+Cards
+Current Stock
+Today's Inward
+Today's Outward
+Low Stock
+Pending Orders (future)
+13. Barcode Search Logic
+When barcode scanned
+If barcode exists
+===== PAGE 10 =====
+Open Product
+Else
+Display
+Barcode not found.
+Create New Product?
+14. Audit Trail
+Every transaction should store
+Created By
+Created Date
+Updated By
+Updated Date
+Computer Name (optional)
+15. Future Ready Modules
+Leave architecture ready for
+Purchase Orders
+Sales Orders
+Vendor Management
+School Management
+AMC Tracking
+Warranty Tracking
+Repair History
+Asset Tracking
+QR Code Support
+Serial Number Tracking
+Multi Warehouse
+Multi Branch
+Mobile App
+===== PAGE 11 =====
+16. Database Tables
+Product Master
+• Product ID
+• Product Name
+• Category
+• Barcode
+• Model
+• Brand
+• Unit
+• Description
+• Minimum Stock
+Inward
+• Inward ID
+• Product ID
+• Barcode
+• Quantity
+• Supplier
+• Invoice No
+• Invoice Date
+• Purchase Order
+• Received By
+• Entered By
+• Date
+Outward
+• Outward ID
+• Product ID
+• Barcode
+• Quantity
+• Party
+===== PAGE 12 =====
+• Invoice No
+• Outward Type
+• Delivered By
+• Received By
+• Date
+Stock Ledger
+Every stock movement.
+Never delete.
+Only append.
+17. Technical Requirements
+• Desktop application (Electron + React, matching your existing AI Lab LMS technology
+stack)
+• SQLite for single-office deployment (upgrade path to PostgreSQL/MySQL for multi-user
+or cloud deployments)
+• USB barcode scanner support (keyboard-emulation scanners)
+• Barcode generation (Code 128 preferred)
+• Barcode label printing
+• PDF report export
+• Excel export
+• Daily automatic database backup
+• Restore from backup
+• User authentication with role-based access (future-ready)
+18. Suggested Enhancements for Your Business (Highly Recommended)
+Since your business deals with AI Lab kits made up of multiple components, I recommend
+adding these features from the beginning:
+A. Kit/Bundle Management (Bill of Materials)
+An AI Lab Kit should be treated as a bundle containing multiple items.
+Example:
+• 1 × Arduino UNO
+===== PAGE 13 =====
+• 1 × Servo Motor
+• 1 × Ultrasonic Sensor
+• 1 × RFID Module
+• 1 × Breadboard
+• 20 × Jumper Wires
+When one AI Lab Kit is sold, the system should automatically deduct the quantities of all
+constituent components from inventory.
+B. Serial Number Tracking
+Certain products (VR headsets, laptops, drones, tablets, printers, monitors, etc.) should have
+individual serial numbers. Each serial number can have its own barcode, making warranty
+claims, replacements, and servicing much easier.
+C. Pen Drive Content Tracking
+For your educational content business, maintain separate records for:
+• Pen Drive Capacity (32 GB / 64 GB / 128 GB)
+• Content Version (e.g., Std. 1–4 Marathi v2.3)
+• Content Loaded Date
+• Loaded By
+• Write Protection Status (if applicable)
+This lets you identify exactly which content version was supplied to a school.
+D. School Asset History
+For every school, maintain a complete transaction history:
+• AI Lab Kits supplied
+• Pen drives supplied
+• Replacements
+• Additional purchases
+• Warranty/service records
+This creates a complete customer asset ledger.
+E. Stock Movement Timeline
+Each product should have a chronological timeline showing:
+• Date and time
+• Inward/Outward action
+• Quantity
+===== PAGE 14 =====
+• User who performed the action
+• Supplier or customer
+• Balance stock after the transaction
+This is invaluable for audits and troubleshooting.

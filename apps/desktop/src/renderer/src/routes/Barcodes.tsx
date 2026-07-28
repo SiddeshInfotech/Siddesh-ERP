@@ -81,8 +81,8 @@ const STATUS_LABEL: Record<BarcodeStatus, string> = {
   VOID: 'Void',
   AVAILABLE: 'Available',
   ALLOCATED: 'Allocated',
-  INWARDED: 'Inwarded',
-  OUTWARDED: 'Outwarded',
+  INWARDED: 'In stock',
+  OUTWARDED: 'Outward',
   DAMAGED: 'Damaged',
   CANCELLED: 'Cancelled'
 }
@@ -163,13 +163,13 @@ function BatchBarcodesSubTable({ productId, batchCode }: { productId: string; ba
         </span>
         <div className="flex items-center gap-3 text-body-xs text-on-surface-variant">
           <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-success"></span> In Stock: {barcodes.filter(b => b.status === 'IN_STOCK').length}
+            <span className="size-2 rounded-full bg-success"></span> In Stock: {barcodes.filter(b => b.status === 'IN_STOCK' || b.status === 'INWARDED').length}
           </span>
           <span className="inline-flex items-center gap-1">
             <span className="size-2 rounded-full bg-on-surface-variant/40"></span> Generated: {barcodes.filter(b => b.status === 'GENERATED').length}
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-primary"></span> Outward: {barcodes.filter(b => b.status === 'OUTWARD').length}
+            <span className="size-2 rounded-full bg-primary"></span> Outward: {barcodes.filter(b => b.status === 'OUTWARD' || b.status === 'OUTWARDED').length}
           </span>
           <span className="inline-flex items-center gap-1">
             <span className="size-2 rounded-full bg-error"></span> Void: {barcodes.filter(b => b.status === 'VOID').length}
@@ -463,7 +463,7 @@ export function Barcodes() {
                   <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70">Brand</th>
                   <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70">Barcode Type</th>
                   <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70">Batch Qty</th>
-                  <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70">Total Stock</th>
+                  <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70">In Stock</th>
                   <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70">Actions</th>
                 </tr>
               </thead>
@@ -522,8 +522,23 @@ export function Barcodes() {
                         <td className="px-4 text-table-cell text-right tabular-nums font-mono font-bold text-on-surface">
                           {row.totalBarcodes}
                         </td>
-                        <td className="px-4 text-table-cell text-right tabular-nums font-mono font-bold text-success">
-                          {row.totalQtyOnHand}
+                        {/* Received-only: a batch counts as stock only once its barcodes flip
+                            GENERATED → IN_STOCK/INWARDED. A generated-but-not-received batch is 0. */}
+                        <td className="px-4 text-table-cell text-right">
+                          <div className="flex flex-col items-end leading-tight">
+                            <span
+                              className={cn(
+                                'tabular-nums font-mono font-bold',
+                                row.qtyInStock > 0 ? 'text-success' : 'text-on-surface-variant/50'
+                              )}
+                            >
+                              {row.qtyInStock}
+                            </span>
+                            <span className="font-sans text-[10px] text-on-surface-variant/60">
+                              Gen {row.qtyGenerated}
+                              {row.qtyOutward > 0 ? ` · Out ${row.qtyOutward}` : ''}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-4 text-table-cell text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-2">

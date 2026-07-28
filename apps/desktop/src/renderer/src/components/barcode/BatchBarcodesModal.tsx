@@ -39,8 +39,8 @@ const STATUS_LABEL: Record<BarcodeStatus, string> = {
   VOID: 'Void',
   AVAILABLE: 'Available',
   ALLOCATED: 'Allocated',
-  INWARDED: 'Inwarded',
-  OUTWARDED: 'Outwarded',
+  INWARDED: 'In stock',
+  OUTWARDED: 'Outward',
   DAMAGED: 'Damaged',
   CANCELLED: 'Cancelled'
 }

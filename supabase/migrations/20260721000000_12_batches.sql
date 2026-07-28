@@ -347,7 +347,6 @@ begin
       'qty_available', coalesce(v_stock.qty_available, 0)
     )
   );
-  );
 end;
 $$;
 

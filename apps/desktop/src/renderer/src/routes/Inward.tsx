@@ -34,10 +34,8 @@ import {
  * Inward — receive stock into the store (SRD §5; DSK-301 → DSK-309).
  *
  * Carries every field SRD §5 asks for: product, quantity, supplier name / mobile / GST,
- * invoice number and date, purchase order, and who brought the material.
- *
- * NOT built: DSK-307, attaching the invoice PDF or photo. It is P2 and needs a Supabase
- * Storage bucket with its own RLS, which does not exist yet.
+ * invoice number and date, purchase order, who brought the material, and the optional
+ * invoice PDF/image (uploaded to the `invoices` Storage bucket on save).
  */
 
 interface Errors {
@@ -138,30 +136,17 @@ export function Inward() {
 
   const processedData = useMemo(() => {
     if (!historyData) return []
-    const groups: Record<string, InwardHistoryRow[]> = {}
     const clonedData = historyData.map((row) => ({ ...row }))
+    // "Total Quantity" is the product's total inwarded quantity across every batch —
+    // the same figure on each of that product's rows, NOT a per-row running sum.
+    // Summed over the unfiltered data so fully-outwarded batches still count toward
+    // the product's total received.
+    const totalInwardByProduct: Record<string, number> = {}
     for (const row of clonedData) {
-      const pid = row.product_id
-      if (!groups[pid]) groups[pid] = []
-      groups[pid].push(row)
+      totalInwardByProduct[row.product_id] = (totalInwardByProduct[row.product_id] ?? 0) + row.inward_qty
     }
-    for (const pid in groups) {
-      const rows = groups[pid]
-      if (!rows) continue
-      rows.sort((a, b) => {
-        const timeA = new Date(a.received_at).getTime()
-        const timeB = new Date(b.received_at).getTime()
-        if (timeA !== timeB) return timeA - timeB
-        return (a.batch_code || '').localeCompare(b.batch_code || '')
-      })
-      let runningTotal = 0
-      for (let i = rows.length - 1; i >= 0; i--) {
-        const r = rows[i]
-        if (r) {
-          runningTotal += r.remaining_qty
-          r.total_qty = runningTotal
-        }
-      }
+    for (const row of clonedData) {
+      row.total_qty = totalInwardByProduct[row.product_id] ?? 0
     }
     return clonedData
   }, [historyData])
@@ -378,8 +363,8 @@ export function Inward() {
           )
       },
       { header: 'Quantity (on that batch)', align: 'right', cell: (row) => row.inward_qty },
-      { header: 'Remaining Quantity', align: 'right', cell: (row) => row.remaining_qty },
-      { header: 'Total Quantity', align: 'right', cell: (row) => row.total_qty },
+      { header: 'Remaining Quantity (on that batch)', align: 'right', cell: (row) => row.remaining_qty },
+      { header: 'Total Quantity (all batches)', align: 'right', cell: (row) => row.total_qty },
       { header: 'Brought By', cell: (row) => orDash(row.brought_by) },
       {
         header: 'Actions',

@@ -161,30 +161,15 @@ export function Outward() {
 
   const processedOutwardData = useMemo(() => {
     if (!outwardHistoryData) return []
-    const groups: Record<string, OutwardHistoryRow[]> = {}
     const clonedData = outwardHistoryData.map((row) => ({ ...row }))
+    // "Total Quantity" is the product's total dispatched quantity across every batch —
+    // the same figure on each of that product's rows, NOT a per-row running sum.
+    const totalOutByProduct: Record<string, number> = {}
     for (const row of clonedData) {
-      const pid = row.product_id
-      if (!groups[pid]) groups[pid] = []
-      groups[pid].push(row)
+      totalOutByProduct[row.product_id] = (totalOutByProduct[row.product_id] ?? 0) + row.outward_qty
     }
-    for (const pid in groups) {
-      const rows = groups[pid]
-      if (!rows) continue
-      rows.sort((a, b) => {
-        const timeA = a.issued_at ? new Date(a.issued_at).getTime() : 0
-        const timeB = a.issued_at ? new Date(b.issued_at).getTime() : 0
-        if (timeA !== timeB) return timeA - timeB
-        return (a.batch_code || '').localeCompare(b.batch_code || '')
-      })
-      let runningTotal = 0
-      for (let i = 0; i < rows.length; i++) {
-        const r = rows[i]
-        if (r) {
-          runningTotal += r.remaining_qty
-          r.total_qty = runningTotal
-        }
-      }
+    for (const row of clonedData) {
+      row.total_qty = totalOutByProduct[row.product_id] ?? 0
     }
     return clonedData
   }, [outwardHistoryData])
@@ -403,8 +388,8 @@ export function Outward() {
       },
       { header: 'Type', cell: (row) => outwardTypeLabel(row.outward_type) },
       { header: 'Quantity (given out)', align: 'right', cell: (row) => row.outward_qty },
-      { header: 'Remaining Quantity', align: 'right', cell: (row) => row.remaining_qty },
-      { header: 'Total Quantity', align: 'right', cell: (row) => row.total_qty },
+      { header: 'Remaining Quantity (on that batch)', align: 'right', cell: (row) => row.remaining_qty },
+      { header: 'Total Quantity (all batches)', align: 'right', cell: (row) => row.total_qty },
       {
         header: 'Actions',
         align: 'right',

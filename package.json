@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "electron": "^33.2.1",
-    "supabase": "^2.98.0",
+    "supabase": "2.98.0",
     "typescript": "^7.0.2"
   },
   "allowScripts": {
