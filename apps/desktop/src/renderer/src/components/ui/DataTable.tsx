@@ -31,6 +31,7 @@ interface DataTableProps<Row> {
   /** Shown when there are zero rows. A blank box is not an empty state. */
   emptyMessage?: string
   caption?: string
+  rowClassName?: (row: Row) => string
 }
 
 /**
@@ -47,7 +48,8 @@ export function DataTable<Row>({
   onRetry,
   onRowClick,
   emptyMessage = 'Nothing to show yet.',
-  caption
+  caption,
+  rowClassName
 }: DataTableProps<Row>) {
   const tableRows = rows ?? data ?? []
 
@@ -119,7 +121,8 @@ export function DataTable<Row>({
             <tr
               className={cn(
                 'h-row hairline-b transition-colors',
-                onRowClick && 'cursor-pointer hover:bg-on-surface/10'
+                onRowClick && 'cursor-pointer hover:bg-on-surface/10',
+                rowClassName && rowClassName(row)
               )}
               key={safeGetRowId(row, rowIdx)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}

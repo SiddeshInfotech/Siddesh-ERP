@@ -61,13 +61,23 @@ console.log(`db:types — generating from project ${ref}…`)
 // Call the CLI's real binary, not `npx` / the .bin shim. Node 24 refuses to spawn a Windows
 // .cmd without shell:true, and shell:true concatenates argv into a single string — so the
 // convenient path is also the injectable one. A direct binary needs no shell either way.
-const bin = join(
+let bin = join(
   ROOT,
   'node_modules',
   'supabase',
   'bin',
   process.platform === 'win32' ? 'supabase.exe' : 'supabase'
 )
+if (!existsSync(bin) && process.platform === 'win32') {
+  const archs = ['cli-windows-x64', 'cli-windows-arm64']
+  for (const arch of archs) {
+    const candidate = join(ROOT, 'node_modules', '@supabase', arch, 'bin', 'supabase.exe')
+    if (existsSync(candidate)) {
+      bin = candidate
+      break
+    }
+  }
+}
 if (!existsSync(bin)) fail('The supabase CLI is not installed. Run `npm install` at the root.')
 
 // stdio 'pipe' on stdout so the types do not leak into the terminal; stderr passes through

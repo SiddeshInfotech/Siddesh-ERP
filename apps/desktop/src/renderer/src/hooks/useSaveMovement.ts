@@ -110,6 +110,7 @@ export interface SaveOutwardInput {
   notes: string | null
   deliveryMethod: string | null
   batchId?: string | null
+  batches?: { batch_id: string | null; qty: number }[] | null
 }
 
 /**
@@ -144,7 +145,8 @@ export function useSaveOutward() {
         ...(input.receivedBy === null ? {} : { p_received_by: input.receivedBy }),
         ...(input.notes === null ? {} : { p_notes: input.notes }),
         ...(input.deliveryMethod === null ? {} : { p_delivery_method: input.deliveryMethod }),
-        ...(input.batchId ? { p_batch_id: input.batchId } : {})
+        ...(input.batchId ? { p_batch_id: input.batchId } : {}),
+        ...(input.batches ? { p_batches: input.batches } : {})
       })
 
       if (error) {

@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -319,6 +319,7 @@ export type Database = {
           product_id: string
           product_unit_id: string | null
           quantity: number
+          remarks: string | null
           unit_cost: number | null
           updated_at: string
           updated_by: string | null
@@ -333,6 +334,7 @@ export type Database = {
           product_id: string
           product_unit_id?: string | null
           quantity: number
+          remarks?: string | null
           unit_cost?: number | null
           updated_at?: string
           updated_by?: string | null
@@ -347,6 +349,7 @@ export type Database = {
           product_id?: string
           product_unit_id?: string | null
           quantity?: number
+          remarks?: string | null
           unit_cost?: number | null
           updated_at?: string
           updated_by?: string | null
@@ -393,6 +396,7 @@ export type Database = {
       inwards: {
         Row: {
           brought_by: string | null
+          client_txn_id: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
@@ -406,13 +410,16 @@ export type Database = {
           office_id: string
           purchase_order_no: string | null
           received_at: string
+          status: Database["public"]["Enums"]["inward_status"]
           supplier_id: string | null
+          total_quantity: number
           updated_at: string
           updated_by: string | null
           version: number
         }
         Insert: {
           brought_by?: string | null
+          client_txn_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -426,13 +433,16 @@ export type Database = {
           office_id: string
           purchase_order_no?: string | null
           received_at?: string
+          status?: Database["public"]["Enums"]["inward_status"]
           supplier_id?: string | null
+          total_quantity?: number
           updated_at?: string
           updated_by?: string | null
           version?: number
         }
         Update: {
           brought_by?: string | null
+          client_txn_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
@@ -446,7 +456,9 @@ export type Database = {
           office_id?: string
           purchase_order_no?: string | null
           received_at?: string
+          status?: Database["public"]["Enums"]["inward_status"]
           supplier_id?: string | null
+          total_quantity?: number
           updated_at?: string
           updated_by?: string | null
           version?: number
@@ -656,6 +668,7 @@ export type Database = {
       }
       outwards: {
         Row: {
+          client_txn_id: string | null
           created_at: string
           created_by: string | null
           customer_id: string | null
@@ -678,6 +691,7 @@ export type Database = {
           version: number
         }
         Insert: {
+          client_txn_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
@@ -700,6 +714,7 @@ export type Database = {
           version?: number
         }
         Update: {
+          client_txn_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
@@ -747,6 +762,7 @@ export type Database = {
           id: string
           is_primary: boolean
           product_id: string
+          sequence_number: number | null
           status: Database["public"]["Enums"]["barcode_status"]
           symbology: Database["public"]["Enums"]["barcode_symbology"]
           updated_at: string
@@ -761,6 +777,7 @@ export type Database = {
           id?: string
           is_primary?: boolean
           product_id: string
+          sequence_number?: number | null
           status?: Database["public"]["Enums"]["barcode_status"]
           symbology?: Database["public"]["Enums"]["barcode_symbology"]
           updated_at?: string
@@ -775,6 +792,7 @@ export type Database = {
           id?: string
           is_primary?: boolean
           product_id?: string
+          sequence_number?: number | null
           status?: Database["public"]["Enums"]["barcode_status"]
           symbology?: Database["public"]["Enums"]["barcode_symbology"]
           updated_at?: string
@@ -810,30 +828,48 @@ export type Database = {
           code: string
           created_at: string
           created_by: string | null
+          deleted_at: string | null
+          generated_quantity: number
           id: string
           product_id: string
+          remaining_quantity: number
+          status: Database["public"]["Enums"]["batch_status"]
+          total_quantity: number
           updated_at: string
           updated_by: string | null
+          used_quantity: number
           version: number
         }
         Insert: {
           code: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          generated_quantity?: number
           id?: string
           product_id: string
+          remaining_quantity?: number
+          status?: Database["public"]["Enums"]["batch_status"]
+          total_quantity?: number
           updated_at?: string
           updated_by?: string | null
+          used_quantity?: number
           version?: number
         }
         Update: {
           code?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          generated_quantity?: number
           id?: string
           product_id?: string
+          remaining_quantity?: number
+          status?: Database["public"]["Enums"]["batch_status"]
+          total_quantity?: number
           updated_at?: string
           updated_by?: string | null
+          used_quantity?: number
           version?: number
         }
         Relationships: [
@@ -955,6 +991,7 @@ export type Database = {
       }
       products: {
         Row: {
+          barcode_type: Database["public"]["Enums"]["barcode_symbology"] | null
           brand_id: string | null
           category_id: string | null
           created_at: string
@@ -978,6 +1015,7 @@ export type Database = {
           version: number
         }
         Insert: {
+          barcode_type?: Database["public"]["Enums"]["barcode_symbology"] | null
           brand_id?: string | null
           category_id?: string | null
           created_at?: string
@@ -1001,6 +1039,7 @@ export type Database = {
           version?: number
         }
         Update: {
+          barcode_type?: Database["public"]["Enums"]["barcode_symbology"] | null
           brand_id?: string | null
           category_id?: string | null
           created_at?: string
@@ -1105,6 +1144,9 @@ export type Database = {
       }
       stock_balances: {
         Row: {
+          batch_id: string | null
+          damaged_quantity: number
+          id: string
           office_id: string
           product_id: string
           qty_available: number | null
@@ -1113,6 +1155,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          batch_id?: string | null
+          damaged_quantity?: number
+          id?: string
           office_id: string
           product_id: string
           qty_available?: number | null
@@ -1121,6 +1166,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          batch_id?: string | null
+          damaged_quantity?: number
+          id?: string
           office_id?: string
           product_id?: string
           qty_available?: number | null
@@ -1129,6 +1177,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stock_balances_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "product_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_balances_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "v_batch_registry"
+            referencedColumns: ["batch_id"]
+          },
           {
             foreignKeyName: "stock_balances_office_id_fkey"
             columns: ["office_id"]
@@ -1547,6 +1609,7 @@ export type Database = {
         Row: {
           brand_name: string | null
           category_name: string | null
+          damaged_quantity: number | null
           is_low_stock: boolean | null
           min_stock: number | null
           office_id: string | null
@@ -1580,6 +1643,7 @@ export type Database = {
       v_inward_history: {
         Row: {
           batch_code: string | null
+          batch_id: string | null
           brought_by: string | null
           created_at: string | null
           id: string | null
@@ -1602,6 +1666,20 @@ export type Database = {
           total_qty: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "inward_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "product_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inward_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "v_batch_registry"
+            referencedColumns: ["batch_id"]
+          },
           {
             foreignKeyName: "inward_items_product_id_fkey"
             columns: ["product_id"]
@@ -1787,7 +1865,6 @@ export type Database = {
           p_batch_id?: string
           p_brought_by?: string
           p_client_txn_id: string
-          p_computer_name?: string
           p_invoice_date?: string
           p_invoice_file_path?: string
           p_invoice_no?: string
@@ -1801,29 +1878,52 @@ export type Database = {
         }
         Returns: Json
       }
-      save_outward: {
-        Args: {
-          p_batch_id?: string
-          p_client_txn_id: string
-          p_computer_name?: string
-          p_contact_person?: string
-          p_delivery_method?: string
-          p_handed_over_by?: string
-          p_invoice_no?: string
-          p_mobile?: string
-          p_notes?: string
-          p_outward_type: Database["public"]["Enums"]["outward_type"]
-          p_party_address?: string
-          p_party_gst?: string
-          p_party_name?: string
-          p_product_id: string
-          p_qty: number
-          p_received_by?: string
-          p_sales_order_no?: string
-          p_signature_path?: string
-        }
-        Returns: Json
-      }
+      save_outward:
+        | {
+            Args: {
+              p_batch_id?: string
+              p_client_txn_id: string
+              p_computer_name?: string
+              p_contact_person?: string
+              p_delivery_method?: string
+              p_handed_over_by?: string
+              p_invoice_no?: string
+              p_mobile?: string
+              p_notes?: string
+              p_outward_type: Database["public"]["Enums"]["outward_type"]
+              p_party_address?: string
+              p_party_gst?: string
+              p_party_name?: string
+              p_product_id: string
+              p_qty: number
+              p_received_by?: string
+              p_sales_order_no?: string
+              p_signature_path?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_batch_id?: string
+              p_batches?: Json
+              p_client_txn_id: string
+              p_contact_person?: string
+              p_delivery_method?: string
+              p_handed_over_by?: string
+              p_invoice_no?: string
+              p_mobile?: string
+              p_notes?: string
+              p_outward_type: Database["public"]["Enums"]["outward_type"]
+              p_party_address?: string
+              p_party_gst?: string
+              p_party_name?: string
+              p_product_id: string
+              p_qty: number
+              p_received_by?: string
+              p_sales_order_no?: string
+            }
+            Returns: Json
+          }
       scan_lookup: { Args: { p_code: string }; Returns: Json }
       scan_receive: {
         Args: {
@@ -1871,9 +1971,27 @@ export type Database = {
     }
     Enums: {
       app_role: "ADMIN" | "STORE_MANAGER" | "SALES_EXECUTIVE"
-      barcode_status: "GENERATED" | "IN_STOCK" | "OUTWARD" | "VOID"
+      barcode_status:
+        | "GENERATED"
+        | "IN_STOCK"
+        | "OUTWARD"
+        | "VOID"
+        | "AVAILABLE"
+        | "ALLOCATED"
+        | "INWARDED"
+        | "OUTWARDED"
+        | "DAMAGED"
+        | "CANCELLED"
       barcode_symbology: "CODE128" | "EAN13" | "UPCA" | "QR" | "OTHER"
+      batch_status:
+        | "CREATED"
+        | "ACTIVE"
+        | "PARTIALLY_USED"
+        | "FULLY_USED"
+        | "CLOSED"
+        | "CANCELLED"
       doc_ref_type: "INWARD" | "OUTWARD" | "TRANSFER" | "ADJUSTMENT"
+      inward_status: "DRAFT" | "COMPLETED" | "CANCELLED"
       outward_type:
         | "SALE"
         | "DEMO"
@@ -2021,9 +2139,29 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["ADMIN", "STORE_MANAGER", "SALES_EXECUTIVE"],
-      barcode_status: ["GENERATED", "IN_STOCK", "OUTWARD", "VOID"],
+      barcode_status: [
+        "GENERATED",
+        "IN_STOCK",
+        "OUTWARD",
+        "VOID",
+        "AVAILABLE",
+        "ALLOCATED",
+        "INWARDED",
+        "OUTWARDED",
+        "DAMAGED",
+        "CANCELLED",
+      ],
       barcode_symbology: ["CODE128", "EAN13", "UPCA", "QR", "OTHER"],
+      batch_status: [
+        "CREATED",
+        "ACTIVE",
+        "PARTIALLY_USED",
+        "FULLY_USED",
+        "CLOSED",
+        "CANCELLED",
+      ],
       doc_ref_type: ["INWARD", "OUTWARD", "TRANSFER", "ADJUSTMENT"],
+      inward_status: ["DRAFT", "COMPLETED", "CANCELLED"],
       outward_type: [
         "SALE",
         "DEMO",

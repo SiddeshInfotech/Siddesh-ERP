@@ -136,6 +136,36 @@ export function Inward() {
   const historyProductId = historyFilter === 'product' ? picker.picked?.id : undefined
   const { data: historyData, isLoading: historyLoading, error: historyError } = useInwardHistory(historyProductId)
 
+  const processedData = useMemo(() => {
+    if (!historyData) return []
+    const groups: Record<string, InwardHistoryRow[]> = {}
+    const clonedData = historyData.map((row) => ({ ...row }))
+    for (const row of clonedData) {
+      const pid = row.product_id
+      if (!groups[pid]) groups[pid] = []
+      groups[pid].push(row)
+    }
+    for (const pid in groups) {
+      const rows = groups[pid]
+      if (!rows) continue
+      rows.sort((a, b) => {
+        const timeA = new Date(a.received_at).getTime()
+        const timeB = new Date(b.received_at).getTime()
+        if (timeA !== timeB) return timeA - timeB
+        return (a.batch_code || '').localeCompare(b.batch_code || '')
+      })
+      let runningTotal = 0
+      for (let i = rows.length - 1; i >= 0; i--) {
+        const r = rows[i]
+        if (r) {
+          runningTotal += r.remaining_qty
+          r.total_qty = runningTotal
+        }
+      }
+    }
+    return clonedData
+  }, [historyData])
+
   const [errors, setErrors] = useState<Errors>({})
   const [saved, setSaved] = useState<Saved | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -300,7 +330,20 @@ export function Inward() {
     // "who supplied it and how it arrived".
     const stockColumns: Column<InwardHistoryRow>[] = [
       { header: 'Date', cell: (row) => new Date(row.received_at).toLocaleDateString() },
-      { header: 'Product', cell: (row) => row.product_name },
+      {
+        header: 'Product',
+        cell: (row) => (
+          <button
+            className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline text-left"
+            onClick={() => {
+              picker.choose(row.product_id)
+              setHistoryFilter('product')
+            }}
+          >
+            {row.product_name}
+          </button>
+        )
+      },
       {
         header: 'Batch',
         cell: (row) =>
@@ -319,6 +362,19 @@ export function Inward() {
             </button>
           ) : (
             '—'
+          )
+      },
+      {
+        header: 'Status',
+        cell: (row) =>
+          row.remaining_qty > 0 ? (
+            <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success">
+              In Stock
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant">
+              Fully Outwarded
+            </span>
           )
       },
       { header: 'Quantity (on that batch)', align: 'right', cell: (row) => row.inward_qty },
@@ -347,7 +403,20 @@ export function Inward() {
 
     const supplierColumns: Column<InwardHistoryRow>[] = [
       { header: 'Date', cell: (row) => new Date(row.received_at).toLocaleDateString() },
-      { header: 'Product', cell: (row) => row.product_name },
+      {
+        header: 'Product',
+        cell: (row) => (
+          <button
+            className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline text-left"
+            onClick={() => {
+              picker.choose(row.product_id)
+              setHistoryFilter('product')
+            }}
+          >
+            {row.product_name}
+          </button>
+        )
+      },
       { header: 'Supplier', cell: (row) => orDash(row.supplier_name) },
       { header: 'Mobile', cell: (row) => orDash(row.supplier_mobile) },
       { header: 'GST No', cell: (row) => orDash(row.supplier_gst) },
@@ -426,10 +495,17 @@ export function Inward() {
           </div>
           <DataTable<InwardHistoryRow>
             columns={historyTab === 'stock' ? stockColumns : supplierColumns}
-            data={historyData}
+            data={processedData}
             isLoading={historyLoading}
             error={historyError ? toUserMessage(historyError) : undefined}
             emptyMessage="No inward entries yet."
+            rowClassName={(row) =>
+              historyTab === 'stock'
+                ? row.remaining_qty > 0
+                  ? 'bg-on-surface/[0.02] hover:bg-on-surface/[0.05]'
+                  : 'bg-on-surface/[0.01] hover:bg-on-surface/[0.03]'
+                : ''
+            }
           />
         </Card>
 

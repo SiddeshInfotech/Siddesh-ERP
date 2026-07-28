@@ -1,5 +1,5 @@
 import { ArrowUpFromLine, CheckCircle2, ChevronLeft, FileText, Plus, School, UserCheck, Trash2 } from 'lucide-react'
-import { useRef, useState, useEffect, type FormEvent, type ReactNode } from 'react'
+import { useRef, useState, useEffect, useMemo, type FormEvent, type ReactNode } from 'react'
 import { ProductPicker } from '@/components/movement/ProductPicker'
 import { BatchPicker, type BatchSelection } from '@/components/movement/BatchPicker'
 import { BatchBarcodesModal } from '@/components/barcode/BatchBarcodesModal'
@@ -12,8 +12,9 @@ import { HistoryTab } from '@/components/ui/HistoryTab'
 import { Select, type SelectOption } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { useOutwardHistory, type OutwardHistoryRow } from '@/hooks/useOutwardHistory'
+import { useInwardHistory, type InwardHistoryRow } from '@/hooks/useInwardHistory'
 import { useProductPicker } from '@/hooks/useProductPicker'
-import { useSaveOutward, useDeleteOutward, type OutwardType } from '@/hooks/useSaveMovement'
+import { useSaveOutward, useDeleteOutward, useDeleteInward, type OutwardType } from '@/hooks/useSaveMovement'
 import { useConfirm } from '@/hooks/useConfirm'
 import { useAlert } from '@/hooks/useAlert'
 import { isInsufficientStock, toUserMessage } from '@/lib/errors'
@@ -122,13 +123,83 @@ export function Outward() {
   const [historyFilter, setHistoryFilter] = useState<'all' | 'product'>('all')
   const [historyTab, setHistoryTab] = useState<'stock' | 'party' | 'other'>('stock')
   const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string } | null>(null)
+  const [batchOutwardQtys, setBatchOutwardQtys] = useState<Record<string, string>>({})
+
+  function handleBatchQtyChange(batchId: string, val: string, maxQty?: number) {
+    const rawVal = val.trim()
+    if (rawVal === '') {
+      setBatchOutwardQtys((prev) => {
+        const next = { ...prev }
+        delete next[batchId]
+        updateTotalQty(next)
+        return next
+      })
+      return
+    }
+    let num = parseInt(rawVal, 10)
+    if (isNaN(num) || num < 0) num = 0
+    if (maxQty !== undefined && num > maxQty) num = maxQty
+
+    setBatchOutwardQtys((prev) => {
+      const next = { ...prev, [batchId]: String(num) }
+      updateTotalQty(next)
+      return next
+    })
+  }
+
+  function updateTotalQty(qtys: Record<string, string>) {
+    let total = 0
+    for (const key in qtys) {
+      total += parseInt(qtys[key] || '0', 10)
+    }
+    setQty(total > 0 ? String(total) : '')
+  }
 
   const historyProductId = historyFilter === 'product' ? picker.picked?.id : undefined
-  const { data: historyData, isLoading: historyLoading, error: historyError } =
+  const { data: outwardHistoryData, isLoading: outwardHistoryLoading, error: outwardHistoryError } =
     useOutwardHistory(historyProductId)
+
+  const processedOutwardData = useMemo(() => {
+    if (!outwardHistoryData) return []
+    const groups: Record<string, OutwardHistoryRow[]> = {}
+    const clonedData = outwardHistoryData.map((row) => ({ ...row }))
+    for (const row of clonedData) {
+      const pid = row.product_id
+      if (!groups[pid]) groups[pid] = []
+      groups[pid].push(row)
+    }
+    for (const pid in groups) {
+      const rows = groups[pid]
+      if (!rows) continue
+      rows.sort((a, b) => {
+        const timeA = a.issued_at ? new Date(a.issued_at).getTime() : 0
+        const timeB = a.issued_at ? new Date(b.issued_at).getTime() : 0
+        if (timeA !== timeB) return timeA - timeB
+        return (a.batch_code || '').localeCompare(b.batch_code || '')
+      })
+      let runningTotal = 0
+      for (let i = rows.length - 1; i >= 0; i--) {
+        const r = rows[i]
+        if (r) {
+          runningTotal += r.remaining_qty
+          r.total_qty = runningTotal
+        }
+      }
+    }
+    return clonedData
+  }, [outwardHistoryData])
+
+  const historyLoading = outwardHistoryLoading
+  const historyError = outwardHistoryError
+  const historyCount = outwardHistoryData?.length ?? 0
+
+  const { data: formInwardData, isLoading: formInwardLoading } = useInwardHistory(
+    showForm && picker.picked ? picker.picked.id : null
+  )
 
   useEffect(() => {
     setBatchSelection(null)
+    setBatchOutwardQtys({})
   }, [picker.picked?.id])
 
   const [errors, setErrors] = useState<Errors>({})
@@ -154,6 +225,7 @@ export function Outward() {
     setDeliveryMethod('')
     setNotes('')
     setBatchSelection(null)
+    setBatchOutwardQtys({})
     setErrors({})
     setSaved(null)
     clientTxnId.current = crypto.randomUUID()
@@ -190,6 +262,26 @@ export function Outward() {
       return
     }
 
+    const batchesPayload: { batch_id: string | null; qty: number }[] = []
+    const genericQty = parseInt(batchOutwardQtys['generic'] || '0', 10)
+    if (genericQty > 0) {
+      batchesPayload.push({
+        batch_id: '00000000-0000-0000-0000-000000000000',
+        qty: genericQty
+      })
+    }
+    for (const key in batchOutwardQtys) {
+      if (key !== 'generic') {
+        const bQty = parseInt(batchOutwardQtys[key] || '0', 10)
+        if (bQty > 0) {
+          batchesPayload.push({
+            batch_id: key,
+            qty: bQty
+          })
+        }
+      }
+    }
+
     saveOutward.mutate(
       {
         clientTxnId: clientTxnId.current,
@@ -207,7 +299,8 @@ export function Outward() {
         receivedBy: orNull(receivedBy),
         deliveryMethod: orNull(deliveryMethod),
         notes: orNull(notes),
-        batchId: batchSelection?.batchId || null
+        batchId: null,
+        batches: batchesPayload.length > 0 ? batchesPayload : null
       },
       {
         onSuccess: (result) => {
@@ -258,9 +351,23 @@ export function Outward() {
   // Landing list + tabbed history, mirroring Inward. Same rows (one per Date + Product +
   // Batch), three column sets: what left and from which batch / who received it / the rest.
   if (!showForm && saved === null) {
+    const isStockTab = historyTab === 'stock'
     const stockColumns: Column<OutwardHistoryRow>[] = [
       { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
-      { header: 'Product', cell: (row) => row.product_name },
+      {
+        header: 'Product',
+        cell: (row) => (
+          <button
+            className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline text-left"
+            onClick={() => {
+              picker.choose(row.product_id)
+              setHistoryFilter('product')
+            }}
+          >
+            {row.product_name}
+          </button>
+        )
+      },
       {
         header: 'Batch',
         cell: (row) =>
@@ -279,6 +386,19 @@ export function Outward() {
             </button>
           ) : (
             '—'
+          )
+      },
+      {
+        header: 'Status',
+        cell: (row) =>
+          row.remaining_qty > 0 ? (
+            <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success">
+              In Stock
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant">
+              Fully Outwarded
+            </span>
           )
       },
       { header: 'Type', cell: (row) => outwardTypeLabel(row.outward_type) },
@@ -307,7 +427,20 @@ export function Outward() {
 
     const partyColumns: Column<OutwardHistoryRow>[] = [
       { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
-      { header: 'Product', cell: (row) => row.product_name },
+      {
+        header: 'Product',
+        cell: (row) => (
+          <button
+            className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline text-left"
+            onClick={() => {
+              picker.choose(row.product_id)
+              setHistoryFilter('product')
+            }}
+          >
+            {row.product_name}
+          </button>
+        )
+      },
       { header: 'School / Party', cell: (row) => orDash(row.party_name) },
       { header: 'Contact', cell: (row) => orDash(row.contact_person) },
       { header: 'Mobile', cell: (row) => orDash(row.party_mobile) },
@@ -337,7 +470,20 @@ export function Outward() {
 
     const otherColumns: Column<OutwardHistoryRow>[] = [
       { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
-      { header: 'Product', cell: (row) => row.product_name },
+      {
+        header: 'Product',
+        cell: (row) => (
+          <button
+            className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline text-left"
+            onClick={() => {
+              picker.choose(row.product_id)
+              setHistoryFilter('product')
+            }}
+          >
+            {row.product_name}
+          </button>
+        )
+      },
       { header: 'Type', cell: (row) => outwardTypeLabel(row.outward_type) },
       { header: 'Handed Over By', cell: (row) => orDash(row.handed_over_by) },
       { header: 'Received By', cell: (row) => orDash(row.received_by) },
@@ -363,16 +509,13 @@ export function Outward() {
       }
     ]
 
-    const columns =
-      historyTab === 'stock' ? stockColumns : historyTab === 'party' ? partyColumns : otherColumns
-
     return (
       <div className="flex flex-col gap-gutter">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-h1 text-on-surface">Outward</h1>
             <p className="text-body-sm text-on-surface-variant/60">
-              {historyLoading ? 'Loading…' : `${historyData?.length ?? 0} recent outward entries`}
+              {historyLoading ? 'Loading…' : `${historyCount} recent outward entries`}
             </p>
           </div>
           <Button
@@ -414,13 +557,28 @@ export function Outward() {
               </Button>
             </div>
           </div>
-          <DataTable<OutwardHistoryRow>
-            columns={columns}
-            data={historyData}
-            isLoading={historyLoading}
-            error={historyError ? toUserMessage(historyError) : undefined}
-            emptyMessage="No outward entries yet."
-          />
+          {isStockTab ? (
+            <DataTable<OutwardHistoryRow>
+              columns={stockColumns}
+              data={processedOutwardData}
+              isLoading={outwardHistoryLoading}
+              error={outwardHistoryError ? toUserMessage(outwardHistoryError) : undefined}
+              emptyMessage="No stock entries yet."
+              rowClassName={(row) =>
+                row.remaining_qty > 0
+                  ? 'bg-on-surface/[0.02] hover:bg-on-surface/[0.05]'
+                  : 'bg-on-surface/[0.01] hover:bg-on-surface/[0.03]'
+              }
+            />
+          ) : (
+            <DataTable<OutwardHistoryRow>
+              columns={historyTab === 'party' ? partyColumns : otherColumns}
+              data={processedOutwardData}
+              isLoading={outwardHistoryLoading}
+              error={outwardHistoryError ? toUserMessage(outwardHistoryError) : undefined}
+              emptyMessage="No outward entries yet."
+            />
+          )}
         </Card>
 
         {batchModalData && (
@@ -477,9 +635,9 @@ export function Outward() {
               <Field
                 error={errors.qty}
                 inputMode="numeric"
-                label="Quantity to give out"
+                label="Quantity to give out (sum of batches below)"
                 min={1}
-                onChange={(event) => setQty(event.target.value)}
+                readOnly
                 required
                 type="number"
                 value={qty}
@@ -494,14 +652,76 @@ export function Outward() {
             </div>
             
             {picker.picked && (
-              <BatchPicker 
-                productId={picker.picked.id} 
-                qty={Number(qty) || 0}
-                value={batchSelection} 
-                onChange={setBatchSelection} 
-                allowCreate={false}
-              />
-            )}
+              <div className="flex flex-col gap-2 mt-4">
+                <h3 className="text-body-sm font-semibold text-on-surface">Select Batch Allocations</h3>
+                {formInwardLoading ? (
+                  <p className="text-body-sm text-on-surface-variant/60">Loading available batches...</p>
+                ) : (
+                  <div className="border border-outline-variant rounded-xl overflow-hidden">
+                    <table className="w-full border-collapse text-left text-body-sm">
+                      <thead>
+                        <tr className="bg-on-surface/[0.03] hairline-b text-label-caps">
+                          <th className="px-4 py-2 text-on-surface-variant/70 uppercase">Date</th>
+                          <th className="px-4 py-2 text-on-surface-variant/70 uppercase">Batch</th>
+                          <th className="px-4 py-2 text-on-surface-variant/70 uppercase text-right">Inward Qty</th>
+                          <th className="px-4 py-2 text-on-surface-variant/70 uppercase text-right">Remaining</th>
+                          <th className="px-4 py-2 text-on-surface-variant/70 uppercase">Brought By</th>
+                          <th className="px-4 py-2 text-on-surface-variant/70 uppercase text-center w-32">Outward Qty</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* Generic / No Batch Row */}
+                        <tr className="hairline-b hover:bg-on-surface/[0.02] h-row">
+                          <td className="px-4 text-on-surface-variant">—</td>
+                          <td className="px-4 font-medium text-on-surface">Generic / No Batch</td>
+                          <td className="px-4 text-right text-on-surface-variant">—</td>
+                          <td className="px-4 text-right text-on-surface-variant">—</td>
+                          <td className="px-4 text-on-surface-variant">—</td>
+                          <td className="px-4 py-1 text-center">
+                            <input
+                              className="w-24 text-right border border-outline-variant bg-surface-container-lowest text-on-surface rounded px-2 py-1 focus:border-primary transition-all"
+                              type="number"
+                              min={0}
+                              value={batchOutwardQtys['generic'] || ''}
+                              placeholder="0"
+                              onChange={(e) => handleBatchQtyChange('generic', e.target.value)}
+                            />
+                          </td>
+                        </tr>
+                        {/* Batches with stock */}
+                        {formInwardData && formInwardData.filter(b => b.remaining_qty > 0).map((row) => (
+                          <tr key={row.id} className="hairline-b hover:bg-on-surface/[0.02] h-row">
+                            <td className="px-4 text-on-surface">{new Date(row.received_at).toLocaleDateString()}</td>
+                            <td className="px-4 font-semibold text-primary">{row.batch_code || '—'}</td>
+                            <td className="px-4 text-right text-on-surface">{row.inward_qty}</td>
+                            <td className="px-4 text-right text-success font-semibold">{row.remaining_qty}</td>
+                            <td className="px-4 text-on-surface">{row.brought_by || '—'}</td>
+                            <td className="px-4 py-1 text-center">
+                              <input
+                                className="w-24 text-right border border-outline-variant bg-surface-container-lowest text-on-surface rounded px-2 py-1 focus:border-primary transition-all font-semibold"
+                                type="number"
+                                min={0}
+                                max={row.remaining_qty}
+                                value={row.batch_id ? (batchOutwardQtys[row.batch_id] || '') : ''}
+                                placeholder="0"
+                                onChange={(e) => handleBatchQtyChange(row.batch_id || '', e.target.value, row.remaining_qty)}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                        {(!formInwardData || formInwardData.filter(b => b.remaining_qty > 0).length === 0) && (
+                          <tr>
+                            <td colSpan={6} className="px-4 py-8 text-center text-on-surface-variant/60">
+                              No active batches with stock found. You can dispatch from "Generic / No Batch".
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ) /* replaced BatchPicker */ }
 
             {looksShort ? (
               <Alert tone="warning">

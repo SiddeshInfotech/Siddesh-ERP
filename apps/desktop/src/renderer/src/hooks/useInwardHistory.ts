@@ -10,6 +10,7 @@ export interface InwardHistoryRow {
   product_id: string
   product_name: string
   batch_code: string | null
+  batch_id: string | null
   inward_qty: number
   remaining_qty: number
   total_qty: number
@@ -52,6 +53,7 @@ export function useInwardHistory(productId?: string | null) {
         product_id: row.product_id,
         product_name: row.product_name ?? '',
         batch_code: row.batch_code ?? null,
+        batch_id: row.batch_id ?? null,
         remaining_qty: row.remaining_qty ?? 0,
         total_qty: row.total_qty ?? 0,
         supplier_name: row.supplier_name ?? null,
