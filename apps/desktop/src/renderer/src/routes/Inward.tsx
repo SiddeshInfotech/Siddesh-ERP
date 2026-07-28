@@ -495,7 +495,7 @@ export function Inward() {
           </div>
           <DataTable<InwardHistoryRow>
             columns={historyTab === 'stock' ? stockColumns : supplierColumns}
-            data={processedData}
+            data={historyTab === 'stock' ? processedData.filter((r) => r.remaining_qty > 0) : processedData}
             isLoading={historyLoading}
             error={historyError ? toUserMessage(historyError) : undefined}
             emptyMessage="No inward entries yet."

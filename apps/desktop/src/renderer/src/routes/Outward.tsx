@@ -178,7 +178,7 @@ export function Outward() {
         return (a.batch_code || '').localeCompare(b.batch_code || '')
       })
       let runningTotal = 0
-      for (let i = rows.length - 1; i >= 0; i--) {
+      for (let i = 0; i < rows.length; i++) {
         const r = rows[i]
         if (r) {
           runningTotal += r.remaining_qty
@@ -560,7 +560,7 @@ export function Outward() {
           {isStockTab ? (
             <DataTable<OutwardHistoryRow>
               columns={stockColumns}
-              data={processedOutwardData}
+              data={processedOutwardData.filter((r) => r.remaining_qty > 0)}
               isLoading={outwardHistoryLoading}
               error={outwardHistoryError ? toUserMessage(outwardHistoryError) : undefined}
               emptyMessage="No stock entries yet."
