@@ -1,4 +1,4 @@
--- =============================================================================
+  -- =============================================================================
 -- 01 — FOUNDATION
 -- Extensions, enums, sequences, helper functions, audit + guard triggers.
 -- Nothing here creates business tables; everything below depends on this file.

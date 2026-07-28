@@ -23,14 +23,26 @@ const STATUS_STYLES: Record<BarcodeStatus, string> = {
   GENERATED: 'bg-on-surface/[0.06] text-on-surface-variant',
   IN_STOCK: 'bg-success/10 text-success',
   OUTWARD: 'bg-primary/10 text-primary',
-  VOID: 'bg-error/10 text-error'
+  VOID: 'bg-error/10 text-error',
+  AVAILABLE: 'bg-success/10 text-success',
+  ALLOCATED: 'bg-warning/10 text-warning-dark',
+  INWARDED: 'bg-success/10 text-success',
+  OUTWARDED: 'bg-primary/10 text-primary',
+  DAMAGED: 'bg-error/10 text-error',
+  CANCELLED: 'bg-error/10 text-error'
 }
 
 const STATUS_LABEL: Record<BarcodeStatus, string> = {
   GENERATED: 'Generated',
   IN_STOCK: 'In stock',
   OUTWARD: 'Outward',
-  VOID: 'Void'
+  VOID: 'Void',
+  AVAILABLE: 'Available',
+  ALLOCATED: 'Allocated',
+  INWARDED: 'Inwarded',
+  OUTWARDED: 'Outwarded',
+  DAMAGED: 'Damaged',
+  CANCELLED: 'Cancelled'
 }
 
 function StatusBadge({ status }: { status: BarcodeStatus }) {
@@ -92,7 +104,7 @@ export function BatchBarcodesModal({ productId, productName, batchCode, onClose 
   }, [])
 
   const received = useMemo(
-    () => (barcodes ?? []).filter((b) => b.status === 'IN_STOCK').length,
+    () => (barcodes ?? []).filter((b) => b.status !== 'GENERATED' && b.status !== 'VOID').length,
     [barcodes]
   )
   const total = barcodes?.length ?? 0

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { supabase } from '@/lib/supabase'
 
-export type BarcodeStatus = 'GENERATED' | 'IN_STOCK' | 'OUTWARD' | 'VOID'
+export type BarcodeStatus = 'GENERATED' | 'IN_STOCK' | 'OUTWARD' | 'VOID' | 'AVAILABLE' | 'ALLOCATED' | 'INWARDED' | 'OUTWARDED' | 'DAMAGED' | 'CANCELLED'
 export type ScanSource = 'USB' | 'BLUETOOTH' | 'CAMERA' | 'MANUAL'
 
 export interface BatchBarcodeRow {

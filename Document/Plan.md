@@ -137,4 +137,4 @@ I have updated the **Barcode Management System** ([Barcodes.tsx](file:///c:/Comp
      - Input or scan existing manufacturer barcode string (e.g. `8901234567890`).
 
 5. **Recently Generated Batches History**:
-   - Saves batch history cards with creation timestamp, product name, barcode range, and 1-click **Print Batch Labels** button (`BarcodeCanvasA4`).
+   - Saves batch history cards with creation timestamp, product name, barcode range, and 1-click **Print Batch Labels** button (`BarcodeCanvasA4`). 
