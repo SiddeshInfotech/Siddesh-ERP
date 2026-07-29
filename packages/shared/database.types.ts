@@ -1657,12 +1657,17 @@ export type Database = {
           product_id: string | null
           product_name: string | null
           purchase_order_no: string | null
+          qty_generated: number | null
+          qty_in_stock: number | null
+          qty_outward: number | null
+          qty_void: number | null
           received_at: string | null
           remaining_qty: number | null
           supplier_address: string | null
           supplier_gst: string | null
           supplier_mobile: string | null
           supplier_name: string | null
+          total_barcodes: number | null
           total_qty: number | null
         }
         Relationships: [

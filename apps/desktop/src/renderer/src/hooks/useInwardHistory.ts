@@ -14,6 +14,11 @@ export interface InwardHistoryRow {
   inward_qty: number
   remaining_qty: number
   total_qty: number
+  total_barcodes: number
+  qty_generated: number
+  qty_in_stock: number
+  qty_outward: number
+  qty_void: number
   // Supplier & Delivery tab
   supplier_name: string | null
   supplier_mobile: string | null
@@ -56,6 +61,11 @@ export function useInwardHistory(productId?: string | null) {
         batch_id: row.batch_id ?? null,
         remaining_qty: row.remaining_qty ?? 0,
         total_qty: row.total_qty ?? 0,
+        total_barcodes: row.total_barcodes ?? 0,
+        qty_generated: row.qty_generated ?? 0,
+        qty_in_stock: row.qty_in_stock ?? 0,
+        qty_outward: row.qty_outward ?? 0,
+        qty_void: row.qty_void ?? 0,
         supplier_name: row.supplier_name ?? null,
         supplier_mobile: row.supplier_mobile ?? null,
         supplier_gst: row.supplier_gst ?? null,

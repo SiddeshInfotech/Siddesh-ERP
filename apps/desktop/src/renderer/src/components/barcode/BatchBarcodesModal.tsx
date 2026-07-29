@@ -107,6 +107,22 @@ export function BatchBarcodesModal({ productId, productName, batchCode, onClose 
     () => (barcodes ?? []).filter((b) => b.status !== 'GENERATED' && b.status !== 'VOID').length,
     [barcodes]
   )
+  const inStock = useMemo(
+    () => (barcodes ?? []).filter((b) => STATUS_LABEL[b.status] === 'In stock').length,
+    [barcodes]
+  )
+  const generated = useMemo(
+    () => (barcodes ?? []).filter((b) => STATUS_LABEL[b.status] === 'Generated').length,
+    [barcodes]
+  )
+  const outward = useMemo(
+    () => (barcodes ?? []).filter((b) => STATUS_LABEL[b.status] === 'Outward').length,
+    [barcodes]
+  )
+  const voided = useMemo(
+    () => (barcodes ?? []).filter((b) => STATUS_LABEL[b.status] === 'Void').length,
+    [barcodes]
+  )
   const total = barcodes?.length ?? 0
   const pending = total - received
 
@@ -153,7 +169,25 @@ export function BatchBarcodesModal({ productId, productName, batchCode, onClose 
               {productName} · Batch <span className="font-semibold text-primary">{batchCode}</span>
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
+            <div className="flex gap-4 border-r border-outline-variant/30 pr-6 text-right">
+              <div>
+                <p className="text-h2 tabular-nums text-success">{inStock}</p>
+                <p className="text-body-sm text-on-surface-variant/60">In stock</p>
+              </div>
+              <div>
+                <p className="text-h2 tabular-nums text-on-surface-variant/80">{generated}</p>
+                <p className="text-body-sm text-on-surface-variant/60">Generated</p>
+              </div>
+              <div>
+                <p className="text-h2 tabular-nums text-primary">{outward}</p>
+                <p className="text-body-sm text-on-surface-variant/60">Outward</p>
+              </div>
+              <div>
+                <p className="text-h2 tabular-nums text-error/80">{voided}</p>
+                <p className="text-body-sm text-on-surface-variant/60">Void</p>
+              </div>
+            </div>
             {/* Live receiving progress — the "actual quantity" as it is scanned in. */}
             <div className="text-right">
               <p className="text-h2 tabular-nums text-success">

@@ -351,8 +351,39 @@ export function Inward() {
       },
       {
         header: 'Status',
-        cell: (row) =>
-          row.remaining_qty > 0 ? (
+        cell: (row) => {
+          if (row.total_barcodes > 0) {
+            if (row.qty_in_stock === 0 && row.qty_outward === 0) {
+              return (
+                <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant">
+                  Generated
+                </span>
+              )
+            }
+            if (row.qty_outward === row.total_barcodes) {
+              return (
+                <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant">
+                  Fully Outwarded
+                </span>
+              )
+            }
+            if (row.qty_generated > 0) {
+              return (
+                <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-body-sm font-medium text-warning-dark">
+                  Partially In Stock ({row.qty_in_stock}/{row.total_barcodes})
+                </span>
+              )
+            }
+            if (row.qty_in_stock > 0 && row.qty_generated === 0) {
+              return (
+                <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success">
+                  In Stock
+                </span>
+              )
+            }
+          }
+
+          return row.remaining_qty > 0 ? (
             <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success">
               In Stock
             </span>
@@ -361,6 +392,7 @@ export function Inward() {
               Fully Outwarded
             </span>
           )
+        }
       },
       { header: 'Quantity (on that batch)', align: 'right', cell: (row) => row.inward_qty },
       { header: 'Remaining Quantity (on that batch)', align: 'right', cell: (row) => row.remaining_qty },
