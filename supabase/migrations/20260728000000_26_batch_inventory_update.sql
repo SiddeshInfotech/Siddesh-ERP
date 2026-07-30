@@ -318,3 +318,4 @@ grant execute on function public.save_inward to authenticated;
 grant execute on function public.save_inward to service_role;
 
 notify pgrst, 'reload schema';
+ 

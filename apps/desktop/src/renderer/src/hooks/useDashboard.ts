@@ -42,21 +42,31 @@ export function useDashboard() {
     queryFn: async (): Promise<DashboardSummary> => {
       // Two queries in parallel, not one per card. Both go through security_invoker views, so
       // an office sees only its own numbers.
-      const [stockResult, todayResult] = await Promise.all([
+      const [stockResult, inwardDocsResult, outwardDocsResult] = await Promise.all([
         supabase.from('v_current_stock').select('qty_on_hand, qty_available, is_low_stock'),
         supabase
-          .from('v_product_ledger')
-          .select('txn_type, qty_delta')
-          .gte('occurred_at', startOfToday())
+          .from('inwards')
+          .select('total_quantity')
+          .gte('received_at', startOfToday())
+          .is('deleted_at', null),
+        supabase
+          .from('outward_items')
+          .select('quantity, outwards!inner(issued_at, deleted_at)')
+          .gte('outwards.issued_at', startOfToday())
+          .is('outwards.deleted_at', null)
       ])
 
       if (stockResult.error) {
         logger.error('Dashboard stock query failed', toLogContext(stockResult.error))
         throw stockResult.error
       }
-      if (todayResult.error) {
-        logger.error("Dashboard today's movement query failed", toLogContext(todayResult.error))
-        throw todayResult.error
+      if (inwardDocsResult.error) {
+        logger.error("Dashboard today's inward query failed", toLogContext(inwardDocsResult.error))
+        throw inwardDocsResult.error
+      }
+      if (outwardDocsResult.error) {
+        logger.error("Dashboard today's outward query failed", toLogContext(outwardDocsResult.error))
+        throw outwardDocsResult.error
       }
 
       const summary = stockResult.data.reduce(
@@ -69,24 +79,19 @@ export function useDashboard() {
         { totalOnHand: 0, lowStockCount: 0, outOfStockCount: 0 }
       )
 
-      // qty_delta is signed in the ledger: inward is positive, outward negative. Outward is
-      // shown as a magnitude — "12 went out" reads better than "-12".
-      const today = todayResult.data.reduce(
-        (totals, row) => {
-          const delta = row.qty_delta ?? 0
-          if (row.txn_type === 'INWARD') return { ...totals, inward: totals.inward + delta }
-          if (row.txn_type === 'OUTWARD') return { ...totals, outward: totals.outward - delta }
-          // TRANSFER_IN/OUT and ADJUSTMENT are movements too, but neither is a receipt or a
-          // dispatch — folding them into these cards would misreport both.
-          return totals
-        },
-        { inward: 0, outward: 0 }
+      const todayInward = (inwardDocsResult.data ?? []).reduce(
+        (acc, row) => acc + (row.total_quantity ?? 0),
+        0
+      )
+      const todayOutward = (outwardDocsResult.data ?? []).reduce(
+        (acc, row) => acc + (row.quantity ?? 0),
+        0
       )
 
       return {
         totalOnHand: summary.totalOnHand,
-        todayInward: today.inward,
-        todayOutward: today.outward,
+        todayInward,
+        todayOutward,
         lowStockCount: summary.lowStockCount,
         outOfStockCount: summary.outOfStockCount,
         productsTracked: stockResult.data.length
