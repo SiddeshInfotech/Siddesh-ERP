@@ -594,3 +594,22 @@ routes/Placeholder.tsx (deleted), apps/desktop/package.json (write-excel-file 4.
 **What:** (1) SERIOUS: dispatching from a batch never updated its item barcodes, so the Batch Records modal and the registry In-Stock count still showed a batch as fully in stock after an outward (e.g. modal "10/10 received" while the outward table said remaining 8). Migration 38 adds an outward_items trigger that flips up to `quantity` of a batch's received barcodes IN_STOCK/INWARDED → OUTWARD (FIFO by code) on dispatch and back to IN_STOCK on delete (delete_outward cascades the row), plus a one-time idempotent backfill so already-dispatched units read OUTWARD. No-batch ("Generic") dispatches carry no barcodes and are a no-op; the ledger stays the source of truth for the number (rule 0.7). This does NOT touch save_outward/save_inward. (2) Outward "Stock & Batches" Total Quantity was a per-row running sum of remaining (8 then 16 for two 2-unit dispatches); replaced with the product's total dispatched across all batches (sum of outward_qty), and relabelled the headers "Remaining Quantity (on that batch)" and "Total Quantity (all batches)" to match the Inward screen. (3) Relabelled the INWARDED barcode status to "In stock" (and OUTWARDED → "Outward") in the Batch Records modal and the registry, and made the registry sub-table In-Stock/Outward counts treat the IN_STOCK/INWARDED and OUTWARD/OUTWARDED synonyms as one — so a received unit reads "In stock" everywhere and a dispatched one reads "Outward".
 **Notes:** Migrations 36 & 37 are already applied to remote (pushed earlier); 38 is the only pending one. The barcode-status lifecycle and the stock ledger are two parallel systems — now kept in step for batch-linked inward/outward, but the ledger remains authoritative if they ever diverge (e.g. manual barcode deletes, or an inward that doesn't generate a barcode per unit). Could not exercise the Electron UI here (needs preload + Supabase login); verified by typecheck and dry-run.
 **Files:** supabase/migrations/20260728172000_38_outward_barcode_status.sql, apps/desktop/src/renderer/src/routes/Outward.tsx, apps/desktop/src/renderer/src/routes/Barcodes.tsx, apps/desktop/src/renderer/src/components/barcode/BatchBarcodesModal.tsx
+
+## 01/08/2026 11:30 — Fix scan_receive p_ref_type mismatch (scan-driven stock) — Ram
+**Status:** Done (migration written; awaits `supabase db push`)
+**What:** Root cause of "scanned barcodes don't count toward stock, scanned-at/device blank,
+Stock page empty": migration 40's `public.scan_receive` calls `app.post_ledger(..., p_ref_type := v_txn_type)`
+where `v_txn_type` is `stock_txn_type` but `post_ledger.p_ref_type` is `doc_ref_type`. No matching
+overload → "function app.post_ledger(... p_ref_type => stock_txn_type ...) does not exist" → every
+scan fails (no ledger, no barcode_scans row, status update rolls back). Because
+`v_stock_balances_by_batch` resolves each barcode's office from `barcode_scans` and drops rows with
+null office, a barcode that was flipped without a scan record is excluded from stock — which is why
+the mobile's direct status PATCH showed "In stock" in batch views but 0 on the Stock page/Dashboard.
+**How:** New migration `43_fix_scan_receive_ref_type.sql` re-creates `scan_receive` identical to 40
+but casts `p_ref_type := v_txn_type::text::public.doc_ref_type` (both enums share INWARD/OUTWARD
+labels). This fixes the desktop batch scan-to-receive AND lets the mobile use `scan_receive`.
+**Apply:** `npx supabase db push` (project already linked; migration list showed local=remote).
+**Coordinated mobile change (barcode app):** `recordInward`/`recordOutward` now call the `scan_receive`
+RPC (was a direct status PATCH), so a phone scan writes the barcode_scans row (office/device/when) and
+posts the ledger — counting the unit in stock. Also added desktop "Status Changed" column earlier.
+**Files:** supabase/migrations/20260801120000_43_fix_scan_receive_ref_type.sql

@@ -13,6 +13,9 @@ export interface BatchBarcodeRow {
   created_at: string
   /** When the physical unit was scanned in. Null while still GENERATED. */
   scanned_at: string | null
+  /** When the barcode row last changed — used as the status-change time for status
+   * updates that don't go through a receive scan (e.g. the mobile app flips it directly). */
+  updated_at: string | null
   /** Full name of the user who scanned it (→ "Performed By"). */
   scanned_by_name: string | null
   device_source: ScanSource | null
@@ -49,6 +52,20 @@ export function useBatchBarcodes(productId?: string | null, batchCode?: string |
 
       if (error) throw error
 
+      // The receive-scan view has no updated_at, but a direct status change (e.g. from the
+      // mobile app) stamps product_barcodes.updated_at. Fetch it so the UI can show when
+      // each barcode's status last changed even without a receive scan.
+      const ids = (data ?? []).map((r) => r.id).filter((id): id is string => !!id)
+      const updatedAtById = new Map<string, string | null>()
+      if (ids.length > 0) {
+        const { data: updatedRows, error: updatedError } = await supabase
+          .from('product_barcodes')
+          .select('id, updated_at')
+          .in('id', ids)
+        if (updatedError) throw updatedError
+        for (const r of updatedRows ?? []) updatedAtById.set(r.id, r.updated_at ?? null)
+      }
+
       return (data ?? []).map((row) => ({
         id: row.id ?? '',
         code: row.code ?? '',
@@ -56,6 +73,7 @@ export function useBatchBarcodes(productId?: string | null, batchCode?: string |
         status: (row.status ?? 'GENERATED') as BarcodeStatus,
         created_at: row.created_at ?? '',
         scanned_at: row.scanned_at,
+        updated_at: row.id ? updatedAtById.get(row.id) ?? null : null,
         scanned_by_name: row.scanned_by_name,
         device_source: row.device_source as ScanSource | null
       })) as BatchBarcodeRow[]

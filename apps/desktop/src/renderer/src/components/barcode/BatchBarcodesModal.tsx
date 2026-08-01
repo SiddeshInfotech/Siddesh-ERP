@@ -262,6 +262,15 @@ export function BatchBarcodesModal({ productId, productName, batchCode, onClose 
                   header: 'Scanned At',
                   cell: (row) => (row.scanned_at ? new Date(row.scanned_at).toLocaleString() : '—')
                 },
+                {
+                  header: 'Status Changed',
+                  cell: (row) => {
+                    // Prefer the receive-scan time; fall back to the row's last-updated time,
+                    // which is when a direct status change (e.g. from the phone) happened.
+                    const at = row.scanned_at ?? row.updated_at
+                    return at ? new Date(at).toLocaleString() : '—'
+                  }
+                },
                 { header: 'Performed By', cell: (row) => row.scanned_by_name ?? '—' },
                 { header: 'Device', cell: (row) => row.device_source ?? '—' },
                 { header: 'Symbology', cell: (row) => row.symbology },
