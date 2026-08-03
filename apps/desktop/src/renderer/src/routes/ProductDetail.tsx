@@ -1,10 +1,10 @@
-import { ChevronRight, ChevronDown, Pencil, PowerOff, Power, Package, ArrowDownToLine, ArrowUpFromLine, Ban, Scan, User, MapPin } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { ChevronRight, ChevronDown, Pencil, PowerOff, Power, Package, ArrowDownToLine, ArrowUpFromLine, Ban, Scan, User, MapPin, Search } from 'lucide-react'
+import { useState, useMemo, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { LabelPrintPanel } from '@/components/products/LabelPrintPanel'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader } from '@/components/ui/Card'
+import { Select } from '@/components/ui/Select'
 import { SpinnerPane } from '@/components/ui/Spinner'
 import { Timeline } from '@/components/ui/Timeline'
 import { useProduct } from '@/hooks/useProduct'
@@ -134,10 +134,20 @@ function DetailRow({ label, children }: { label: string; children: ReactNode }) 
   )
 }
 
+const BARCODE_STATUS_OPTIONS = [
+  { value: 'ALL', label: 'All Statuses' },
+  { value: 'GENERATED', label: 'Generated' },
+  { value: 'INWARDED', label: 'Inwarded' },
+  { value: 'OUTWARDED', label: 'Outwarded' },
+  { value: 'MISSING', label: 'Missing' }
+]
+
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [expandedBarcodeId, setExpandedBarcodeId] = useState<string | null>(null)
+  const [barcodeSearch, setBarcodeSearch] = useState('')
+  const [barcodeStatusFilter, setBarcodeStatusFilter] = useState('ALL')
 
   const { data: product, isPending, error, refetch } = useProduct(id)
   const stock = useProductStock(id)
@@ -189,6 +199,30 @@ export function ProductDetail() {
 
   const isLowStock = (stock.data?.qtyAvailable ?? 0) <= product.minStock
   const aliases = product.barcodes.filter((barcode) => !barcode.isPrimary)
+
+  const filteredBarcodes = useMemo(() => {
+    if (!product) return []
+    const term = barcodeSearch.trim().toLowerCase()
+    
+    return product.barcodes.filter((barcode) => {
+      if (term && !barcode.code.toLowerCase().includes(term)) {
+        return false
+      }
+      
+      if (barcodeStatusFilter !== 'ALL') {
+        if (barcodeStatusFilter === 'MISSING') {
+          if (!['VOID', 'DAMAGED', 'CANCELLED'].includes(barcode.status)) return false
+        } else if (barcodeStatusFilter === 'INWARDED') {
+          if (!['INWARDED', 'IN_STOCK'].includes(barcode.status)) return false
+        } else if (barcodeStatusFilter === 'OUTWARDED') {
+          if (!['OUTWARDED', 'OUTWARD'].includes(barcode.status)) return false
+        } else if (barcodeStatusFilter === 'GENERATED') {
+          if (barcode.status !== 'GENERATED') return false
+        }
+      }
+      return true
+    })
+  }, [product, barcodeSearch, barcodeStatusFilter])
 
   return (
     <div className="flex flex-col gap-gutter">
@@ -242,10 +276,8 @@ export function ProductDetail() {
         <Alert tone="error">{toUserMessage(setActive.error)}</Alert>
       )}
 
-      <div className="grid grid-cols-3 gap-gutter">
-        <div className="col-span-2 flex flex-col gap-gutter">
-          <Card>
-            <CardHeader title="Stock" />
+      <Card>
+        <CardHeader title="Stock" />
             <div className="flex items-end gap-8 p-5">
               <div>
                 <p className="text-label-caps uppercase text-on-surface-variant">Available</p>
@@ -306,73 +338,118 @@ export function ProductDetail() {
 
           <Card>
             <CardHeader title="Barcodes" />
-            <div className="flex flex-col gap-3 p-5">
-              {product.barcodes.map((barcode) => (
-                <div
-                  className="rounded-xl border border-border overflow-hidden bg-surface-container-lowest/20"
-                  key={barcode.id}
-                >
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between px-4 py-3 hover:bg-surface-container-lowest/60 transition-colors text-left"
-                    onClick={() => setExpandedBarcodeId(expandedBarcodeId === barcode.id ? null : barcode.id)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <span className="font-mono text-mono-id text-on-surface font-semibold">{barcode.code}</span>
-                      <span className="text-body-sm text-on-surface-variant/60 hidden sm:inline">
-                        {barcode.isPrimary ? 'Primary Code' : "Manufacturer's Code"}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      {/* Status Badge */}
-                      <span className={cn(
-                        'text-label-sm font-semibold rounded-full px-2.5 py-0.5 border capitalize',
-                        barcode.status === 'IN_STOCK' && 'text-success bg-success/10 border-success/20',
-                        barcode.status === 'OUTWARD' && 'text-amber-600 bg-amber-500/10 border-amber-500/20',
-                        barcode.status === 'VOID' && 'text-error bg-error/10 border-error/20'
-                      )}>
-                        {barcode.status === 'IN_STOCK' ? 'In Stock' : barcode.status === 'OUTWARD' ? 'Dispatched' : barcode.status.toLowerCase().replace('_', ' ')}
-                      </span>
-
-                      <ChevronDown
-                        className={cn(
-                          'size-4 text-outline transition-transform duration-200',
-                          expandedBarcodeId === barcode.id && 'rotate-180'
-                        )}
-                        strokeWidth={2}
-                      />
-                    </div>
-                  </button>
-
-                  {expandedBarcodeId === barcode.id && (
-                    <div className="border-t border-border/60 bg-surface-container-lowest/40 p-4">
-                      <BarcodeTimeline barcodeId={barcode.id} />
-                    </div>
+            <div className="flex items-center gap-3 border-b border-border p-4 bg-surface-container-lowest/30">
+              <div className="relative flex-1">
+                <Search
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-outline"
+                  strokeWidth={1.5}
+                />
+                <input
+                  className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-4 text-body-sm text-on-surface transition-all placeholder:text-outline focus:border-primary-container"
+                  onChange={(e) => setBarcodeSearch(e.target.value)}
+                  placeholder="Search by barcode ID..."
+                  type="search"
+                  value={barcodeSearch}
+                />
+              </div>
+              <Select
+                containerClassName="w-40"
+                onChange={setBarcodeStatusFilter}
+                options={BARCODE_STATUS_OPTIONS}
+                value={barcodeStatusFilter}
+              />
+            </div>
+            <div className="flex flex-col lg:flex-row gap-6 p-5 items-start">
+              {/* Left Column: History/Timeline */}
+              <div className="w-full lg:w-[350px] xl:w-[400px] flex-shrink-0 bg-surface-container-lowest/30 rounded-xl border border-border p-5 max-h-[600px] overflow-y-auto custom-scrollbar">
+                <div className="flex items-center justify-between mb-5 pb-3 border-b border-border/60">
+                  <h3 className="text-title-md font-semibold text-on-surface">
+                    {expandedBarcodeId ? 'Barcode History' : 'Product History'}
+                  </h3>
+                  {expandedBarcodeId && (
+                    <button 
+                      onClick={() => setExpandedBarcodeId(null)}
+                      className="text-label-sm text-primary hover:text-primary/80 transition-colors"
+                    >
+                      View All
+                    </button>
                   )}
                 </div>
-              ))}
-              {aliases.length === 0 ? (
-                <p className="text-body-sm text-on-surface-variant/60 mt-1 pl-1">
-                  Scanning the manufacturer&apos;s own barcode will not find this product. Edit it
-                  to add that code.
-                </p>
-              ) : null}
+                
+                {expandedBarcodeId ? (
+                  <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-md bg-surface border border-border px-3 py-1.5 shadow-sm">
+                      <Scan className="size-3.5 text-outline" />
+                      <span className="text-label-sm font-mono text-on-surface font-semibold">
+                        {product.barcodes.find(b => b.id === expandedBarcodeId)?.code}
+                      </span>
+                    </div>
+                    <div className="pl-1">
+                      <BarcodeTimeline barcodeId={expandedBarcodeId} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                    <Timeline productId={product.id} />
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Barcodes Grid */}
+              <div className="flex-1 w-full min-w-0">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                  {filteredBarcodes.map((barcode) => (
+                    <button
+                      key={barcode.id}
+                      type="button"
+                      className={cn(
+                        "flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-colors overflow-hidden",
+                        expandedBarcodeId === barcode.id 
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/20" 
+                          : "border-border bg-surface-container-lowest/20 hover:bg-surface-container-lowest/60"
+                      )}
+                      onClick={() => setExpandedBarcodeId(expandedBarcodeId === barcode.id ? null : barcode.id)}
+                    >
+                      <span 
+                        className="font-mono text-label-md text-on-surface font-semibold mb-1.5 w-full truncate" 
+                        title={barcode.code}
+                      >
+                        {barcode.code}
+                      </span>
+                      <span className={cn(
+                        'text-[10px] font-bold rounded-full px-2 py-0.5 border uppercase tracking-wider',
+                        ['IN_STOCK', 'INWARDED', 'AVAILABLE', 'ALLOCATED'].includes(barcode.status) && 'text-success bg-success/10 border-success/20',
+                        ['OUTWARD', 'OUTWARDED'].includes(barcode.status) && 'text-amber-600 bg-amber-500/10 border-amber-500/20',
+                        ['VOID', 'DAMAGED', 'CANCELLED'].includes(barcode.status) && 'text-error bg-error/10 border-error/20',
+                        barcode.status === 'GENERATED' && 'text-primary bg-primary/10 border-primary/20'
+                      )}>
+                        {barcode.status === 'IN_STOCK' ? 'IN STOCK' : barcode.status === 'OUTWARD' ? 'DISPATCHED' : barcode.status.replace('_', ' ')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {filteredBarcodes.length === 0 && (
+                  <div className="py-12 flex flex-col items-center justify-center text-center">
+                    <div className="size-12 rounded-full bg-surface-container flex items-center justify-center mb-3">
+                      <Scan className="size-6 text-on-surface-variant/40" />
+                    </div>
+                    <p className="text-body-md font-medium text-on-surface">No barcodes found</p>
+                    <p className="text-body-sm text-on-surface-variant/70 mt-1">
+                      No barcodes match your search or filter criteria.
+                    </p>
+                  </div>
+                )}
+                {aliases.length === 0 ? (
+                  <Alert tone="info" className="mt-6">
+                    Scanning the manufacturer's own barcode will not find this product. Edit it to add that code.
+                  </Alert>
+                ) : null}
+              </div>
             </div>
           </Card>
-        </div>
 
-        <Card className="h-fit">
-          <CardHeader title="Label" />
-          <LabelPrintPanel code={product.skuBarcode} productName={product.name} />
-        </Card>
-      </div>
-
-      {/* Timeline Section */}
-      <Card className="mt-6 p-6">
-        <h2 className="text-h2 text-on-surface mb-6">Product Timeline</h2>
-        <Timeline productId={product.id} />
-      </Card>
     </div>
   )
 }
