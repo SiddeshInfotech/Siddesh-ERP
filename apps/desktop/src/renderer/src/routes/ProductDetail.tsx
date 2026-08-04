@@ -153,6 +153,30 @@ export function ProductDetail() {
   const stock = useProductStock(id)
   const setActive = useSetProductActive()
 
+  const filteredBarcodes = useMemo(() => {
+    if (!product) return []
+    const term = barcodeSearch.trim().toLowerCase()
+    
+    return product.barcodes.filter((barcode) => {
+      if (term && !barcode.code.toLowerCase().includes(term)) {
+        return false
+      }
+      
+      if (barcodeStatusFilter !== 'ALL') {
+        if (barcodeStatusFilter === 'MISSING') {
+          if (!['VOID', 'DAMAGED', 'CANCELLED'].includes(barcode.status)) return false
+        } else if (barcodeStatusFilter === 'INWARDED') {
+          if (!['INWARDED', 'IN_STOCK'].includes(barcode.status)) return false
+        } else if (barcodeStatusFilter === 'OUTWARDED') {
+          if (!['OUTWARDED', 'OUTWARD'].includes(barcode.status)) return false
+        } else if (barcodeStatusFilter === 'GENERATED') {
+          if (barcode.status !== 'GENERATED') return false
+        }
+      }
+      return true
+    })
+  }, [product, barcodeSearch, barcodeStatusFilter])
+
   if (isPending) {
     return (
       <Card>
@@ -199,30 +223,6 @@ export function ProductDetail() {
 
   const isLowStock = (stock.data?.qtyAvailable ?? 0) <= product.minStock
   const aliases = product.barcodes.filter((barcode) => !barcode.isPrimary)
-
-  const filteredBarcodes = useMemo(() => {
-    if (!product) return []
-    const term = barcodeSearch.trim().toLowerCase()
-    
-    return product.barcodes.filter((barcode) => {
-      if (term && !barcode.code.toLowerCase().includes(term)) {
-        return false
-      }
-      
-      if (barcodeStatusFilter !== 'ALL') {
-        if (barcodeStatusFilter === 'MISSING') {
-          if (!['VOID', 'DAMAGED', 'CANCELLED'].includes(barcode.status)) return false
-        } else if (barcodeStatusFilter === 'INWARDED') {
-          if (!['INWARDED', 'IN_STOCK'].includes(barcode.status)) return false
-        } else if (barcodeStatusFilter === 'OUTWARDED') {
-          if (!['OUTWARDED', 'OUTWARD'].includes(barcode.status)) return false
-        } else if (barcodeStatusFilter === 'GENERATED') {
-          if (barcode.status !== 'GENERATED') return false
-        }
-      }
-      return true
-    })
-  }, [product, barcodeSearch, barcodeStatusFilter])
 
   return (
     <div className="flex flex-col gap-gutter">
