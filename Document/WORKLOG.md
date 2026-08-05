@@ -613,3 +613,41 @@ labels). This fixes the desktop batch scan-to-receive AND lets the mobile use `s
 RPC (was a direct status PATCH), so a phone scan writes the barcode_scans row (office/device/when) and
 posts the ledger — counting the unit in stock. Also added desktop "Status Changed" column earlier.
 **Files:** supabase/migrations/20260801120000_43_fix_scan_receive_ref_type.sql
+
+## 05/08/2026 12:00 — Office list → Dhule region (data-only migration) — Ram
+**Status:** Done (migration written; awaits `supabase db push`)
+**What:** Client picked the Dhule-region office set (Dhule Main, Dhule Branch, Jalgaon, Pune),
+replacing the original Pune/Nashik/Mumbai seed. Confirmed first that the multi-office feature is
+already fully built in the DB — offices table + office_id FKs on stock_ledger/stock_balances/documents,
+RLS scoping via app.can_access_office(), Admin (is_admin) sees all offices, general users see only
+their own. So this is a DATA change, not a schema change: no new tables, no new columns.
+**How:** New migration 44 adds DHULE_MAIN / DHULE_BR / JALGAON (guarded by NOT EXISTS on live code),
+renames Pune "Head Office" → "Pune Office" (Dhule Main is the head/admin office now), and soft-deletes
+Nashik & Mumbai (deleted_at + is_active=false). Soft delete is safe here: opening stock was seeded to
+PUNE only, so nothing references Nashik/Mumbai; offices_select RLS hides deleted rows and the
+uq_offices_code_live partial index frees their codes. Reversible by clearing deleted_at.
+**Apply:** `npx supabase db push` (not run here — shared DB, awaiting confirmation).
+**Left to do (UI, no schema work):** (1) show office_name column in Products/Stock/Inward/Outward only
+when is_admin; (2) Settings → Office Management (Admin) over offices table; (3) Settings → User
+Management (Admin) creating auth user with raw_user_meta_data {full_name, role, office_id}.
+**Files:** supabase/migrations/20260805120000_44_offices_dhule_region.sql
+
+## 05/08/2026 13:10 — Admin UI: role/office profile, Office & User Management, admin Stock column — Ram
+**Status:** Done — new/edited files typecheck clean; could not run Electron UI here (needs preload + Supabase login)
+**What:** Built the Admin-side multi-office UI on top of the already-built DB (RLS does the scoping;
+no schema change). (1) `useProfile` hook — reads role + office from public.profiles (NOT user_metadata,
+which is client-settable and untrusted); exposes `isAdmin`. (2) `useOffices` — offices list + create/
+update/setActive mutations (plain table writes; offices_write RLS gates them to Admin) + `useTeam` read.
+(3) Settings: replaced the hardcoded "Head Office (Pune)" / role cards with real profile data; renders
+OfficeManagement + UserManagement only when isAdmin. (4) OfficeManagement component — list + add/edit
+(code locked after create) + activate/deactivate (soft, never delete). (5) UserManagement — read-only
+team list with an honest notice that creating a login needs the server-side admin key (rule 0.1), not
+the client. (6) Stock: added an "Office Location" column shown only for Admin (general users are already
+RLS-scoped to one office); dropped the now-duplicate inline office label for admins.
+**Notes:** Office column pattern (`...(isAdmin ? [col] : [])`) is ready to copy to Inward/Outward/Products
+if wanted — Stock done as the reference. Pre-existing unrelated typecheck error in ProductDetail.tsx:356
+(a Select missing its `label` prop) exists on clean HEAD; left untouched (out of scope) and flagged.
+**Files:** apps/desktop/src/renderer/src/hooks/useProfile.ts, apps/desktop/src/renderer/src/hooks/useOffices.ts,
+apps/desktop/src/renderer/src/components/settings/OfficeManagement.tsx,
+apps/desktop/src/renderer/src/components/settings/UserManagement.tsx,
+apps/desktop/src/renderer/src/routes/Settings.tsx, apps/desktop/src/renderer/src/routes/Stock.tsx

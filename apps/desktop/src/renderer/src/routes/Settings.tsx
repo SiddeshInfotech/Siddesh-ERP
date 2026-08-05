@@ -13,14 +13,24 @@ import {
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { OfficeManagement } from '@/components/settings/OfficeManagement'
+import { UserManagement } from '@/components/settings/UserManagement'
 import { useAuth } from '@/hooks/useAuth'
 import { useConfirm } from '@/hooks/useConfirm'
 import { useAlert } from '@/hooks/useAlert'
+import { useProfile } from '@/hooks/useProfile'
 import { useDeleteAllInventoryData } from '@/hooks/useSystemMutations'
 import { cn } from '@/lib/cn'
 
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Admin',
+  STORE_MANAGER: 'Store Manager',
+  SALES_EXECUTIVE: 'Sales Executive'
+}
+
 export function Settings() {
   const { session, user } = useAuth()
+  const { profile, isAdmin } = useProfile()
   const confirm = useConfirm()
   const showAlert = useAlert()
   const wipeMutation = useDeleteAllInventoryData()
@@ -88,7 +98,7 @@ export function Settings() {
               {user?.email || session?.user?.email || 'Administrator'}
             </div>
             <div className="text-caption font-mono text-on-surface-variant/80 mt-0.5">
-              Role: {(user?.user_metadata as any)?.role || 'ADMIN'}
+              Role: {profile ? (ROLE_LABELS[profile.role] ?? profile.role) : '—'}
             </div>
           </div>
 
@@ -98,10 +108,10 @@ export function Settings() {
               <span>Active Office Location</span>
             </div>
             <div className="text-body-md font-bold text-on-surface truncate">
-              {(user?.user_metadata as any)?.office || 'Head Office (Pune)'}
+              {isAdmin ? 'All Offices' : (profile?.officeName ?? '—')}
             </div>
             <div className="text-caption font-mono text-on-surface-variant/80 mt-0.5">
-              Code: {(user?.user_metadata as any)?.office_code || 'PUNE-HQ'}
+              Code: {isAdmin ? 'ADMIN' : (profile?.officeCode ?? '—')}
             </div>
           </div>
 
@@ -120,6 +130,15 @@ export function Settings() {
           </div>
         </div>
       </Card>
+
+      {/* Admin-only: Office & User Management. RLS still gates every write, so this is a
+          UI convenience, not the security boundary. */}
+      {isAdmin ? (
+        <>
+          <OfficeManagement />
+          <UserManagement />
+        </>
+      ) : null}
 
       {/* Danger Zone Card */}
       <Card className="border-error/50 bg-error/5 p-6 relative overflow-hidden shadow-md">

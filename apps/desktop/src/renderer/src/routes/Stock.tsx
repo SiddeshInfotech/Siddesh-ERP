@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { DataTable, type Column } from '@/components/ui/DataTable'
 import { Select, type SelectOption } from '@/components/ui/Select'
 import { useAuth } from '@/hooks/useAuth'
+import { useProfile } from '@/hooks/useProfile'
 import { useExportReport } from '@/hooks/useExportReport'
 import { useCurrentStock, type StockRow } from '@/hooks/useReports'
 import { useDeleteProduct } from '@/hooks/useProductMutations'
@@ -57,6 +58,7 @@ export function Stock() {
   const { data, isPending, error, refetch } = useCurrentStock()
   const { exportExcel, exportPdf, isExporting, error: exportError } = useExportReport()
   const { session } = useAuth()
+  const { isAdmin } = useProfile()
   const deleteProduct = useDeleteProduct()
   const confirm = useConfirm()
   const showAlert = useAlert()
@@ -126,11 +128,26 @@ export function Stock() {
           <span className="font-semibold text-on-surface">{row.productName}</span>
           <span className="text-body-sm text-on-surface-variant/60">
             {row.categoryName ?? '—'}
-            {row.officeName === null ? '' : ` · ${row.officeName}`}
+            {/* Admin gets a dedicated Office column instead of this inline label. */}
+            {isAdmin || row.officeName === null ? '' : ` · ${row.officeName}`}
           </span>
         </div>
       )
     },
+    // "One additional column for Admin users" (client chat): office ownership per row.
+    // General users are already scoped to one office by RLS, so it would be noise for them.
+    ...(isAdmin
+      ? [
+          {
+            id: 'office',
+            header: 'Office Location',
+            width: 'w-40',
+            cell: (row: StockRow) => (
+              <span className="text-on-surface-variant">{row.officeName ?? '—'}</span>
+            )
+          } satisfies Column<StockRow>
+        ]
+      : []),
     {
       id: 'opening',
       header: 'Opening',
