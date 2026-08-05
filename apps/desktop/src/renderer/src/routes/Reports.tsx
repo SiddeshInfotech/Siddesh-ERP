@@ -181,22 +181,22 @@ export function Reports() {
       : `${range.from === '' ? 'Start' : formatDate(range.from)} – ${range.to === '' ? 'Today' : formatDate(range.to)}`
 
   const inwardColumns: Column<InwardRow>[] = [
-    { id: 'date', header: 'Received', width: 'w-40', cell: (r) => <span className="text-on-surface-variant">{formatDateTime(r.receivedAt)}</span> },
-    { id: 'no', header: 'Inward no', width: 'w-28', cell: (r) => <span className="font-mono text-mono-id text-on-surface-variant">{r.inwardNo}</span> },
-    { id: 'supplier', header: 'Supplier', cell: (r) => <span className="text-on-surface">{r.supplierName ?? '—'}</span> },
+    { id: 'date', header: 'Received', width: 'w-48', cell: (r) => <span className="text-on-surface-variant whitespace-nowrap">{formatDateTime(r.receivedAt)}</span> },
+    { id: 'no', header: 'Inward no', width: 'w-32', cell: (r) => <span className="font-mono text-mono-id text-on-surface-variant whitespace-nowrap">{r.inwardNo}</span> },
+    { id: 'supplier', header: 'Supplier', cell: (r) => <span className="text-on-surface whitespace-nowrap">{r.supplierName ?? '—'}</span> },
     {
       id: 'product',
       header: 'Product',
       cell: (r) => (
-        <div className="flex flex-col">
+        <div className="flex flex-col whitespace-nowrap">
           <span className="font-semibold text-on-surface">{r.productName}</span>
-          <span className="font-mono text-body-sm text-on-surface-variant/60">{r.skuBarcode}</span>
+          <span className="font-mono text-[11px] text-on-surface-variant/60">{r.skuBarcode}</span>
         </div>
       )
     },
-    { id: 'qty', header: 'Qty', align: 'right', width: 'w-20', cell: (r) => <span className="font-semibold tabular-nums text-success">+{r.quantity}</span> },
-    { id: 'invoice', header: 'Invoice', width: 'w-32', cell: (r) => <span className="text-on-surface-variant">{r.invoiceNo ?? '—'}</span> },
-    { id: 'brought', header: 'Brought by', width: 'w-32', cell: (r) => <span className="text-on-surface-variant">{r.broughtBy ?? '—'}</span> },
+    { id: 'qty', header: 'Qty', align: 'right', width: 'w-20', cell: (r) => <span className="font-semibold tabular-nums text-success whitespace-nowrap">+{r.quantity}</span> },
+    { id: 'invoice', header: 'Invoice', width: 'w-32', cell: (r) => <span className="text-on-surface-variant whitespace-nowrap">{r.invoiceNo ?? '—'}</span> },
+    { id: 'brought', header: 'Brought by', width: 'w-32', cell: (r) => <span className="text-on-surface-variant whitespace-nowrap">{r.broughtBy ?? '—'}</span> },
     {
       id: 'actions',
       header: 'Actions',
@@ -219,22 +219,22 @@ export function Reports() {
   ]
 
   const outwardColumns: Column<OutwardRow>[] = [
-    { id: 'date', header: 'Issued', width: 'w-40', cell: (r) => <span className="text-on-surface-variant">{formatDateTime(r.issuedAt)}</span> },
-    { id: 'no', header: 'Outward no', width: 'w-28', cell: (r) => <span className="font-mono text-mono-id text-on-surface-variant">{r.outwardNo}</span> },
-    { id: 'type', header: 'Type', width: 'w-28', cell: (r) => <span className="text-body-sm text-on-surface-variant">{r.outwardType}</span> },
-    { id: 'party', header: 'Party', cell: (r) => <span className="text-on-surface">{r.partyName ?? '—'}</span> },
+    { id: 'date', header: 'Issued', width: 'w-48', cell: (r) => <span className="text-on-surface-variant whitespace-nowrap">{formatDateTime(r.issuedAt)}</span> },
+    { id: 'no', header: 'Outward no', width: 'w-32', cell: (r) => <span className="font-mono text-mono-id text-on-surface-variant whitespace-nowrap">{r.outwardNo}</span> },
+    { id: 'type', header: 'Type', width: 'w-28', cell: (r) => <span className="text-body-sm text-on-surface-variant whitespace-nowrap">{r.outwardType}</span> },
+    { id: 'party', header: 'Party', cell: (r) => <span className="text-on-surface whitespace-nowrap">{r.partyName ?? '—'}</span> },
     {
       id: 'product',
       header: 'Product',
       cell: (r) => (
-        <div className="flex flex-col">
+        <div className="flex flex-col whitespace-nowrap">
           <span className="font-semibold text-on-surface">{r.productName}</span>
-          <span className="font-mono text-body-sm text-on-surface-variant/60">{r.skuBarcode}</span>
+          <span className="font-mono text-[11px] text-on-surface-variant/60">{r.skuBarcode}</span>
         </div>
       )
     },
-    { id: 'qty', header: 'Qty', align: 'right', width: 'w-20', cell: (r) => <span className="font-semibold tabular-nums text-on-surface">−{r.quantity}</span> },
-    { id: 'invoice', header: 'Invoice', width: 'w-32', cell: (r) => <span className="text-on-surface-variant">{r.invoiceNo ?? '—'}</span> },
+    { id: 'qty', header: 'Qty', align: 'right', width: 'w-20', cell: (r) => <span className="font-semibold tabular-nums text-on-surface whitespace-nowrap">−{r.quantity}</span> },
+    { id: 'invoice', header: 'Invoice', width: 'w-32', cell: (r) => <span className="text-on-surface-variant whitespace-nowrap">{r.invoiceNo ?? '—'}</span> },
     {
       id: 'actions',
       header: 'Actions',
@@ -257,8 +257,8 @@ export function Reports() {
   ]
 
   const ledgerColumns: Column<LedgerRow>[] = [
-    { id: 'date', header: 'Date', width: 'w-40', cell: (r) => <span className="text-on-surface-variant">{formatDateTime(r.occurredAt)}</span> },
-    { id: 'type', header: 'Type', width: 'w-32', cell: (r) => <span className="text-body-sm text-on-surface-variant">{r.txnType}</span> },
+    { id: 'date', header: 'Date', width: 'w-48', cell: (r) => <span className="text-on-surface-variant whitespace-nowrap">{formatDateTime(r.occurredAt)}</span> },
+    { id: 'type', header: 'Type', width: 'w-32', cell: (r) => <span className="text-body-sm text-on-surface-variant whitespace-nowrap">{r.txnType}</span> },
     {
       id: 'delta',
       header: 'Change',
@@ -270,9 +270,9 @@ export function Reports() {
         </span>
       )
     },
-    { id: 'balance', header: 'Balance after', align: 'right', width: 'w-28', cell: (r) => <span className="font-semibold tabular-nums text-on-surface">{r.balanceAfter}</span> },
-    { id: 'party', header: 'Party', cell: (r) => <span className="text-on-surface-variant">{r.partyName ?? '—'}</span> },
-    { id: 'by', header: 'By', width: 'w-32', cell: (r) => <span className="text-on-surface-variant/70">{r.createdByName ?? '—'}</span> },
+    { id: 'balance', header: 'Balance after', align: 'right', width: 'w-28', cell: (r) => <span className="font-semibold tabular-nums text-on-surface whitespace-nowrap">{r.balanceAfter}</span> },
+    { id: 'party', header: 'Party', cell: (r) => <span className="text-on-surface-variant whitespace-nowrap">{r.partyName ?? '—'}</span> },
+    { id: 'by', header: 'By', width: 'w-32', cell: (r) => <span className="text-on-surface-variant/70 whitespace-nowrap">{r.createdByName ?? '—'}</span> },
     {
       id: 'actions',
       header: 'Actions',

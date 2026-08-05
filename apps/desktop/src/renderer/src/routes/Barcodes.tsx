@@ -14,7 +14,9 @@ import {
   Activity,
   AlertCircle,
   Inbox,
-  Trash2
+  Trash2,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 import { BarcodeCanvasA4, type BarcodeLabelData } from '@/components/barcode/BarcodeCanvasA4'
 import { Alert } from '@/components/ui/Alert'
@@ -178,15 +180,15 @@ function BatchBarcodesSubTable({ productId, batchCode }: { productId: string; ba
       </div>
       <div className="max-h-80 overflow-y-auto">
         <table className="w-full border-collapse text-left text-body-sm">
-          <thead className="bg-on-surface/[0.02] sticky top-0 z-10 hairline-b text-label-caps uppercase text-on-surface-variant/70">
+          <thead className="bg-surface sticky top-0 z-10 hairline-b text-label-caps uppercase text-on-surface-variant/70">
             <tr>
-              <th className="px-4 py-2 font-semibold w-12 text-center">#</th>
-              <th className="px-4 py-2 font-semibold">Barcode Number</th>
-              <th className="px-4 py-2 font-semibold">Status</th>
-              <th className="px-4 py-2 font-semibold">Scanned At</th>
-              <th className="px-4 py-2 font-semibold">Performed By</th>
-              <th className="px-4 py-2 font-semibold">Device</th>
-              <th className="px-4 py-2 font-semibold text-right">Actions</th>
+              <th className="px-4 py-2 font-semibold w-12 text-center whitespace-nowrap">#</th>
+              <th className="px-4 py-2 font-semibold whitespace-nowrap">Barcode Number</th>
+              <th className="px-4 py-2 font-semibold whitespace-nowrap">Status</th>
+              <th className="px-4 py-2 font-semibold whitespace-nowrap">Scanned At</th>
+              <th className="px-4 py-2 font-semibold whitespace-nowrap">Performed By</th>
+              <th className="px-4 py-2 font-semibold whitespace-nowrap">Device</th>
+              <th className="px-4 py-2 font-semibold text-right whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
@@ -394,7 +396,7 @@ export function Barcodes() {
       <Card>
         {/* Hairline-b Filter Strip */}
         <div className="flex flex-wrap items-end gap-3 hairline-b p-4">
-          <div className="flex flex-1 min-w-[240px] flex-col">
+          <div className="flex flex-1 min-w-[240px] flex-col mb-1.5">
             <label
               className="mb-1.5 ml-1 block text-label-caps uppercase text-on-surface-variant"
               htmlFor="batch-search"
@@ -456,15 +458,15 @@ export function Barcodes() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-on-surface/[0.03]">
-                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70">Barcode Initial</th>
-                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70">Product</th>
-                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70">Batch Code</th>
-                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70">Category</th>
-                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70">Brand</th>
-                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70">Barcode Type</th>
-                  <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70">Batch Qty</th>
-                  <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70">In Stock</th>
-                  <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70">Actions</th>
+                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">Barcode Initial</th>
+                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">Product</th>
+                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">Batch Code</th>
+                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">Category</th>
+                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">Brand</th>
+                  <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">Barcode Type</th>
+                  <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">Batch Qty</th>
+                  <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">In Stock</th>
+                  <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -481,30 +483,30 @@ export function Barcodes() {
                         )}
                         onClick={() => setExpandedBatchId(isExpanded ? null : row.batchId)}
                       >
-                        <td className="px-4 text-table-cell font-mono font-semibold text-primary">
+                        <td className="px-4 text-table-cell font-mono font-semibold text-primary whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <Barcode className="size-4 text-primary shrink-0" />
                             <span>{row.firstBarcodeCode || '—'}</span>
                           </div>
                         </td>
-                        <td className="px-4 text-table-cell">
+                        <td className="px-4 text-table-cell whitespace-nowrap">
                           <div>
                             <div className="font-semibold text-on-surface text-body-sm">{row.productName}</div>
                             <div className="text-[11px] text-on-surface-variant/60">{row.skuBarcode || 'No SKU'}</div>
                           </div>
                         </td>
-                        <td className="px-4 text-table-cell font-mono text-body-sm font-medium text-on-surface">
+                        <td className="px-4 text-table-cell font-mono text-body-sm font-medium text-on-surface whitespace-nowrap">
                           {row.batchCode}
                         </td>
-                        <td className="px-4 text-table-cell">
+                        <td className="px-4 text-table-cell whitespace-nowrap">
                           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-surface-variant/40 text-on-surface-variant">
                             {row.categoryName || 'General'}
                           </span>
                         </td>
-                        <td className="px-4 text-table-cell text-body-sm text-on-surface-variant">
+                        <td className="px-4 text-table-cell text-body-sm text-on-surface-variant whitespace-nowrap">
                           {row.brandName || '—'}
                         </td>
-                        <td className="px-4 text-table-cell">
+                        <td className="px-4 text-table-cell whitespace-nowrap">
                           {!row.firstBarcodeCode ? (
                             <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-warning">
                               <AlertCircle className="size-3" /> Missing
@@ -519,12 +521,12 @@ export function Barcodes() {
                             </span>
                           )}
                         </td>
-                        <td className="px-4 text-table-cell text-right tabular-nums font-mono font-bold text-on-surface">
+                        <td className="px-4 text-table-cell text-right tabular-nums font-mono font-bold text-on-surface whitespace-nowrap">
                           {row.totalBarcodes}
                         </td>
                         {/* Received-only: a batch counts as stock only once its barcodes flip
                             GENERATED → IN_STOCK/INWARDED. A generated-but-not-received batch is 0. */}
-                        <td className="px-4 text-table-cell text-right">
+                        <td className="px-4 text-table-cell text-right whitespace-nowrap">
                           <div className="flex flex-col items-end leading-tight">
                             <span
                               className={cn(
@@ -534,40 +536,42 @@ export function Barcodes() {
                             >
                               {row.qtyInStock}
                             </span>
-                            <span className="font-sans text-[10px] text-on-surface-variant/60">
+                            <span className="font-sans text-[10px] text-on-surface-variant/60 whitespace-nowrap">
                               Gen {row.qtyGenerated}
                               {row.qtyOutward > 0 ? ` · Out ${row.qtyOutward}` : ''}
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 text-table-cell text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant={isExpanded ? 'primary' : 'secondary'}
-                              size="sm"
+                        <td className="px-4 text-table-cell text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-3">
+                            <button
+                              type="button"
                               onClick={() => setExpandedBatchId(isExpanded ? null : row.batchId)}
+                              title={isExpanded ? 'Hide Barcodes' : 'View Barcodes'}
+                              className={cn(
+                                "p-1 transition-colors",
+                                isExpanded ? "text-primary" : "text-on-surface-variant hover:text-primary"
+                              )}
                             >
-                              <span>{isExpanded ? 'Hide' : 'View Barcodes'}</span>
-                              {isExpanded ? <ChevronUp className="size-4 ml-1" /> : <ChevronDown className="size-4 ml-1" />}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                              {isExpanded ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => setPrintBatch(row)}
                               title="Print Batch Labels"
+                              className="p-1 transition-colors text-on-surface-variant hover:text-on-surface"
                             >
-                              <Printer className="size-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                              <Printer className="size-4.5" />
+                            </button>
+                            <button
+                              type="button"
                               disabled={deleteBatch.isPending}
                               onClick={() => handleDeleteBatch(row)}
-                              className="text-on-surface-variant hover:text-error hover:bg-error/10"
                               title="Delete Batch"
+                              className="p-1 transition-colors text-on-surface-variant hover:text-error disabled:opacity-50"
                             >
-                              <Trash2 className="size-4" />
-                            </Button>
+                              <Trash2 className="size-4.5" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -588,7 +592,7 @@ export function Barcodes() {
 
         {/* Table Paging Controls */}
         {!isPending && rows.length > 0 && (
-          <div className="flex items-center justify-between p-4 border-t border-border/40 text-body-sm text-on-surface-variant">
+          <div className="flex items-center justify-between px-4 py-2 border-t border-border/40 text-body-sm text-on-surface-variant">
             <span>
               Page {safePage + 1} of {pageCount}
             </span>

@@ -17,17 +17,14 @@ export function HistoryTab({ active, onClick, children }: HistoryTabProps) {
     <button
       aria-selected={active}
       className={cn(
-        'relative px-4 py-2.5 text-body-sm font-semibold transition-colors',
-        active ? 'text-primary' : 'text-on-surface-variant/70 hover:text-on-surface'
+        'relative px-4 py-1.5 rounded-full text-body-sm font-semibold transition-all',
+        active ? 'bg-primary-container/15 text-primary' : 'text-on-surface-variant/70 hover:bg-on-surface/5 hover:text-on-surface'
       )}
       onClick={onClick}
       role="tab"
       type="button"
     >
       {children}
-      {active ? (
-        <span aria-hidden="true" className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-primary" />
-      ) : null}
     </button>
   )
 }

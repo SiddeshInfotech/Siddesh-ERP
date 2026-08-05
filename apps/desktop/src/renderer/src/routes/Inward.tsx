@@ -314,7 +314,7 @@ export function Inward() {
     // The stock tab answers "how much and which batch"; the supplier tab answers
     // "who supplied it and how it arrived".
     const stockColumns: Column<InwardHistoryRow>[] = [
-      { header: 'Date', cell: (row) => new Date(row.received_at).toLocaleDateString() },
+      { header: 'Date', cell: (row) => <span className="whitespace-nowrap">{new Date(row.received_at).toLocaleDateString()}</span> },
       {
         header: 'Product',
         cell: (row) => (
@@ -332,19 +332,10 @@ export function Inward() {
       {
         header: 'Batch',
         cell: (row) =>
-          row.batch_code ? (
-            <button
-              className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline"
-              onClick={() =>
-                setBatchModalData({
-                  productId: row.product_id,
-                  productName: row.product_name,
-                  batchCode: row.batch_code!
-                })
-              }
-            >
-              {row.batch_code}
-            </button>
+          row.batch_id ? (
+            <div className="flex flex-col">
+              <span className="font-medium text-primary whitespace-nowrap">{row.batch_code}</span>
+            </div>
           ) : (
             '—'
           )
@@ -355,28 +346,28 @@ export function Inward() {
           if (row.total_barcodes > 0) {
             if (row.qty_in_stock === 0 && row.qty_outward === 0) {
               return (
-                <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant">
+                <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant whitespace-nowrap">
                   Generated
                 </span>
               )
             }
             if (row.qty_outward === row.total_barcodes) {
               return (
-                <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant">
+                <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant whitespace-nowrap">
                   Fully Outwarded
                 </span>
               )
             }
             if (row.qty_generated > 0) {
               return (
-                <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-body-sm font-medium text-warning-dark">
+                <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-body-sm font-medium text-warning-dark whitespace-nowrap">
                   Partially In Stock ({row.qty_in_stock}/{row.total_barcodes})
                 </span>
               )
             }
             if (row.qty_in_stock > 0 && row.qty_generated === 0) {
               return (
-                <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success">
+                <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success whitespace-nowrap">
                   In Stock
                 </span>
               )
@@ -384,20 +375,20 @@ export function Inward() {
           }
 
           return row.remaining_qty > 0 ? (
-            <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success">
+            <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success whitespace-nowrap">
               In Stock
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant">
+            <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant whitespace-nowrap">
               Fully Outwarded
             </span>
           )
         }
       },
-      { header: 'Quantity (on that batch)', align: 'right', cell: (row) => row.inward_qty },
-      { header: 'Remaining Quantity (on that batch)', align: 'right', cell: (row) => row.remaining_qty },
-      { header: 'Total Quantity (all batches)', align: 'right', cell: (row) => row.total_qty },
-      { header: 'Brought By', cell: (row) => orDash(row.brought_by) },
+      { header: 'Batch Qty', align: 'right', cell: (row) => row.inward_qty },
+      { header: 'Remaining Qty', align: 'right', cell: (row) => row.remaining_qty },
+      { header: 'Total Qty', align: 'right', cell: (row) => row.total_qty },
+      { header: 'Brought By', cell: (row) => <span className="whitespace-nowrap">{orDash(row.brought_by)}</span> },
       {
         header: 'Actions',
         align: 'right',
@@ -409,17 +400,17 @@ export function Inward() {
               void handleDelete(row)
             }}
             disabled={deleteInward.isPending}
-            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            className="p-1 transition-colors text-on-surface-variant hover:text-error disabled:opacity-50"
             title="Delete inward entry"
           >
-            <Trash2 aria-hidden="true" className="size-4" />
+            <Trash2 aria-hidden="true" className="size-4.5" />
           </button>
         )
       }
     ]
 
     const supplierColumns: Column<InwardHistoryRow>[] = [
-      { header: 'Date', cell: (row) => new Date(row.received_at).toLocaleDateString() },
+      { header: 'Date', cell: (row) => <span className="whitespace-nowrap">{new Date(row.received_at).toLocaleDateString()}</span> },
       {
         header: 'Product',
         cell: (row) => (
@@ -435,12 +426,12 @@ export function Inward() {
         )
       },
       { header: 'Supplier', cell: (row) => orDash(row.supplier_name) },
-      { header: 'Mobile', cell: (row) => orDash(row.supplier_mobile) },
-      { header: 'GST No', cell: (row) => orDash(row.supplier_gst) },
-      { header: 'Invoice No', cell: (row) => orDash(row.invoice_no) },
+      { header: 'Mobile', cell: (row) => <span className="whitespace-nowrap">{orDash(row.supplier_mobile)}</span> },
+      { header: 'GST No', cell: (row) => <span className="whitespace-nowrap">{orDash(row.supplier_gst)}</span> },
+      { header: 'Invoice No', cell: (row) => <span className="whitespace-nowrap">{orDash(row.invoice_no)}</span> },
       {
         header: 'Invoice Date',
-        cell: (row) => (row.invoice_date ? new Date(row.invoice_date).toLocaleDateString() : '—')
+        cell: (row) => <span className="whitespace-nowrap">{row.invoice_date ? new Date(row.invoice_date).toLocaleDateString() : '—'}</span>
       },
       { header: 'PO No', cell: (row) => orDash(row.purchase_order_no) },
       { header: 'Brought By', cell: (row) => orDash(row.brought_by) },
@@ -456,10 +447,10 @@ export function Inward() {
               void handleDelete(row)
             }}
             disabled={deleteInward.isPending}
-            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            className="p-1 transition-colors text-on-surface-variant hover:text-error disabled:opacity-50"
             title="Delete inward entry"
           >
-            <Trash2 aria-hidden="true" className="size-4" />
+            <Trash2 aria-hidden="true" className="size-4.5" />
           </button>
         )
       }

@@ -104,7 +104,7 @@ export function DataTable<Row>({
             {columns.map((column, colIdx) => (
               <th
                 className={cn(
-                  'px-4 py-2.5 text-label-caps uppercase text-on-surface-variant/70',
+                  'px-4 py-2.5 text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap',
                   column.align === 'right' ? 'text-right' : 'text-left',
                   column.width
                 )}
@@ -121,7 +121,7 @@ export function DataTable<Row>({
             <tr
               className={cn(
                 'h-row hairline-b transition-colors',
-                onRowClick && 'cursor-pointer hover:bg-on-surface/10',
+                onRowClick && 'cursor-pointer hover:bg-on-surface/5',
                 rowClassName && rowClassName(row)
               )}
               key={safeGetRowId(row, rowIdx)}

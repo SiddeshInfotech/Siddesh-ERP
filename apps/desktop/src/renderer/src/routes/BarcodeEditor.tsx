@@ -54,7 +54,7 @@ export function BarcodeEditor() {
 
   // Flow State
   const [selectedProductId, setSelectedProductId] = useState<string>(id || '')
-  const [quantity, setQuantity] = useState<number>(10)
+  const [quantity, setQuantity] = useState<number | ''>(10)
   const [batchCode, setBatchCode] = useState<string>('')
   const [createNewBatch, setCreateNewBatch] = useState<boolean>(true)
   const [selectedBatchId, setSelectedBatchId] = useState<string>('')
@@ -114,8 +114,11 @@ export function BarcodeEditor() {
 
   // Status & Print Canvas State
   const [isSaving, setIsSaving] = useState(false)
+  const [isPrinting, setIsPrinting] = useState(false)
+  const [hasSaved, setHasSaved] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [printItems, setPrintItems] = useState<BarcodeLabelData[] | null>(null)
+
 
   // Product select options
   const productOptions: SelectOption[] = useMemo(() => {
@@ -150,18 +153,23 @@ export function BarcodeEditor() {
 
   // Generated Barcode Sequence list
   const generatedSequence: string[] = useMemo(() => {
+    const validQuantity = typeof quantity === 'number' && quantity > 0 ? quantity : 1
     if (mode === 'B') {
       const bCode = customManufacturerBarcode.trim() || selectedProduct?.skuBarcode || '8901234567890'
-      return Array(Math.max(1, quantity)).fill(bCode)
+      return Array(Math.max(1, validQuantity)).fill(bCode)
     }
 
-    return generateCustomBarcodeSequence(selectedFormatId, startSeq, quantity, {
+    return generateCustomBarcodeSequence(selectedFormatId, startSeq, validQuantity, {
       skuCode: selectedProduct?.name ? selectedProduct.name.slice(0, 4) : 'PROD',
       categoryName: selectedProduct?.categoryName || 'GEN',
       customPrefix,
       date: new Date()
     })
   }, [mode, selectedFormatId, startSeq, quantity, selectedProduct, customManufacturerBarcode, customPrefix])
+
+  useEffect(() => {
+    setHasSaved(false)
+  }, [generatedSequence])
 
   // Preview barcode
   const previewBarcode = generatedSequence[0] || 'ST00000001'
@@ -176,67 +184,73 @@ export function BarcodeEditor() {
   }, [previewBarcode])
 
   // Save Barcode & Return to /barcodes (Backend records timestamp automatically)
+  const saveBarcodesToDB = async () => {
+    if (hasSaved) return
+    if (!selectedProduct) throw new Error('No product selected')
+    const primaryBarcode = generatedSequence[0]
+    if (!primaryBarcode) throw new Error('No barcode generated')
+
+    let resolvedBatchId: string | null = null
+
+    if (createNewBatch) {
+      if (!batchCode.trim()) {
+        throw new Error('Batch code is required when creating a new batch.')
+      }
+      // Insert new batch
+      const { data: newBatch, error: batchError } = await supabase
+        .from('product_batches')
+        .insert({
+          product_id: selectedProduct.id,
+          code: batchCode.trim()
+        })
+        .select()
+        .single()
+
+      if (batchError) throw batchError
+      resolvedBatchId = newBatch.id
+    } else {
+      resolvedBatchId = selectedBatchId || null
+    }
+
+    // Insert all generated barcodes (deduplicated to prevent duplicate key errors in Option B mode)
+    const uniqueBarcodes = Array.from(new Set(generatedSequence))
+    const { error: barcodesError } = await supabase
+      .from('product_barcodes')
+      .insert(
+        uniqueBarcodes.map((code, idx) => ({
+          product_id: selectedProduct.id,
+          code,
+          batch_id: mode === 'B' ? null : (resolvedBatchId || null), // Option B doesn't use batches
+          symbology: 'CODE128',
+          is_primary: idx === 0 && !selectedProduct.skuBarcode
+        }))
+      )
+
+    if (barcodesError) {
+      // If it's a duplicate code constraint violation, customize the error message
+      if (barcodesError.code === '23505') {
+        throw new Error('One or more of the generated barcodes already exists in the system.')
+      }
+      throw barcodesError
+    }
+
+    // Invalidate React Query caches
+    await queryClient.invalidateQueries({ queryKey: ['batches', selectedProduct.id] })
+    await queryClient.invalidateQueries({ queryKey: ['products'] })
+    await queryClient.invalidateQueries({ queryKey: ['last_barcode', selectedProduct.id] })
+    await queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
+    await queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
+    
+    setHasSaved(true)
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedProduct) return
-    const primaryBarcode = generatedSequence[0]
-    if (!primaryBarcode) return
-
     setIsSaving(true)
     setSubmitError(null)
 
     try {
-      let resolvedBatchId: string | null = null
-
-      if (createNewBatch) {
-        if (!batchCode.trim()) {
-          throw new Error('Batch code is required when creating a new batch.')
-        }
-        // Insert new batch
-        const { data: newBatch, error: batchError } = await supabase
-          .from('product_batches')
-          .insert({
-            product_id: selectedProduct.id,
-            code: batchCode.trim()
-          })
-          .select()
-          .single()
-
-        if (batchError) throw batchError
-        resolvedBatchId = newBatch.id
-      } else {
-        resolvedBatchId = selectedBatchId || null
-      }
-
-      // Insert all generated barcodes (deduplicated to prevent duplicate key errors in Option B mode)
-      const uniqueBarcodes = Array.from(new Set(generatedSequence))
-      const { error: barcodesError } = await supabase
-        .from('product_barcodes')
-        .insert(
-          uniqueBarcodes.map((code, idx) => ({
-            product_id: selectedProduct.id,
-            code,
-            batch_id: mode === 'B' ? null : (resolvedBatchId || null), // Option B doesn't use batches
-            symbology: 'CODE128',
-            is_primary: idx === 0 && !selectedProduct.skuBarcode
-          }))
-        )
-
-      if (barcodesError) {
-        // If it's a duplicate code constraint violation, customize the error message
-        if (barcodesError.code === '23505') {
-          throw new Error('One or more of the generated barcodes already exists in the system.')
-        }
-        throw barcodesError
-      }
-
-      // Invalidate React Query caches
-      await queryClient.invalidateQueries({ queryKey: ['batches', selectedProduct.id] })
-      await queryClient.invalidateQueries({ queryKey: ['products'] })
-      await queryClient.invalidateQueries({ queryKey: ['last_barcode', selectedProduct.id] })
-      await queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
-      await queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
-
+      await saveBarcodesToDB()
       void navigate('/barcodes')
     } catch (err: any) {
       setSubmitError(toUserMessage(err))
@@ -246,15 +260,25 @@ export function BarcodeEditor() {
   }
 
   // Print Batch Canvas Trigger
-  const handlePrintBatch = () => {
+  const handlePrintBatch = async () => {
     if (!selectedProduct) return
-    const items: BarcodeLabelData[] = generatedSequence.map((code) => ({
-      barcode: code,
-      productName: selectedProduct.name,
-      categoryOrModel: selectedProduct.categoryName || undefined,
-      brand: selectedProduct.brandName || undefined
-    }))
-    setPrintItems(items)
+    setIsPrinting(true)
+    setSubmitError(null)
+
+    try {
+      await saveBarcodesToDB()
+      const items: BarcodeLabelData[] = generatedSequence.map((code) => ({
+        barcode: code,
+        productName: selectedProduct.name,
+        categoryOrModel: selectedProduct.categoryName || undefined,
+        brand: selectedProduct.brandName || undefined
+      }))
+      setPrintItems(items)
+    } catch (err: any) {
+      setSubmitError(toUserMessage(err))
+    } finally {
+      setIsPrinting(false)
+    }
   }
 
   if (printItems) {
@@ -320,7 +344,15 @@ export function BarcodeEditor() {
                 type="number"
                 min={1}
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (val === '') {
+                    setQuantity('')
+                  } else {
+                    const num = parseInt(val, 10)
+                    setQuantity(isNaN(num) ? '' : num)
+                  }
+                }}
                 placeholder="Enter quantity"
               />
             </div>
@@ -500,7 +532,7 @@ export function BarcodeEditor() {
                   Sequence Review ({generatedSequence.length} Units)
                 </span>
               </div>
-              <div className="max-h-36 overflow-y-auto space-y-1 p-2 bg-surface-variant/20 rounded-xl border border-border/60 font-mono text-xs">
+              <div className="max-h-36 overflow-y-auto space-y-1 p-2 bg-surface-variant/20 rounded-xl border border-border/60 font-mono text-xs [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {generatedSequence.map((code, idx) => (
                   <div
                     key={idx}
@@ -519,9 +551,9 @@ export function BarcodeEditor() {
             <Button variant="ghost" onClick={() => void navigate('/barcodes')} type="button">
               Cancel
             </Button>
-            <Button variant="secondary" onClick={handlePrintBatch} type="button">
+            <Button variant="secondary" onClick={handlePrintBatch} type="button" isLoading={isPrinting}>
               <Printer className="size-4 mr-2" />
-              Print Labels ({quantity})
+              Print Labels ({quantity || 1})
             </Button>
             <Button variant="primary" type="submit" isLoading={isSaving}>
               <CheckCircle2 className="size-4 mr-2" />

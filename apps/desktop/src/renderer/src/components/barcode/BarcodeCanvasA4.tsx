@@ -113,7 +113,15 @@ export function BarcodeCanvasA4({ items, onBack }: BarcodeCanvasA4Props) {
     setIsGeneratingPDF(true)
     try {
       const pdf = buildBarcodeLabelsPdf(items, { cols: preset.cols, rows: preset.rows })
-      pdf.save(`Barcode_Labels_${preset.key}_${Date.now()}.pdf`)
+      
+      const productName = items[0]?.productName 
+        ? items[0].productName.replace(/[^a-z0-9]/gi, '_') 
+        : 'Product'
+      const quantity = items.length
+      const d = new Date()
+      const dateStr = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`
+      
+      pdf.save(`${productName}_${quantity}_${dateStr}.pdf`)
     } catch (err) {
       console.error('Barcode PDF generation failed', err)
     } finally {

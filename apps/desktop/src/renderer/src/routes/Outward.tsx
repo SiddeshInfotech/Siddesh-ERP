@@ -338,7 +338,7 @@ export function Outward() {
   if (!showForm && saved === null) {
     const isStockTab = historyTab === 'stock'
     const stockColumns: Column<OutwardHistoryRow>[] = [
-      { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
+      { header: 'Date', cell: (row) => <span className="whitespace-nowrap">{row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—'}</span> },
       {
         header: 'Product',
         cell: (row) => (
@@ -358,7 +358,7 @@ export function Outward() {
         cell: (row) =>
           row.batch_code ? (
             <button
-              className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline"
+              className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline whitespace-nowrap"
               onClick={() =>
                 setBatchModalData({
                   productId: row.product_id,
@@ -377,19 +377,19 @@ export function Outward() {
         header: 'Status',
         cell: (row) =>
           row.remaining_qty > 0 ? (
-            <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success">
+            <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-body-sm font-medium text-success whitespace-nowrap">
               In Stock
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant">
+            <span className="inline-flex items-center rounded-full bg-on-surface/[0.06] px-2.5 py-0.5 text-body-sm font-medium text-on-surface-variant whitespace-nowrap">
               Fully Outwarded
             </span>
           )
       },
-      { header: 'Type', cell: (row) => outwardTypeLabel(row.outward_type) },
-      { header: 'Quantity (given out)', align: 'right', cell: (row) => row.outward_qty },
-      { header: 'Remaining Quantity (on that batch)', align: 'right', cell: (row) => row.remaining_qty },
-      { header: 'Total Quantity (all batches)', align: 'right', cell: (row) => row.total_qty },
+      { header: 'Type', cell: (row) => <span className="whitespace-nowrap">{outwardTypeLabel(row.outward_type)}</span> },
+      { header: 'Qty Given', align: 'right', cell: (row) => row.outward_qty },
+      { header: 'Remaining Qty', align: 'right', cell: (row) => row.remaining_qty },
+      { header: 'Total Qty', align: 'right', cell: (row) => row.total_qty },
       {
         header: 'Actions',
         align: 'right',
@@ -401,17 +401,17 @@ export function Outward() {
               void handleDelete(row)
             }}
             disabled={deleteOutward.isPending}
-            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            className="p-1 transition-colors text-on-surface-variant hover:text-error disabled:opacity-50"
             title="Delete outward entry"
           >
-            <Trash2 aria-hidden="true" className="size-4" />
+            <Trash2 aria-hidden="true" className="size-4.5" />
           </button>
         )
       }
     ]
 
     const partyColumns: Column<OutwardHistoryRow>[] = [
-      { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
+      { header: 'Date', cell: (row) => <span className="whitespace-nowrap">{row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—'}</span> },
       {
         header: 'Product',
         cell: (row) => (
@@ -444,17 +444,17 @@ export function Outward() {
               void handleDelete(row)
             }}
             disabled={deleteOutward.isPending}
-            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            className="p-1 transition-colors text-on-surface-variant hover:text-error disabled:opacity-50"
             title="Delete outward entry"
           >
-            <Trash2 aria-hidden="true" className="size-4" />
+            <Trash2 aria-hidden="true" className="size-4.5" />
           </button>
         )
       }
     ]
 
     const otherColumns: Column<OutwardHistoryRow>[] = [
-      { header: 'Date', cell: (row) => (row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—') },
+      { header: 'Date', cell: (row) => <span className="whitespace-nowrap">{row.issued_at ? new Date(row.issued_at).toLocaleDateString() : '—'}</span> },
       {
         header: 'Product',
         cell: (row) => (
@@ -485,10 +485,10 @@ export function Outward() {
               void handleDelete(row)
             }}
             disabled={deleteOutward.isPending}
-            className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+            className="p-1 transition-colors text-on-surface-variant hover:text-error disabled:opacity-50"
             title="Delete outward entry"
           >
-            <Trash2 aria-hidden="true" className="size-4" />
+            <Trash2 aria-hidden="true" className="size-4.5" />
           </button>
         )
       }
