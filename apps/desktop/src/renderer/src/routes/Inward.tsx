@@ -334,7 +334,18 @@ export function Inward() {
         cell: (row) =>
           row.batch_id ? (
             <div className="flex flex-col">
-              <span className="font-medium text-primary whitespace-nowrap">{row.batch_code}</span>
+              <button
+                className="font-medium text-primary transition-colors hover:text-primary-focus hover:underline text-left whitespace-nowrap"
+                onClick={() => {
+                  setBatchModalData({
+                    productId: row.product_id,
+                    productName: row.product_name,
+                    batchCode: row.batch_code || ''
+                  })
+                }}
+              >
+                {row.batch_code}
+              </button>
             </div>
           ) : (
             '—'
