@@ -130,6 +130,13 @@ export type Database = {
             foreignKeyName: "barcode_scans_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
+            referencedRelation: "v_batch_activity"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "barcode_scans_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
             referencedRelation: "v_batch_registry"
             referencedColumns: ["batch_id"]
           },
@@ -160,6 +167,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "barcode_scans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -367,6 +381,13 @@ export type Database = {
             foreignKeyName: "inward_items_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
+            referencedRelation: "v_batch_activity"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "inward_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
             referencedRelation: "v_batch_registry"
             referencedColumns: ["batch_id"]
           },
@@ -383,6 +404,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inward_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
           {
             foreignKeyName: "inward_items_product_unit_id_fkey"
@@ -523,11 +551,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "kit_components_component_product_id_fkey"
+            columns: ["component_product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
+          },
+          {
             foreignKeyName: "kit_components_kit_product_id_fkey"
             columns: ["kit_product_id"]
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kit_components_kit_product_id_fkey"
+            columns: ["kit_product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -640,6 +682,13 @@ export type Database = {
             foreignKeyName: "outward_items_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
+            referencedRelation: "v_batch_activity"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "outward_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
             referencedRelation: "v_batch_registry"
             referencedColumns: ["batch_id"]
           },
@@ -656,6 +705,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outward_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
           {
             foreignKeyName: "outward_items_product_unit_id_fkey"
@@ -811,6 +867,13 @@ export type Database = {
             foreignKeyName: "product_barcodes_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
+            referencedRelation: "v_batch_activity"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "product_barcodes_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
             referencedRelation: "v_batch_registry"
             referencedColumns: ["batch_id"]
           },
@@ -820,6 +883,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_barcodes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -880,6 +950,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "product_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
+          },
         ]
       }
       product_notes: {
@@ -920,6 +997,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_notes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -986,6 +1070,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_units_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -1095,6 +1186,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          is_office_login: boolean
           mobile: string | null
           office_id: string | null
           role: Database["public"]["Enums"]["app_role"]
@@ -1110,6 +1202,7 @@ export type Database = {
           full_name: string
           id: string
           is_active?: boolean
+          is_office_login?: boolean
           mobile?: string | null
           office_id?: string | null
           role?: Database["public"]["Enums"]["app_role"]
@@ -1125,6 +1218,7 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          is_office_login?: boolean
           mobile?: string | null
           office_id?: string | null
           role?: Database["public"]["Enums"]["app_role"]
@@ -1188,6 +1282,13 @@ export type Database = {
             foreignKeyName: "stock_balances_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
+            referencedRelation: "v_batch_activity"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "stock_balances_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
             referencedRelation: "v_batch_registry"
             referencedColumns: ["batch_id"]
           },
@@ -1204,6 +1305,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_balances_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -1274,6 +1382,13 @@ export type Database = {
             foreignKeyName: "stock_ledger_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
+            referencedRelation: "v_batch_activity"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "stock_ledger_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
             referencedRelation: "v_batch_registry"
             referencedColumns: ["batch_id"]
           },
@@ -1290,6 +1405,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_ledger_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
           {
             foreignKeyName: "stock_ledger_product_unit_id_fkey"
@@ -1395,6 +1517,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
           {
             foreignKeyName: "transfer_items_product_unit_id_fkey"
@@ -1531,16 +1660,76 @@ export type Database = {
       }
     }
     Views: {
+      v_barcode_status_summary: {
+        Row: {
+          qty_generated: number | null
+          qty_in_stock: number | null
+          qty_outward: number | null
+          qty_void: number | null
+          total_units: number | null
+        }
+        Relationships: []
+      }
+      v_batch_activity: {
+        Row: {
+          batch_code: string | null
+          batch_created_at: string | null
+          batch_created_by: string | null
+          batch_id: string | null
+          brand_name: string | null
+          category_id: string | null
+          category_name: string | null
+          first_barcode_code: string | null
+          last_activity_at: string | null
+          product_id: string | null
+          product_name: string | null
+          qty_generated: number | null
+          qty_in_stock: number | null
+          qty_outward: number | null
+          qty_void: number | null
+          sku_barcode: string | null
+          total_barcodes: number | null
+          total_qty_on_hand: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_batch_barcodes: {
         Row: {
           batch_id: string | null
           code: string | null
           created_at: string | null
           device_source: Database["public"]["Enums"]["scan_source"] | null
+          generated_at: string | null
+          generated_by_name: string | null
           id: string | null
+          inwarded_at: string | null
+          outwarded_at: string | null
           product_id: string | null
           scanned_at: string | null
           scanned_by_name: string | null
+          scanned_office_name: string | null
           status: Database["public"]["Enums"]["barcode_status"] | null
           symbology: Database["public"]["Enums"]["barcode_symbology"] | null
         }
@@ -1556,6 +1745,13 @@ export type Database = {
             foreignKeyName: "product_barcodes_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
+            referencedRelation: "v_batch_activity"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "product_barcodes_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
             referencedRelation: "v_batch_registry"
             referencedColumns: ["batch_id"]
           },
@@ -1565,6 +1761,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_barcodes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -1595,6 +1798,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_batches_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
           {
             foreignKeyName: "products_category_id_fkey"
@@ -1637,6 +1847,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_balances_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
         ]
       }
@@ -1682,6 +1899,13 @@ export type Database = {
             foreignKeyName: "inward_items_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
+            referencedRelation: "v_batch_activity"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "inward_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
             referencedRelation: "v_batch_registry"
             referencedColumns: ["batch_id"]
           },
@@ -1691,6 +1915,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inward_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
           {
             foreignKeyName: "inwards_office_id_fkey"
@@ -1736,6 +1967,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "outward_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
+          },
+          {
             foreignKeyName: "outwards_office_id_fkey"
             columns: ["office_id"]
             isOneToOne: false
@@ -1777,7 +2015,26 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "stock_ledger_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
+          },
         ]
+      }
+      v_product_stock_status: {
+        Row: {
+          generated_units: number | null
+          in_stock_units: number | null
+          min_stock: number | null
+          outward_units: number | null
+          product_id: string | null
+          product_name: string | null
+          total_units: number | null
+        }
+        Relationships: []
       }
       v_stock_balances_by_batch: {
         Row: {
@@ -1786,36 +2043,7 @@ export type Database = {
           product_id: string | null
           qty_on_hand: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "stock_ledger_batch_id_fkey"
-            columns: ["batch_id"]
-            isOneToOne: false
-            referencedRelation: "product_batches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_ledger_batch_id_fkey"
-            columns: ["batch_id"]
-            isOneToOne: false
-            referencedRelation: "v_batch_registry"
-            referencedColumns: ["batch_id"]
-          },
-          {
-            foreignKeyName: "stock_ledger_office_id_fkey"
-            columns: ["office_id"]
-            isOneToOne: false
-            referencedRelation: "offices"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_ledger_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       v_stock_dashboard: {
         Row: {
@@ -1851,6 +2079,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_balances_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
           },
         ]
       }

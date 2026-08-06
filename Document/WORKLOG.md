@@ -651,3 +651,106 @@ if wanted — Stock done as the reference. Pre-existing unrelated typecheck erro
 apps/desktop/src/renderer/src/components/settings/OfficeManagement.tsx,
 apps/desktop/src/renderer/src/components/settings/UserManagement.tsx,
 apps/desktop/src/renderer/src/routes/Settings.tsx, apps/desktop/src/renderer/src/routes/Stock.tsx
+
+## 06/08/2026 12:30 — Office logins: flag + link + surface (Phase 1 of Dashboard/Barcode rework) — Ram
+**Status:** Code done, typecheck-clean (only the known pre-existing ProductDetail.tsx:356 remains). Runtime blocked on applying migration 45 + `npm run db:types`.
+**What:** Client asked for an offices table with a password column for office logins. Refused by design
+(rule 0.1 / 02_org.sql: anon key ships in the .exe, so a credential in a client-readable table leaks
+every login). Compliant shape agreed with client (06/08): an office login IS a Supabase-Auth account,
+created in the Supabase Dashboard, flagged `is_office_login`. (1) Migration 45 — adds
+`profiles.is_office_login` (default false) + partial index; extends `tg_handle_new_user` to read the flag
+from signup metadata (all prior behaviour preserved). (2) `useOffices` — reads office `address`
+(location); `useTeam` now excludes office logins; new `useOfficeLogins` lists them per office. (3)
+OfficeManagement — Address/Location field, a "Login" column showing each office's linked account, and a
+note on creating one in the Supabase Dashboard. Users list stays people-only.
+**Apply:** `npx supabase db push` then `npm run db:types` (not run here — shared DB). Then create each
+office login in Supabase Dashboard → Authentication → Add user with metadata
+{full_name, role:'STORE_MANAGER', office_id, is_office_login:true}.
+**Notes:** `is_office_login` cast `as any` in two queries until db:types regenerates (repo's existing
+pattern for not-yet-typed DB objects). No password ever stored in the app.
+**Files:** supabase/migrations/20260806120000_45_office_login.sql,
+apps/desktop/src/renderer/src/hooks/useOffices.ts,
+apps/desktop/src/renderer/src/components/settings/OfficeManagement.tsx
+
+## 06/08/2026 13:40 — Dashboard rework: status breakdown, daily history drawer, batch activity (Phase 2) — Ram
+**Status:** Code done, typecheck-clean (only the known pre-existing ProductDetail.tsx:356 remains). Runtime blocked on applying migrations 45+46 + `npm run db:types` + a login.
+**What:** (1) Migration 46 — two read-only views: `v_barcode_status_summary` (system-wide unit counts by
+lifecycle status) and `v_batch_activity` (v_batch_registry INNER-joined to per-batch last scan → only
+batches that had a status change, newest first). No write path touched. (2) `useDashboard` now also reads
+the status summary → In-stock / Generated / Outward. (3) Current-stock card shows that breakdown under its
+headline (headline stays the office-scoped in-stock count; breakdown is a system-wide lifecycle hint). (4)
+Today's-inward / Today's-outward cards are now clickable → a `DailyHistoryDrawer` slide-over grouping the
+office-scoped ledger by local day, newest first, each day expandable to its movements (product, qty, party,
+by-whom). (5) New "Batch Activity" table on the dashboard: batches with a status change, expandable to the
+unit sticker list. (6) Extracted `BatchBarcodesSubTable` (+ StatusBadge) out of Barcodes.tsx into a shared
+component (`components/barcode/BatchBarcodesSubTable.tsx`) with a `canDelete` flag, so the dashboard reuses
+one implementation instead of a copy — Barcodes.tsx now imports it.
+**Apply:** `npx supabase db push` then `npm run db:types`.
+**Notes:** `v_barcode_status_summary` / `v_batch_activity` cast `as any` on .from() (repo pattern for
+untyped views). Recent Transactions table kept as-is. Daily history + today counts share the same
+security_invoker ledger view, so they can't disagree.
+**Files:** supabase/migrations/20260806130000_46_dashboard_views.sql,
+apps/desktop/src/renderer/src/hooks/useDashboard.ts, apps/desktop/src/renderer/src/hooks/useDailyHistory.ts,
+apps/desktop/src/renderer/src/hooks/useAllBatches.ts,
+apps/desktop/src/renderer/src/components/dashboard/DailyHistoryDrawer.tsx,
+apps/desktop/src/renderer/src/components/barcode/BatchBarcodesSubTable.tsx,
+apps/desktop/src/renderer/src/routes/Dashboard.tsx, apps/desktop/src/renderer/src/routes/Barcodes.tsx
+
+## 06/08/2026 14:35 — Barcode lifecycle columns: Scanned by / at office, remove Action+Symbology (Phase 3) — Ram
+**Status:** Code done, typecheck-clean (only the known pre-existing ProductDetail.tsx:356 remains). Runtime blocked on applying migration 47 + `npm run db:types` + a login.
+**What:** (1) Migration 47 — redefines v_batch_barcodes to expose the FULL lifecycle per unit:
+generated_at/generated_by_name (from product_barcodes audit), inwarded_at (latest RECEIVE scan),
+outwarded_at (latest ISSUE scan), and — for the current status change — scanned_by_name, device_source,
+and scanned_office_name (office of the login that last scanned). Backwards compatible; scanned_* now reflect
+the most recent scan of ANY action (was RECEIVE-only). No write path touched. (2) useBatchBarcodes — new
+fields; dropped the separate updated_at fetch (the "Status Changed" column is gone). (3) Shared
+BatchBarcodesSubTable — columns are now # · Barcode · Status · Generated · Inwarded · Outwarded · Scanned By
+· Scanned At (office); removed Device + per-sticker Actions (delete). (4) BatchBarcodesModal (third-image
+"Batch Records" table) — same reshape: removed Scanned-At-timestamp / Status Changed / Device / Symbology /
+Actions; added Generated/Inwarded/Outwarded/Scanned By/Scanned At(office); reuses the shared StatusBadge +
+formatStamp. (5) Products "Stock" column (second image) — NO change needed: it already reads v_current_stock
+(scan-driven), i.e. the in-stock/inwarded unit count.
+**Apply:** `npx supabase db push` then `npm run db:types`.
+**Note:** Removing the Action column also removed per-sticker delete from these two tables (as requested).
+Whole-batch delete still lives on the Barcodes registry main table. The "Scanned At" column shows the office
+location of the login that last changed the unit's status (barcode_scans.office_id → offices.name).
+**Files:** supabase/migrations/20260806140000_47_barcode_lifecycle_view.sql,
+apps/desktop/src/renderer/src/hooks/useBatchBarcodes.ts,
+apps/desktop/src/renderer/src/components/barcode/BatchBarcodesSubTable.tsx,
+apps/desktop/src/renderer/src/components/barcode/BatchBarcodesModal.tsx,
+apps/desktop/src/renderer/src/routes/Dashboard.tsx
+
+## 06/08/2026 14:55 — Fix migration 47 (view column-order) — Ram
+**Status:** Fixed. Corrects the 14:35 entry's migration 47.
+**What:** `db push` of migration 47 failed with 42P16 "cannot change name of view column scanned_at to
+generated_at": `create or replace view` may only APPEND columns, not rename/reorder existing ones. My first
+draft inserted generated_at/inwarded_at/outwarded_at ahead of the original scanned_at (position 8). Rewrote
+so the first ten columns keep migration 16's exact order/name/type (only their expressions change, to the
+latest-scan-of-any-action), with the five new columns appended after. Re-run `npx supabase db push`.
+**Note:** Migrations 45 and 46 already applied (the failed push only offered 47). App code unchanged —
+PostgREST selects columns by name, so view column order is irrelevant to the client.
+**Files:** supabase/migrations/20260806140000_47_barcode_lifecycle_view.sql
+
+## 06/08/2026 15:30 — Dashboard: cumulative all-products + today's inward/outward batch activity — Ram
+**Status:** Code done, typecheck-clean (only the known pre-existing ProductDetail.tsx:356 remains). Runtime blocked on applying migration 48 + `npm run db:types`.
+**What:** Client feedback: the dashboard showed one office's slice ("9 units / 1 product") next to the
+system-wide breakdown ("In stock 14") — they want every figure CUMULATIVE across all products/offices.
+Root cause: cards read office-scoped views (v_current_stock, v_product_ledger) while the breakdown read the
+global barcode data. Moved the whole dashboard onto the globally-readable barcode sources. (1) Migration 48
+— v_product_stock_status: barcode lifecycle rolled up per product across all offices (in_stock/generated/
+outward units + min_stock). (2) useDashboard rewritten: current stock, breakdown, products-tracked, low- and
+out-of-stock all from v_product_stock_status (all products); today's inward/outward = count of today's
+RECEIVE / ISSUE rows in barcode_scans (global). (3) Removed the Recent Transactions table. (4) Replaced the
+generic Batch Activity with TWO tables — "Today's Inward" and "Today's Outward" — each listing the batches
+that moved that direction today (units today + last activity), expandable to the unit sub-table
+(useTodayBatchActivity, reads barcode_scans globally). (5) Cards are display-only now (current stock / low
+stock still link to /stock); removed the day-history drawer.
+**Apply:** `npx supabase db push` then `npm run db:types`.
+**Dead code removed:** DailyHistoryDrawer.tsx, useDailyHistory.ts, and useBatchActivity/BatchActivityRow
+(useAllBatches.ts). Views v_barcode_status_summary + v_batch_activity (migration 46) are now unused but left
+deployed (harmless); drop in a later migration if desired.
+**Note:** The dashboard is intentionally GLOBAL now (an office login sees all-office totals here). The
+barcode sources are already globally readable, so no data is exposed that wasn't before.
+**Files:** supabase/migrations/20260806160000_48_product_stock_status.sql,
+apps/desktop/src/renderer/src/hooks/useDashboard.ts, apps/desktop/src/renderer/src/hooks/useTodayBatchActivity.ts,
+apps/desktop/src/renderer/src/hooks/useAllBatches.ts, apps/desktop/src/renderer/src/routes/Dashboard.tsx

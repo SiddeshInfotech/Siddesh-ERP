@@ -42,6 +42,29 @@ export interface BatchRegistryRow {
   totalQtyOnHand: number
 }
 
+/** Maps one raw v_batch_registry / v_batch_activity row to BatchRegistryRow. */
+function mapBatchRow(row: any): BatchRegistryRow {
+  // PostgREST returns COUNT aggregates as strings — coerce to number.
+  return {
+    batchId:          row.batch_id          ?? '',
+    batchCode:        row.batch_code         ?? '',
+    batchCreatedAt:   row.batch_created_at   ?? '',
+    productId:        row.product_id         ?? '',
+    productName:      row.product_name       ?? '',
+    skuBarcode:       row.sku_barcode        ?? null,
+    categoryId:       row.category_id        ?? null,
+    categoryName:     row.category_name      ?? null,
+    brandName:        row.brand_name         ?? null,
+    totalBarcodes:    Number(row.total_barcodes  ?? 0),
+    qtyGenerated:     Number(row.qty_generated   ?? 0),
+    qtyInStock:       Number(row.qty_in_stock    ?? 0),
+    qtyOutward:       Number(row.qty_outward     ?? 0),
+    qtyVoid:          Number(row.qty_void        ?? 0),
+    firstBarcodeCode: row.first_barcode_code ?? null,
+    totalQtyOnHand:   Number(row.total_qty_on_hand ?? 0),
+  }
+}
+
 /**
  * Fetches every batch in the system (all products) for the Batch Barcode Registry.
  *
@@ -60,25 +83,7 @@ export function useAllBatches() {
 
       if (error) throw error
 
-      // PostgREST returns COUNT aggregates as strings — coerce to number.
-      return ((data as any[]) ?? []).map((row): BatchRegistryRow => ({
-        batchId:          row.batch_id          ?? '',
-        batchCode:        row.batch_code         ?? '',
-        batchCreatedAt:   row.batch_created_at   ?? '',
-        productId:        row.product_id         ?? '',
-        productName:      row.product_name       ?? '',
-        skuBarcode:       row.sku_barcode        ?? null,
-        categoryId:       row.category_id        ?? null,
-        categoryName:     row.category_name      ?? null,
-        brandName:        row.brand_name         ?? null,
-        totalBarcodes:    Number(row.total_barcodes  ?? 0),
-        qtyGenerated:     Number(row.qty_generated   ?? 0),
-        qtyInStock:       Number(row.qty_in_stock    ?? 0),
-        qtyOutward:       Number(row.qty_outward     ?? 0),
-        qtyVoid:          Number(row.qty_void        ?? 0),
-        firstBarcodeCode: row.first_barcode_code ?? null,
-        totalQtyOnHand:   Number(row.total_qty_on_hand ?? 0),
-      }))
+      return ((data as any[]) ?? []).map(mapBatchRow)
     }
   })
 }

@@ -1,37 +1,33 @@
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
+  ChevronDown,
+  ChevronRight,
+  Inbox,
   PackageX,
   TriangleAlert,
-  Warehouse,
-  Trash2
+  Warehouse
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Fragment, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { BatchBarcodesSubTable } from '@/components/barcode/BatchBarcodesSubTable'
 import { Alert } from '@/components/ui/Alert'
 import { Card } from '@/components/ui/Card'
-import { DataTable } from '@/components/ui/DataTable'
+import { SpinnerPane } from '@/components/ui/Spinner'
 import { useDashboard } from '@/hooks/useDashboard'
-import { useRecentTransactions, type LedgerRow } from '@/hooks/useReports'
-import { useDeleteLedgerEntry } from '@/hooks/useSaveMovement'
-import { useConfirm } from '@/hooks/useConfirm'
-import { useAlert } from '@/hooks/useAlert'
+import { useTodayBatchActivity, type TodayBatchRow } from '@/hooks/useTodayBatchActivity'
 import { cn } from '@/lib/cn'
 import { toUserMessage } from '@/lib/errors'
-
-const DATE_FORMATTER = new Intl.DateTimeFormat('en-GB', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric'
-})
 
 /**
  * Dashboard — the home screen (SRD §12; DSK-401 → DSK-405).
  *
- * SRD §12 also lists "Pending Orders", explicitly marked future. There is no purchase-order
- * table, so it is absent rather than shown as 0 — a card reading 0 asserts "none pending",
- * which we cannot know.
+ * Every figure is CUMULATIVE across all products and offices (client chat 06/08/2026). The
+ * cards summarise system-wide stock and today's movement; the two tables below show which
+ * batches moved in and out today, each expandable to its individual units.
  */
+
+const TIME_LABEL = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' })
 
 interface StatCardProps {
   label: string
@@ -42,14 +38,16 @@ interface StatCardProps {
   tone?: 'default' | 'warning'
   hint?: string
   to?: string
+  /** Extra content rendered under the hint — e.g. a status breakdown. */
+  footer?: ReactNode
   isLoading: boolean
 }
 
-function StatCard({ label, value, unit, icon, tone = 'default', hint, to, isLoading }: StatCardProps) {
+function StatCard({ label, value, unit, icon, tone = 'default', hint, to, footer, isLoading }: StatCardProps) {
   const body = (
     <Card
       className={cn(
-        'flex flex-col gap-3 p-5 transition-colors',
+        'flex h-full flex-col gap-3 p-5 transition-colors',
         to !== undefined && 'hover:bg-on-surface/[0.04]'
       )}
     >
@@ -70,54 +68,134 @@ function StatCard({ label, value, unit, icon, tone = 'default', hint, to, isLoad
         >
           {value}
           {unit === undefined ? null : (
-            <span className="ml-1.5 text-body-md font-normal text-on-surface-variant/60">
-              {unit}
-            </span>
+            <span className="ml-1.5 text-body-md font-normal text-on-surface-variant/60">{unit}</span>
           )}
         </p>
       )}
 
-      {hint === undefined ? null : (
-        <p className="text-body-sm text-on-surface-variant/60">{hint}</p>
-      )}
+      {hint === undefined ? null : <p className="text-body-sm text-on-surface-variant/60">{hint}</p>}
+
+      {footer}
     </Card>
   )
 
   return to === undefined ? body : <Link to={to}>{body}</Link>
 }
 
+interface TodayBatchTableProps {
+  rows: TodayBatchRow[]
+  direction: 'INWARD' | 'OUTWARD'
+  isLoading: boolean
+  expandedKey: string | null
+  onToggle: (key: string) => void
+}
+
+/**
+ * Batches that moved (in or out) today, most-recent first. Each row expands to the batch's
+ * unit list. The expand key is prefixed with the direction because one batch can appear in
+ * both tables on the same day.
+ */
+function TodayBatchTable({ rows, direction, isLoading, expandedKey, onToggle }: TodayBatchTableProps) {
+  const isInward = direction === 'INWARD'
+  const qtyColour = isInward ? 'text-success' : 'text-tertiary'
+
+  if (isLoading) return <SpinnerPane />
+
+  if (rows.length === 0) {
+    return (
+      <div className="flex min-h-32 flex-col items-center justify-center gap-2 p-6 text-center">
+        <Inbox aria-hidden="true" className="size-7 text-outline" strokeWidth={1.5} />
+        <p className="text-body-sm text-on-surface-variant/70">
+          No {isInward ? 'inward' : 'outward'} activity today.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-on-surface/[0.03]">
+            <th className="w-8 px-4 py-2.5" />
+            <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">
+              Product
+            </th>
+            <th className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">
+              Batch Code
+            </th>
+            <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">
+              Units today
+            </th>
+            <th className="px-4 py-2.5 text-right text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap">
+              Last activity
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const key = `${direction}:${row.batchId}`
+            const isExpanded = expandedKey === key
+            return (
+              <Fragment key={key}>
+                <tr
+                  className={cn(
+                    'hairline-b cursor-pointer transition-colors hover:bg-on-surface/5',
+                    isExpanded && 'bg-on-surface/[0.04]'
+                  )}
+                  onClick={() => onToggle(key)}
+                >
+                  <td className="px-4 py-2.5 text-on-surface-variant">
+                    {isExpanded ? (
+                      <ChevronDown aria-hidden="true" className="size-4" />
+                    ) : (
+                      <ChevronRight aria-hidden="true" className="size-4" />
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <span className="font-semibold text-on-surface text-body-sm">{row.productName}</span>
+                  </td>
+                  <td className="px-4 py-2.5 font-mono text-body-sm font-medium text-on-surface whitespace-nowrap">
+                    {row.batchCode}
+                  </td>
+                  <td className={cn('px-4 py-2.5 text-right tabular-nums font-mono font-bold whitespace-nowrap', qtyColour)}>
+                    {isInward ? '+' : '−'}
+                    {row.unitsToday}
+                  </td>
+                  <td className="px-4 py-2.5 text-right text-body-sm text-on-surface-variant whitespace-nowrap">
+                    {row.lastActivityAt ? TIME_LABEL.format(new Date(row.lastActivityAt)) : '—'}
+                  </td>
+                </tr>
+                {isExpanded ? (
+                  <tr className="bg-on-surface/[0.02] hairline-b">
+                    <td className="p-0" colSpan={5}>
+                      <BatchBarcodesSubTable batchCode={row.batchCode} productId={row.productId} />
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export function Dashboard() {
   const { data, isPending, error, refetch } = useDashboard()
-  const { data: recentTransactions, isLoading: transactionsLoading } = useRecentTransactions(10)
-  const deleteLedgerEntry = useDeleteLedgerEntry()
-  const confirm = useConfirm()
-  const showAlert = useAlert()
+  const { data: today, isPending: todayPending } = useTodayBatchActivity()
 
-  async function handleDelete(row: LedgerRow) {
-    const ok = await confirm({
-      title: 'Delete Transaction',
-      description: `Are you sure you want to delete ledger entry of ${row.qtyDelta >= 0 ? '+' : ''}${row.qtyDelta} for ${row.productName}?`,
-      confirmText: 'Delete Transaction'
-    })
-    if (!ok) return
-    try {
-      await deleteLedgerEntry.mutateAsync(row.id)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to delete ledger entry.'
-      void showAlert({
-        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
-        description: msg,
-        tone: 'warning'
-      })
-    }
-  }
+  // Which batch row is expanded, keyed by "<direction>:<batchId>" so the two tables don't clash.
+  const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  const toggle = (key: string) => setExpandedKey((current) => (current === key ? null : key))
 
   return (
     <div className="flex flex-col gap-10 pb-10">
       <div>
         <h1 className="text-h1 text-on-surface">Dashboard</h1>
         <p className="text-body-sm text-on-surface-variant/60">
-          Siddesh Technologies — Pune · Nashik · Mumbai
+          Siddesh Technologies — all products, all offices
         </p>
       </div>
 
@@ -140,6 +218,23 @@ export function Dashboard() {
 
       <div className="grid grid-cols-4 gap-gutter">
         <StatCard
+          footer={
+            isPending ? null : (
+              // Unit lifecycle breakdown (all products), per client chat.
+              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-body-sm">
+                <span className="inline-flex items-center gap-1 text-success">
+                  <span className="size-1.5 rounded-full bg-success" /> In stock {data?.unitsInStock ?? 0}
+                </span>
+                <span className="inline-flex items-center gap-1 text-on-surface-variant/70">
+                  <span className="size-1.5 rounded-full bg-on-surface-variant/50" /> Generated{' '}
+                  {data?.unitsGenerated ?? 0}
+                </span>
+                <span className="inline-flex items-center gap-1 text-primary">
+                  <span className="size-1.5 rounded-full bg-primary" /> Outward {data?.unitsOutward ?? 0}
+                </span>
+              </div>
+            )
+          }
           hint={`Across ${data?.productsTracked ?? 0} products`}
           icon={<Warehouse aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />}
           isLoading={isPending}
@@ -150,34 +245,26 @@ export function Dashboard() {
         />
 
         <StatCard
-          hint="Received today"
-          icon={
-            <ArrowDownToLine aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />
-          }
+          hint="Received today (all products)"
+          icon={<ArrowDownToLine aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />}
           isLoading={isPending}
           label="Today's inward"
-          to="/reports"
           unit="units"
           value={data?.todayInward ?? 0}
         />
 
         <StatCard
-          hint="Given out today"
-          icon={
-            <ArrowUpFromLine aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />
-          }
+          hint="Given out today (all products)"
+          icon={<ArrowUpFromLine aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />}
           isLoading={isPending}
           label="Today's outward"
-          to="/reports"
           unit="units"
           value={data?.todayOutward ?? 0}
         />
 
         <StatCard
           hint="At or below minimum level"
-          icon={
-            <TriangleAlert aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />
-          }
+          icon={<TriangleAlert aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />}
           isLoading={isPending}
           label="Low stock"
           to="/stock"
@@ -186,8 +273,7 @@ export function Dashboard() {
         />
       </div>
 
-      {/* Out of stock earns a place only when it is true. An always-present card reading 0 is
-          noise; a line that appears when something is actually wrong gets read. */}
+      {/* Out of stock earns a place only when it is true. */}
       {!isPending && (data?.outOfStockCount ?? 0) > 0 ? (
         <Alert
           action={
@@ -202,102 +288,43 @@ export function Dashboard() {
         >
           <span className="flex items-center gap-2">
             <PackageX aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.5} />
-            {data?.outOfStockCount} product{data?.outOfStockCount === 1 ? ' has' : 's have'} no
-            stock left.
+            {data?.outOfStockCount} product{data?.outOfStockCount === 1 ? ' has' : 's have'} no stock left.
           </span>
         </Alert>
       ) : null}
 
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-h3 text-on-surface">Recent Transactions</h2>
-          <Link to="/reports" className="text-body-sm font-semibold text-primary hover:underline">
-            View all reports &rarr;
-          </Link>
-        </div>
-        <Card className="overflow-hidden">
-          {transactionsLoading ? (
-            <div className="p-8 text-center text-on-surface-variant">Loading transactions...</div>
-          ) : (
-            <DataTable<LedgerRow>
-              columns={[
-                {
-                  accessorKey: 'date',
-                  header: 'Date',
-                  cell: (row) => DATE_FORMATTER.format(new Date(row.occurredAt))
-                },
-                {
-                  accessorKey: 'product',
-                  header: 'Product',
-                  cell: (row) => row.productName
-                },
-                {
-                  accessorKey: 'type',
-                  header: 'Type',
-                  cell: (row) => (
-                    <span
-                      className={cn(
-                        'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider',
-                        row.txnType === 'INWARD'
-                          ? 'bg-success/10 text-success'
-                          : row.txnType === 'OUTWARD'
-                            ? 'bg-tertiary/10 text-tertiary'
-                            : 'bg-on-surface/10 text-on-surface-variant'
-                      )}
-                    >
-                      {row.txnType}
-                    </span>
-                  )
-                },
-                {
-                  accessorKey: 'qty',
-                  header: 'Qty',
-                  cell: (row) => (
-                    <span
-                      className={cn(
-                        'tabular-nums font-medium',
-                        row.qtyDelta > 0 ? 'text-success' : row.qtyDelta < 0 ? 'text-tertiary' : ''
-                      )}
-                    >
-                      {row.qtyDelta > 0 ? '+' : ''}
-                      {row.qtyDelta}
-                    </span>
-                  )
-                },
-                {
-                  accessorKey: 'party',
-                  header: 'Party',
-                  cell: (row) => (
-                    <span className="text-on-surface-variant">
-                      {row.partyName || '—'}
-                    </span>
-                  )
-                },
-                {
-                  id: 'actions',
-                  header: 'Actions',
-                  align: 'right',
-                  width: 'w-20',
-                  cell: (row) => (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        void handleDelete(row)
-                      }}
-                      disabled={deleteLedgerEntry.isPending}
-                      className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
-                      title="Delete transaction"
-                    >
-                      <Trash2 aria-hidden="true" className="size-4" />
-                    </button>
-                  )
-                }
-              ]}
-              data={recentTransactions ?? []}
-              emptyMessage="No recent transactions found."
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <ArrowDownToLine aria-hidden="true" className="size-4 text-success" strokeWidth={1.5} />
+            <h2 className="text-h3 text-on-surface">Today's Inward — Batch Activity</h2>
+          </div>
+          <Card className="overflow-hidden">
+            <TodayBatchTable
+              direction="INWARD"
+              expandedKey={expandedKey}
+              isLoading={todayPending}
+              onToggle={toggle}
+              rows={today?.inward ?? []}
             />
-          )}
-        </Card>
+          </Card>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <ArrowUpFromLine aria-hidden="true" className="size-4 text-tertiary" strokeWidth={1.5} />
+            <h2 className="text-h3 text-on-surface">Today's Outward — Batch Activity</h2>
+          </div>
+          <Card className="overflow-hidden">
+            <TodayBatchTable
+              direction="OUTWARD"
+              expandedKey={expandedKey}
+              isLoading={todayPending}
+              onToggle={toggle}
+              rows={today?.outward ?? []}
+            />
+          </Card>
+        </div>
       </div>
     </div>
   )

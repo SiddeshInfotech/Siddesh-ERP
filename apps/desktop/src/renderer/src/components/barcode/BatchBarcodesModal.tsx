@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, ScanLine, X, Trash2 } from 'lucide-react'
+import { Activity, ScanLine, X } from 'lucide-react'
 
+import { StatusBadge, formatStamp } from '@/components/barcode/BatchBarcodesSubTable'
 import { cn } from '@/lib/cn'
-import { useBatchBarcodes, useDeleteBarcode, type BarcodeStatus, type BatchBarcodeRow } from '@/hooks/useBatchBarcodes'
+import { useBatchBarcodes, type BatchBarcodeRow } from '@/hooks/useBatchBarcodes'
 import { useScanReceive } from '@/hooks/useScanReceive'
-import { useConfirm } from '@/hooks/useConfirm'
-import { useAlert } from '@/hooks/useAlert'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { DataTable } from '../ui/DataTable'
@@ -19,45 +18,6 @@ interface BatchBarcodesModalProps {
   onClose: () => void
 }
 
-const STATUS_STYLES: Record<BarcodeStatus, string> = {
-  GENERATED: 'bg-on-surface/[0.06] text-on-surface-variant',
-  IN_STOCK: 'bg-success/10 text-success',
-  OUTWARD: 'bg-primary/10 text-primary',
-  VOID: 'bg-error/10 text-error',
-  AVAILABLE: 'bg-success/10 text-success',
-  ALLOCATED: 'bg-warning/10 text-warning-dark',
-  INWARDED: 'bg-success/10 text-success',
-  OUTWARDED: 'bg-primary/10 text-primary',
-  DAMAGED: 'bg-error/10 text-error',
-  CANCELLED: 'bg-error/10 text-error'
-}
-
-const STATUS_LABEL: Record<BarcodeStatus, string> = {
-  GENERATED: 'Generated',
-  IN_STOCK: 'In stock',
-  OUTWARD: 'Outward',
-  VOID: 'Void',
-  AVAILABLE: 'Available',
-  ALLOCATED: 'Allocated',
-  INWARDED: 'In stock',
-  OUTWARDED: 'Outward',
-  DAMAGED: 'Damaged',
-  CANCELLED: 'Cancelled'
-}
-
-function StatusBadge({ status }: { status: BarcodeStatus }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-body-sm font-medium',
-        STATUS_STYLES[status]
-      )}
-    >
-      {STATUS_LABEL[status]}
-    </span>
-  )
-}
-
 type ScanFeedback =
   | { kind: 'received'; code: string }
   | { kind: 'already'; code: string }
@@ -68,28 +28,6 @@ type ScanFeedback =
 export function BatchBarcodesModal({ productId, productName, batchCode, onClose }: BatchBarcodesModalProps) {
   const { data: barcodes, isLoading, isError, error } = useBatchBarcodes(productId, batchCode)
   const scanReceive = useScanReceive()
-  const deleteBarcode = useDeleteBarcode()
-  const confirm = useConfirm()
-  const showAlert = useAlert()
-
-  async function handleDelete(barcode: BatchBarcodeRow) {
-    const ok = await confirm({
-      title: 'Delete Barcode Sticker',
-      description: `Are you sure you want to delete barcode sticker "${barcode.code}"?`,
-      confirmText: 'Delete Sticker'
-    })
-    if (!ok) return
-    try {
-      await deleteBarcode.mutateAsync(barcode.id)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to delete barcode sticker.'
-      void showAlert({
-        title: msg.includes('Cannot delete') ? 'Cannot Delete Item' : 'Action Failed',
-        description: msg,
-        tone: 'warning'
-      })
-    }
-  }
 
   const [scanValue, setScanValue] = useState('')
   const [feedback, setFeedback] = useState<ScanFeedback>(null)
@@ -108,19 +46,19 @@ export function BatchBarcodesModal({ productId, productName, batchCode, onClose 
     [barcodes]
   )
   const inStock = useMemo(
-    () => (barcodes ?? []).filter((b) => STATUS_LABEL[b.status] === 'In stock').length,
+    () => (barcodes ?? []).filter((b) => b.status === 'IN_STOCK' || b.status === 'INWARDED').length,
     [barcodes]
   )
   const generated = useMemo(
-    () => (barcodes ?? []).filter((b) => STATUS_LABEL[b.status] === 'Generated').length,
+    () => (barcodes ?? []).filter((b) => b.status === 'GENERATED').length,
     [barcodes]
   )
   const outward = useMemo(
-    () => (barcodes ?? []).filter((b) => STATUS_LABEL[b.status] === 'Outward').length,
+    () => (barcodes ?? []).filter((b) => b.status === 'OUTWARD' || b.status === 'OUTWARDED').length,
     [barcodes]
   )
   const voided = useMemo(
-    () => (barcodes ?? []).filter((b) => STATUS_LABEL[b.status] === 'Void').length,
+    () => (barcodes ?? []).filter((b) => b.status === 'VOID').length,
     [barcodes]
   )
   const total = barcodes?.length ?? 0
@@ -259,35 +197,25 @@ export function BatchBarcodesModal({ productId, productName, batchCode, onClose 
                 { header: 'Barcode Number', cell: (row) => <span className="font-mono">{row.code}</span> },
                 { header: 'Status', cell: (row) => <StatusBadge status={row.status} /> },
                 {
-                  header: 'Scanned At',
-                  cell: (row) => (row.scanned_at ? new Date(row.scanned_at).toLocaleString() : '—')
-                },
-                {
-                  header: 'Status Changed',
-                  cell: (row) => {
-                    // Prefer the receive-scan time; fall back to the row's last-updated time,
-                    // which is when a direct status change (e.g. from the phone) happened.
-                    const at = row.scanned_at ?? row.updated_at
-                    return at ? new Date(at).toLocaleString() : '—'
-                  }
-                },
-                { header: 'Performed By', cell: (row) => row.scanned_by_name ?? '—' },
-                { header: 'Device', cell: (row) => row.device_source ?? '—' },
-                { header: 'Symbology', cell: (row) => row.symbology },
-                {
-                  header: 'Actions',
-                  align: 'right',
+                  header: 'Generated',
                   cell: (row) => (
-                    <button
-                      onClick={() => void handleDelete(row)}
-                      disabled={deleteBarcode.isPending}
-                      className="inline-flex items-center justify-center rounded-lg p-1.5 text-error transition-colors hover:bg-error/10 disabled:opacity-50"
-                      title="Delete barcode sticker"
-                    >
-                      <Trash2 aria-hidden="true" className="size-4" />
-                    </button>
+                    <span className="font-mono text-xs">{formatStamp(row.generated_at)}</span>
                   )
-                }
+                },
+                {
+                  header: 'Inwarded',
+                  cell: (row) => (
+                    <span className="font-mono text-xs">{formatStamp(row.inwarded_at)}</span>
+                  )
+                },
+                {
+                  header: 'Outwarded',
+                  cell: (row) => (
+                    <span className="font-mono text-xs">{formatStamp(row.outwarded_at)}</span>
+                  )
+                },
+                { header: 'Scanned By', cell: (row) => row.scanned_by_name ?? row.generated_by_name ?? '—' },
+                { header: 'Scanned At', cell: (row) => row.scanned_office_name ?? (row.status === 'GENERATED' ? 'System' : '—') }
               ]}
               data={barcodes || []}
               emptyMessage="No barcodes generated for this batch."

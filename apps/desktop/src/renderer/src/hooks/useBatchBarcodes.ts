@@ -11,27 +11,35 @@ export interface BatchBarcodeRow {
   symbology: string
   status: BarcodeStatus
   created_at: string
-  /** When the physical unit was scanned in. Null while still GENERATED. */
+  /** When the label was generated. */
+  generated_at: string | null
+  /** Full name of the user who generated the label. */
+  generated_by_name: string | null
+  /** When the unit was most recently received (inwarded). Null until received. */
+  inwarded_at: string | null
+  /** When the unit was most recently issued (outwarded). Null until issued. */
+  outwarded_at: string | null
+  /** Most recent scan of any action — the current status change (→ "Scanned by/at"). */
   scanned_at: string | null
-  /** When the barcode row last changed — used as the status-change time for status
-   * updates that don't go through a receive scan (e.g. the mobile app flips it directly). */
-  updated_at: string | null
-  /** Full name of the user who scanned it (→ "Performed By"). */
+  /** Full name of the user who last changed the status (→ "Scanned by"). */
   scanned_by_name: string | null
+  /** Office of the login that last changed the status (→ "Scanned at"). */
+  scanned_office_name: string | null
   device_source: ScanSource | null
 }
 
 /**
- * The item-level barcodes of one batch, each with its live scan lifecycle.
+ * The item-level barcodes of one batch, each with its full scan lifecycle.
  *
- * Reads `v_batch_barcodes`, which joins each barcode to its latest RECEIVE scan
- * (who / when / device). Resolves the batch_code the UI holds into a batch_id first.
+ * Reads `v_batch_barcodes`, which stamps each barcode with when it was generated,
+ * inwarded, and outwarded, plus who last changed its status and at which office.
+ * Resolves the batch_code the UI holds into a batch_id first.
  *
  * @returns The batch's barcodes ordered by code. Unknown batch_code returns `[]`.
  */
 export function useBatchBarcodes(productId?: string | null, batchCode?: string | null) {
   return useQuery({
-    queryKey: ['batch_barcodes_v5', productId, batchCode],
+    queryKey: ['batch_barcodes_v6', productId, batchCode],
     enabled: !!productId && !!batchCode,
     queryFn: async () => {
       const { data: batch, error: batchError } = await supabase
@@ -44,38 +52,32 @@ export function useBatchBarcodes(productId?: string | null, batchCode?: string |
       if (batchError) throw batchError
       if (!batch) return []
 
+      // Cast: migration 47 adds generated_at/inwarded_at/outwarded_at/scanned_office_name;
+      // db:types picks them up on regeneration (repo pattern for not-yet-typed columns).
       const { data, error } = await supabase
-        .from('v_batch_barcodes')
-        .select('id, code, symbology, status, created_at, scanned_at, scanned_by_name, device_source')
+        .from('v_batch_barcodes' as any)
+        .select(
+          'id, code, symbology, status, created_at, generated_at, generated_by_name, inwarded_at, outwarded_at, scanned_at, scanned_by_name, scanned_office_name, device_source'
+        )
         .eq('batch_id', batch.id)
         .order('code', { ascending: true })
 
       if (error) throw error
 
-      // The receive-scan view has no updated_at, but a direct status change (e.g. from the
-      // mobile app) stamps product_barcodes.updated_at. Fetch it so the UI can show when
-      // each barcode's status last changed even without a receive scan.
-      const ids = (data ?? []).map((r) => r.id).filter((id): id is string => !!id)
-      const updatedAtById = new Map<string, string | null>()
-      if (ids.length > 0) {
-        const { data: updatedRows, error: updatedError } = await supabase
-          .from('product_barcodes')
-          .select('id, updated_at')
-          .in('id', ids)
-        if (updatedError) throw updatedError
-        for (const r of updatedRows ?? []) updatedAtById.set(r.id, r.updated_at ?? null)
-      }
-
-      return (data ?? []).map((row) => ({
+      return (data ?? []).map((row: any) => ({
         id: row.id ?? '',
         code: row.code ?? '',
         symbology: row.symbology ?? 'CODE128',
         status: (row.status ?? 'GENERATED') as BarcodeStatus,
         created_at: row.created_at ?? '',
-        scanned_at: row.scanned_at,
-        updated_at: row.id ? updatedAtById.get(row.id) ?? null : null,
-        scanned_by_name: row.scanned_by_name,
-        device_source: row.device_source as ScanSource | null
+        generated_at: row.generated_at ?? row.created_at ?? null,
+        generated_by_name: row.generated_by_name ?? null,
+        inwarded_at: row.inwarded_at ?? null,
+        outwarded_at: row.outwarded_at ?? null,
+        scanned_at: row.scanned_at ?? null,
+        scanned_by_name: row.scanned_by_name ?? null,
+        scanned_office_name: row.scanned_office_name ?? null,
+        device_source: (row.device_source ?? null) as ScanSource | null
       })) as BatchBarcodeRow[]
     }
   })

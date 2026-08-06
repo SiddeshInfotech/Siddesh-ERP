@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Building2, Pencil, Plus, Power, PowerOff } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Building2, Info, KeyRound, Pencil, Plus, Power, PowerOff } from 'lucide-react'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -10,9 +10,11 @@ import { useConfirm } from '@/hooks/useConfirm'
 import {
   useCreateOffice,
   useOffices,
+  useOfficeLogins,
   useSetOfficeActive,
   useUpdateOffice,
   type OfficeInput,
+  type OfficeLoginAccount,
   type OfficeRow
 } from '@/hooks/useOffices'
 import { cn } from '@/lib/cn'
@@ -27,15 +29,28 @@ import { isUniqueViolation, toUserMessage } from '@/lib/errors'
 
 const OFFICE_CODE_RE = /^[A-Z0-9_]{2,10}$/
 
-const EMPTY_FORM: OfficeInput = { code: '', name: '', city: '', state: '', gstNo: '' }
+const EMPTY_FORM: OfficeInput = { code: '', name: '', address: '', city: '', state: '', gstNo: '' }
 
 export function OfficeManagement() {
   const { data: offices, isPending, error, refetch } = useOffices()
+  const { data: officeLogins } = useOfficeLogins()
   const createOffice = useCreateOffice()
   const updateOffice = useUpdateOffice()
   const setActive = useSetOfficeActive()
   const confirm = useConfirm()
   const showAlert = useAlert()
+
+  // office_id → its login account(s). An office usually has one; more is allowed.
+  const loginsByOffice = useMemo(() => {
+    const map = new Map<string, OfficeLoginAccount[]>()
+    for (const login of officeLogins ?? []) {
+      if (login.officeId === null) continue
+      const list = map.get(login.officeId) ?? []
+      list.push(login)
+      map.set(login.officeId, list)
+    }
+    return map
+  }, [officeLogins])
 
   const [editing, setEditing] = useState<OfficeRow | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -56,6 +71,7 @@ export function OfficeManagement() {
     setForm({
       code: row.code,
       name: row.name,
+      address: row.address ?? '',
       city: row.city ?? '',
       state: row.state ?? '',
       gstNo: row.gstNo ?? ''
@@ -128,10 +144,35 @@ export function OfficeManagement() {
         <div className="flex flex-col">
           <span className="font-semibold text-on-surface">{row.name}</span>
           <span className="text-body-sm text-on-surface-variant/60">
-            {[row.city, row.state].filter(Boolean).join(', ') || '—'}
+            {[row.address, row.city, row.state].filter(Boolean).join(', ') || '—'}
           </span>
         </div>
       )
+    },
+    {
+      id: 'login',
+      header: 'Login',
+      width: 'w-52',
+      cell: (row) => {
+        const logins = loginsByOffice.get(row.id) ?? []
+        if (logins.length === 0) {
+          // Not an error — the office simply has no login account set up yet.
+          return <span className="text-body-sm text-on-surface-variant/50">Not set up</span>
+        }
+        return (
+          <div className="flex flex-col gap-1">
+            {logins.map((login) => (
+              <span key={login.id} className="inline-flex items-center gap-1.5 text-body-sm">
+                <KeyRound aria-hidden="true" className="size-3.5 shrink-0 text-primary" />
+                <span className="text-on-surface">{login.fullName}</span>
+                {login.isActive ? null : (
+                  <span className="text-body-sm text-on-surface-variant/50">(inactive)</span>
+                )}
+              </span>
+            ))}
+          </div>
+        )
+      }
     },
     {
       id: 'status',
@@ -201,6 +242,17 @@ export function OfficeManagement() {
         )}
       </div>
 
+      <div className="mb-4 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-body-sm text-on-surface-variant">
+        <Info className="size-4 shrink-0 mt-0.5 text-primary" />
+        <span>
+          Each office signs in with its own login. Create it in the Supabase Dashboard
+          (Authentication → Add user) with user-metadata
+          <span className="font-mono text-xs"> office_id</span> and
+          <span className="font-mono text-xs"> is_office_login: true</span>; it then appears in the
+          Login column here. Passwords are managed by Supabase — never stored in the app.
+        </span>
+      </div>
+
       {isFormOpen ? (
         <div className="mb-5 rounded-xl border border-border/60 bg-surface-variant/20 p-4">
           <h4 className="text-body-lg font-bold text-on-surface mb-3">
@@ -228,6 +280,13 @@ export function OfficeManagement() {
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            />
+            <Field
+              label="Address / Location"
+              containerClassName="md:col-span-2"
+              value={form.address}
+              hint="Street address of this office."
+              onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
             />
             <Field
               label="City"

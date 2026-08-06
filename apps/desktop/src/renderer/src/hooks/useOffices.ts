@@ -17,6 +17,8 @@ export interface OfficeRow {
   id: string
   code: string
   name: string
+  /** Street address — the office's physical location (client chat 06/08/2026). */
+  address: string | null
   city: string | null
   state: string | null
   gstNo: string | null
@@ -26,6 +28,7 @@ export interface OfficeRow {
 export interface OfficeInput {
   code: string
   name: string
+  address: string
   city: string
   state: string
   gstNo: string
@@ -39,8 +42,22 @@ export interface TeamMember {
   isActive: boolean
 }
 
+/**
+ * The shared Supabase-Auth account that represents one office (its "login").
+ * Created in the Supabase Dashboard with is_office_login metadata; the app only
+ * lists it. Kept out of {@link TeamMember} so office logins never clutter the
+ * User Management list.
+ */
+export interface OfficeLoginAccount {
+  id: string
+  fullName: string
+  officeId: string | null
+  isActive: boolean
+}
+
 const OFFICES_KEY = ['offices'] as const
 const TEAM_KEY = ['team'] as const
+const OFFICE_LOGINS_KEY = ['office_logins'] as const
 
 /** Trim a form value; an empty string becomes null so optional columns stay truly empty. */
 function orNull(value: string): string | null {
@@ -52,6 +69,7 @@ function toInsert(input: OfficeInput) {
   return {
     code: input.code.trim().toUpperCase(),
     name: input.name.trim(),
+    address: orNull(input.address),
     city: orNull(input.city),
     state: orNull(input.state),
     gst_no: orNull(input.gstNo)
@@ -63,6 +81,7 @@ function toInsert(input: OfficeInput) {
 function toUpdate(input: OfficeInput) {
   return {
     name: input.name.trim(),
+    address: orNull(input.address),
     city: orNull(input.city),
     state: orNull(input.state),
     gst_no: orNull(input.gstNo)
@@ -77,7 +96,7 @@ export function useOffices() {
     queryFn: async (): Promise<OfficeRow[]> => {
       const { data, error } = await supabase
         .from('offices')
-        .select('id, code, name, city, state, gst_no, is_active')
+        .select('id, code, name, address, city, state, gst_no, is_active')
         .is('deleted_at', null)
         .order('name')
 
@@ -90,6 +109,7 @@ export function useOffices() {
         id: o.id,
         code: o.code,
         name: o.name,
+        address: o.address,
         city: o.city,
         state: o.state,
         gstNo: o.gst_no,
@@ -161,12 +181,15 @@ export function useSetOfficeActive() {
 }
 
 /**
- * Existing logins, for the Admin User Management list (read-only).
+ * Existing person logins, for the Admin User Management list (read-only).
  *
  * Creating a login is deliberately NOT here: it needs Supabase's Admin API (service_role),
  * which can never live in the client (rule 0.1 — the .exe is a public ZIP). New logins are
- * provisioned server-side; this hook only shows who already exists. Admin RLS on `profiles`
- * returns every row; a non-admin sees only their own.
+ * provisioned in the Supabase Dashboard; this hook only shows who already exists. Admin RLS
+ * on `profiles` returns every row; a non-admin sees only their own.
+ *
+ * Office logins (`is_office_login`) are excluded — they are shown under Office Management,
+ * not mixed into the people list (client chat 06/08/2026).
  */
 export function useTeam() {
   return useQuery({
@@ -176,6 +199,9 @@ export function useTeam() {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, role, is_active, offices(name)')
+        // `is_office_login` is added by migration 45; the cast holds until db:types is
+        // regenerated against it (same pattern as the untyped views in this codebase).
+        .eq('is_office_login' as any, false)
         .is('deleted_at', null)
         .order('full_name')
 
@@ -194,6 +220,41 @@ export function useTeam() {
           isActive: p.is_active
         }
       })
+    }
+  })
+}
+
+/**
+ * The office-login accounts, keyed for display under each office.
+ *
+ * These are the shared Supabase-Auth accounts flagged `is_office_login`. Provisioned in the
+ * Supabase Dashboard (the client, not the .exe, can create auth users); the app only lists
+ * them so an admin can see which offices have a login set up. Admin RLS returns all rows.
+ */
+export function useOfficeLogins() {
+  return useQuery({
+    queryKey: OFFICE_LOGINS_KEY,
+    staleTime: 60_000,
+    queryFn: async (): Promise<OfficeLoginAccount[]> => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, office_id, is_active')
+        // See useTeam: cast until db:types picks up migration 45's is_office_login column.
+        .eq('is_office_login' as any, true)
+        .is('deleted_at', null)
+        .order('full_name')
+
+      if (error) {
+        logger.error('Could not load office logins', toLogContext(error))
+        throw error
+      }
+
+      return data.map((p) => ({
+        id: p.id,
+        fullName: p.full_name,
+        officeId: p.office_id,
+        isActive: p.is_active
+      }))
     }
   })
 }

@@ -69,39 +69,87 @@ export function useCurrentStock() {
     queryKey: ['report', 'current-stock'],
     staleTime: REPORT_STALE_TIME,
     queryFn: async (): Promise<StockRow[]> => {
-      const { data, error } = await supabase
-        .from('v_stock_dashboard')
-        .select(
-          'product_id, product_code, product_name, sku_barcode, category_name, brand_name, uom_code, office_name, opening_qty, inward_qty, outward_qty, qty_on_hand, qty_reserved, qty_available, min_stock, is_low_stock'
-        )
-        .order('product_name')
-        .limit(REPORT_LIMIT)
+      const [productsResult, stockResult] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id, name, product_code, min_stock, categories(name), brands(name), uoms(code), product_barcodes(code, is_primary)')
+          .eq('is_active', true)
+          .is('deleted_at', null),
+        supabase
+          .from('v_stock_dashboard')
+          .select('product_id, product_code, product_name, sku_barcode, category_name, brand_name, uom_code, office_name, opening_qty, inward_qty, outward_qty, qty_on_hand, qty_reserved, qty_available, min_stock, is_low_stock')
+          .limit(REPORT_LIMIT)
+      ])
 
-      if (error) {
-        logger.error('Current stock report failed', toLogContext(error))
-        throw error
+      if (stockResult.error) {
+        logger.error('Current stock report failed', toLogContext(stockResult.error))
+        throw stockResult.error
+      }
+      if (productsResult.error) {
+        logger.error('Failed to load products for stock report', toLogContext(productsResult.error))
+        throw productsResult.error
       }
 
-      return data
-        .filter((row) => row.product_id !== null)
-        .map((row) => ({
-          productId: row.product_id ?? '',
-          productCode: row.product_code ?? '',
-          productName: row.product_name ?? '',
-          skuBarcode: row.sku_barcode ?? '',
-          categoryName: row.category_name,
-          brandName: row.brand_name,
-          uomCode: row.uom_code,
-          officeName: row.office_name,
-          openingQty: row.opening_qty ?? 0,
-          inwardQty: row.inward_qty ?? 0,
-          outwardQty: row.outward_qty ?? 0,
-          qtyOnHand: row.qty_on_hand ?? 0,
-          qtyReserved: row.qty_reserved ?? 0,
-          qtyAvailable: row.qty_available ?? 0,
-          minStock: row.min_stock ?? 0,
-          isLowStock: row.is_low_stock ?? false
-        }))
+      const dashboardByProduct = new Map<string, any[]>()
+      for (const row of stockResult.data || []) {
+        if (!row.product_id) continue
+        if (!dashboardByProduct.has(row.product_id)) dashboardByProduct.set(row.product_id, [])
+        dashboardByProduct.get(row.product_id)!.push(row)
+      }
+
+      const results: StockRow[] = []
+      
+      for (const p of productsResult.data || []) {
+        const dRows = dashboardByProduct.get(p.id)
+        if (dRows && dRows.length > 0) {
+          results.push(
+            ...dRows.map((row) => ({
+              productId: row.product_id ?? '',
+              productCode: row.product_code ?? '',
+              productName: row.product_name ?? '',
+              skuBarcode: row.sku_barcode ?? '',
+              categoryName: row.category_name,
+              brandName: row.brand_name,
+              uomCode: row.uom_code,
+              officeName: row.office_name,
+              openingQty: row.opening_qty ?? 0,
+              inwardQty: row.inward_qty ?? 0,
+              outwardQty: row.outward_qty ?? 0,
+              qtyOnHand: row.qty_on_hand ?? 0,
+              qtyReserved: row.qty_reserved ?? 0,
+              qtyAvailable: row.qty_available ?? 0,
+              minStock: row.min_stock ?? 0,
+              isLowStock: row.is_low_stock ?? false
+            }))
+          )
+        } else {
+          // No stock for this product in ANY office the user can see.
+          // Create a single 0-stock row to ensure it still appears in the report.
+          const primaryCode = (p.product_barcodes as any[])?.find(b => b.is_primary)?.code
+          const anyCode = (p.product_barcodes as any[])?.[0]?.code
+          
+          results.push({
+            productId: p.id,
+            productCode: p.product_code ?? '',
+            productName: p.name,
+            skuBarcode: primaryCode ?? anyCode ?? p.product_code ?? '',
+            categoryName: (p.categories as any)?.name ?? null,
+            brandName: (p.brands as any)?.name ?? null,
+            uomCode: (p.uoms as any)?.code ?? null,
+            officeName: '—',
+            openingQty: 0,
+            inwardQty: 0,
+            outwardQty: 0,
+            qtyOnHand: 0,
+            qtyReserved: 0,
+            qtyAvailable: 0,
+            minStock: p.min_stock,
+            isLowStock: 0 <= p.min_stock
+          })
+        }
+      }
+
+      return results.sort((a, b) => a.productName.localeCompare(b.productName))
     }
   })
 }
