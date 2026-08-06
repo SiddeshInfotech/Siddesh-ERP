@@ -122,7 +122,7 @@ export function Outward() {
   const [showForm, setShowForm] = useState(false)
   const [historyFilter, setHistoryFilter] = useState<'all' | 'product'>('all')
   const [historyTab, setHistoryTab] = useState<'stock' | 'party' | 'other'>('stock')
-  const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string } | null>(null)
+  const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string; documentId: string } | null>(null)
   const [batchOutwardQtys, setBatchOutwardQtys] = useState<Record<string, string>>({})
 
   function handleBatchQtyChange(batchId: string, val: string, maxQty?: number) {
@@ -363,7 +363,8 @@ export function Outward() {
                 setBatchModalData({
                   productId: row.product_id,
                   productName: row.product_name,
-                  batchCode: row.batch_code!
+                  batchCode: row.batch_code!,
+                  documentId: row.id
                 })
               }
             >
@@ -571,6 +572,8 @@ export function Outward() {
             productId={batchModalData.productId}
             productName={batchModalData.productName}
             batchCode={batchModalData.batchCode}
+            scanContext="OUTWARD"
+            documentId={batchModalData.documentId}
             onClose={() => setBatchModalData(null)}
           />
         )}
@@ -674,7 +677,7 @@ export function Outward() {
                           </td>
                         </tr>
                         {/* Batches with stock */}
-                        {formInwardData && formInwardData.filter(b => b.remaining_qty > 0).map((row) => (
+                        {formInwardData && formInwardData.filter(b => b.remaining_qty > 0 && b.batch_id).map((row) => (
                           <tr key={row.id} className="hairline-b hover:bg-on-surface/[0.02] h-row">
                             <td className="px-4 text-on-surface">{new Date(row.received_at).toLocaleDateString()}</td>
                             <td className="px-4 font-semibold text-primary">{row.batch_code || '—'}</td>
@@ -694,7 +697,7 @@ export function Outward() {
                             </td>
                           </tr>
                         ))}
-                        {(!formInwardData || formInwardData.filter(b => b.remaining_qty > 0).length === 0) && (
+                        {(!formInwardData || formInwardData.filter(b => b.remaining_qty > 0 && b.batch_id).length === 0) && (
                           <tr>
                             <td colSpan={6} className="px-4 py-8 text-center text-on-surface-variant/60">
                               No active batches with stock found. You can dispatch from "Generic / No Batch".

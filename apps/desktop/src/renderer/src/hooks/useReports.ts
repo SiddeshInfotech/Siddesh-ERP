@@ -46,6 +46,7 @@ export interface StockRow {
   categoryName: string | null
   brandName: string | null
   uomCode: string | null
+  officeId: string | null
   officeName: string | null
   openingQty: number
   inwardQty: number
@@ -77,7 +78,7 @@ export function useCurrentStock() {
           .is('deleted_at', null),
         supabase
           .from('v_stock_dashboard')
-          .select('product_id, product_code, product_name, sku_barcode, category_name, brand_name, uom_code, office_name, opening_qty, inward_qty, outward_qty, qty_on_hand, qty_reserved, qty_available, min_stock, is_low_stock')
+          .select('product_id, product_code, product_name, sku_barcode, category_name, brand_name, uom_code, office_id, office_name, opening_qty, inward_qty, outward_qty, qty_on_hand, qty_reserved, qty_available, min_stock, is_low_stock')
           .limit(REPORT_LIMIT)
       ])
 
@@ -111,6 +112,7 @@ export function useCurrentStock() {
               categoryName: row.category_name,
               brandName: row.brand_name,
               uomCode: row.uom_code,
+              officeId: row.office_id ?? null,
               officeName: row.office_name,
               openingQty: row.opening_qty ?? 0,
               inwardQty: row.inward_qty ?? 0,
@@ -136,6 +138,7 @@ export function useCurrentStock() {
             categoryName: (p.categories as any)?.name ?? null,
             brandName: (p.brands as any)?.name ?? null,
             uomCode: (p.uoms as any)?.code ?? null,
+            officeId: null,
             officeName: '—',
             openingQty: 0,
             inwardQty: 0,

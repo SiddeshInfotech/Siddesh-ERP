@@ -116,7 +116,7 @@ export function Inward() {
   const [historyFilter, setHistoryFilter] = useState<'all' | 'product'>('all')
   const [historyTab, setHistoryTab] = useState<'stock' | 'supplier'>('stock')
   const [showForm, setShowForm] = useState(false)
-  const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string } | null>(null)
+  const [batchModalData, setBatchModalData] = useState<{ productId: string; productName: string; batchCode: string; documentId: string } | null>(null)
 
   useEffect(() => {
     setBatchSelection(null)
@@ -340,7 +340,8 @@ export function Inward() {
                   setBatchModalData({
                     productId: row.product_id,
                     productName: row.product_name,
-                    batchCode: row.batch_code || ''
+                    batchCode: row.batch_code || '',
+                    documentId: row.id
                   })
                 }}
               >
@@ -533,6 +534,8 @@ export function Inward() {
             productId={batchModalData.productId}
             productName={batchModalData.productName}
             batchCode={batchModalData.batchCode}
+            scanContext="INWARD"
+            documentId={batchModalData.documentId}
             onClose={() => setBatchModalData(null)}
           />
         )}

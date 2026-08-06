@@ -15,6 +15,8 @@ interface BatchBarcodesModalProps {
   productId: string
   productName: string
   batchCode: string
+  scanContext: 'INWARD' | 'OUTWARD'
+  documentId: string
   onClose: () => void
 }
 
@@ -25,7 +27,7 @@ type ScanFeedback =
   | { kind: 'error'; message: string }
   | null
 
-export function BatchBarcodesModal({ productId, productName, batchCode, onClose }: BatchBarcodesModalProps) {
+export function BatchBarcodesModal({ productId, productName, batchCode, scanContext, documentId, onClose }: BatchBarcodesModalProps) {
   const { data: barcodes, isLoading, isError, error } = useBatchBarcodes(productId, batchCode)
   const scanReceive = useScanReceive()
 
@@ -80,11 +82,12 @@ export function BatchBarcodesModal({ productId, productName, batchCode, onClose 
     const deviceSource = code.length >= 4 && elapsed < 100 ? 'USB' : 'MANUAL'
 
     scanReceive.mutate(
-      { code, deviceSource },
+      { code, deviceSource, scanContext, documentId },
       {
         onSuccess: (result) => {
           if (result.found === false) setFeedback({ kind: 'notfound', code })
           else if (result.already) setFeedback({ kind: 'already', code })
+          else if (result.ok === false) setFeedback({ kind: 'error', message: result.error || 'Scan rejected by server' })
           else setFeedback({ kind: 'received', code })
         },
         onError: (err) =>

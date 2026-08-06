@@ -11,11 +11,14 @@ export interface ScanReceiveResult {
   barcode_id?: string
   code?: string
   status?: string
+  error?: string
 }
 
 interface ScanReceiveInput {
   code: string
   deviceSource: ScanSource
+  scanContext: 'INWARD' | 'OUTWARD'
+  documentId: string
 }
 
 /**
@@ -34,11 +37,13 @@ export function useScanReceive() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ code, deviceSource }: ScanReceiveInput): Promise<ScanReceiveResult> => {
+    mutationFn: async ({ code, deviceSource, scanContext, documentId }: ScanReceiveInput): Promise<ScanReceiveResult> => {
       const { data, error } = await supabase.rpc('scan_receive', {
         p_code: code,
         p_client_txn_id: crypto.randomUUID(),
-        p_device_source: deviceSource
+        p_device_source: deviceSource,
+        p_scan_context: scanContext,
+        p_document_id: documentId
       })
       if (error) throw error
       return (data ?? {}) as ScanReceiveResult

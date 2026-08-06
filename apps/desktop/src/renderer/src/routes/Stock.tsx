@@ -58,11 +58,12 @@ export function Stock() {
   const { data, isPending, error, refetch } = useCurrentStock()
   const { exportExcel, exportPdf, isExporting, error: exportError } = useExportReport()
   const { session } = useAuth()
-  const { isAdmin } = useProfile()
+  const { data: profile, isAdmin } = useProfile()
   const deleteProduct = useDeleteProduct()
   const confirm = useConfirm()
   const showAlert = useAlert()
   const [view, setView] = useState<View>('all')
+  const [officeFilter, setOfficeFilter] = useState<'my' | 'all'>('my')
 
   async function handleDelete(event: React.MouseEvent, row: StockRow) {
     event.stopPropagation()
@@ -85,11 +86,18 @@ export function Stock() {
   }
 
   const rows = useMemo(() => {
-    const all = data ?? []
+    let all = data ?? []
+    
+    // Admins see all offices from the DB. Allow them to filter by their current office.
+    if (isAdmin && officeFilter === 'my') {
+      // Show rows for their office, OR products with 0 stock that have no office (null/—)
+      all = all.filter(r => r.officeId === profile?.officeId || r.officeId === null)
+    }
+
     if (view === 'low') return all.filter((row) => row.isLowStock)
     if (view === 'out') return all.filter((row) => row.qtyAvailable <= 0)
     return all
-  }, [data, view])
+  }, [data, view, officeFilter, isAdmin, profile])
 
   // Report header facts (SRD §7) — printed above the table in the PDF so an exported sheet
   // says what it is, when it was run, over what, and by whom.
@@ -279,6 +287,18 @@ export function Stock() {
             options={VIEW_OPTIONS}
             value={view}
           />
+          {isAdmin && (
+            <Select
+              containerClassName="w-48"
+              label="Location"
+              onChange={(next) => setOfficeFilter(next as 'my' | 'all')}
+              options={[
+                { value: 'my', label: 'My Location' },
+                { value: 'all', label: 'All Locations' }
+              ]}
+              value={officeFilter}
+            />
+          )}
         </div>
 
         <DataTable
