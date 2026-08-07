@@ -17,6 +17,7 @@ import { useProductPicker } from '@/hooks/useProductPicker'
 import { useSaveOutward, useDeleteOutward, useDeleteInward, type OutwardType } from '@/hooks/useSaveMovement'
 import { useConfirm } from '@/hooks/useConfirm'
 import { useAlert } from '@/hooks/useAlert'
+import { useCustomers } from '@/hooks/useCustomers'
 import { isInsufficientStock, toUserMessage } from '@/lib/errors'
 import {
   findGstProblem,
@@ -24,6 +25,7 @@ import {
   findQtyProblem,
   normaliseGst,
   orDash,
+  orDateTime,
   orNull
 } from '@/lib/movementForm'
 
@@ -112,6 +114,19 @@ export function Outward() {
   const [mobile, setMobile] = useState('')
   const [partyGst, setPartyGst] = useState('')
   const [partyAddress, setPartyAddress] = useState('')
+  const [selectedCustomerId, setSelectedCustomerId] = useState('')
+
+  const { data: customers } = useCustomers()
+
+  const customerOptions = useMemo(
+    () =>
+      (customers || []).map((c) => ({
+        value: c.id,
+        label: c.name,
+        description: c.gst_no ? `GST: ${c.gst_no}` : c.mobile || undefined
+      })),
+    [customers]
+  )
   const [invoiceNo, setInvoiceNo] = useState('')
   const [salesOrderNo, setSalesOrderNo] = useState('')
   const [handedOverBy, setHandedOverBy] = useState('')
@@ -203,6 +218,7 @@ export function Outward() {
     setMobile('')
     setPartyGst('')
     setPartyAddress('')
+    setSelectedCustomerId('')
     setInvoiceNo('')
     setSalesOrderNo('')
     setHandedOverBy('')
@@ -391,6 +407,10 @@ export function Outward() {
       { header: 'Qty Given', align: 'right', cell: (row) => row.outward_qty },
       { header: 'Remaining Qty', align: 'right', cell: (row) => row.remaining_qty },
       { header: 'Total Qty', align: 'right', cell: (row) => row.total_qty },
+      { header: 'Inwarded', cell: (row) => <span className="whitespace-nowrap">{orDateTime(row.inwarded_at)}</span> },
+      { header: 'Outwarded', cell: (row) => <span className="whitespace-nowrap">{orDateTime(row.outwarded_at)}</span> },
+      { header: 'Scanned By', cell: (row) => <span className="whitespace-nowrap">{orDash(row.scanned_by)}</span> },
+      { header: 'Scanned At', cell: (row) => <span className="whitespace-nowrap">{orDash(row.scanned_at_office)}</span> },
       {
         header: 'Actions',
         align: 'right',
@@ -546,7 +566,7 @@ export function Outward() {
           {isStockTab ? (
             <DataTable<OutwardHistoryRow>
               columns={stockColumns}
-              data={processedOutwardData.filter((r) => r.remaining_qty > 0)}
+              data={processedOutwardData}
               isLoading={outwardHistoryLoading}
               error={outwardHistoryError ? toUserMessage(outwardHistoryError) : undefined}
               emptyMessage="No stock entries yet."
@@ -725,18 +745,49 @@ export function Outward() {
           title="Party"
         >
           <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <Select
+                label="Select Existing Party (Optional)"
+                placeholder="Choose a school / customer to autofill their details..."
+                options={customerOptions}
+                value={selectedCustomerId}
+                onChange={(val) => {
+                  setSelectedCustomerId(val)
+                  const customer = customers?.find((c) => c.id === val)
+                  if (customer) {
+                    setPartyName(customer.name)
+                    setContactPerson(customer.contact_person || '')
+                    setMobile(customer.mobile || '')
+                    setPartyGst(customer.gst_no || '')
+                    setPartyAddress(customer.address || '')
+                  } else {
+                    setPartyName('')
+                    setContactPerson('')
+                    setMobile('')
+                    setPartyGst('')
+                    setPartyAddress('')
+                  }
+                }}
+              />
+            </div>
             <Field
               error={errors.partyName}
               hint="Reused if this school already exists."
               label="School / customer name"
-              onChange={(event) => setPartyName(event.target.value)}
+              onChange={(event) => {
+                setPartyName(event.target.value)
+                setSelectedCustomerId('')
+              }}
               required={outwardType === 'SALE'}
               value={partyName}
             />
             <Field
               hint="Optional."
               label="Contact person"
-              onChange={(event) => setContactPerson(event.target.value)}
+              onChange={(event) => {
+                setContactPerson(event.target.value)
+                setSelectedCustomerId('')
+              }}
               value={contactPerson}
             />
             <Field
@@ -744,7 +795,10 @@ export function Outward() {
               hint="Optional. 10 digits."
               inputMode="numeric"
               label="Mobile number"
-              onChange={(event) => setMobile(event.target.value)}
+              onChange={(event) => {
+                setMobile(event.target.value)
+                setSelectedCustomerId('')
+              }}
               value={mobile}
             />
             <Field
@@ -752,14 +806,20 @@ export function Outward() {
               hint="Optional. 15 characters."
               label="GST number"
               mono
-              onChange={(event) => setPartyGst(event.target.value.toUpperCase())}
+              onChange={(event) => {
+                setPartyGst(event.target.value.toUpperCase())
+                setSelectedCustomerId('')
+              }}
               value={partyGst}
             />
             <Textarea
               containerClassName="col-span-2"
               hint="Optional."
               label="Address"
-              onChange={(event) => setPartyAddress(event.target.value)}
+              onChange={(event) => {
+                setPartyAddress(event.target.value)
+                setSelectedCustomerId('')
+              }}
               rows={2}
               value={partyAddress}
             />

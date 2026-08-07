@@ -73,6 +73,18 @@ export function orDash(value: string | null | undefined): string {
   return value !== null && value !== undefined && value.trim().length > 0 ? value : '—'
 }
 
+/**
+ * Formats an ISO timestamp for a history cell (SRD §18E — "Date and time").
+ *
+ * @returns the local date + time, or an em dash when the movement has not happened yet
+ *   (e.g. an inward batch whose units are still unscanned has no `inwarded_at`).
+ */
+export function orDateTime(value: string | null | undefined): string {
+  if (value === null || value === undefined || value.trim().length === 0) return '—'
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleString()
+}
+
 /** GST is stored upper-case; the CHECK only accepts upper-case. */
 export function normaliseGst(raw: string): string | null {
   const value = raw.trim().toUpperCase()

@@ -22,6 +22,11 @@ If these two disagree, integration fails.
 > **Amended 21/07/2026 — Antigravity.** Batch Management & Outward Delivery Method.
 > Added `p_batch_id` to both `save_inward` and `save_outward`. Added `p_invoice_file_path` to `save_inward`. Added `p_delivery_method` to `save_outward`.
 
+> **Amended 07/08/2026 — Ram.** Standalone mobile scan. Added `scan_mobile` (§4 below) — the phone's
+> only write path. It does NOT need a desktop document: the staff member picks Inward or Outward mode and
+> scans, and the server derives everything from the barcode's batch + status. Nothing existing changes; the
+> desktop's document-context `scan_receive` is untouched.
+
 ---
 
 ## Sprint Goal (one sentence)
@@ -171,6 +176,40 @@ Both RPCs look the party up by `lower(trim(name))` and create it if absent. The 
 address parameters **fill blanks only** — they never overwrite a value already on file.
 A typo typed into today's inward must not silently rewrite a supplier's GST number; correcting
 existing party details is an edit on that record, not a side effect of receiving stock.
+
+---
+
+### 4. `scan_mobile(...)` — the phone scanner's write path
+
+Called once per scanned unit. The app sends its current mode as `p_direction`; there is no
+document to pick. One physical unit = one scan = one ledger row.
+
+```ts
+const { data, error } = await supabase.rpc('scan_mobile', {
+  p_code:          'ST00000123',
+  p_client_txn_id: uuid,           // REQUIRED — one per scan, reused on retry (idempotency)
+  p_direction:     'INWARD',       // 'INWARD' | 'OUTWARD' — the app's current mode
+  p_device_source: 'CAMERA',       // USB | BLUETOOTH | CAMERA | MANUAL (default CAMERA)
+})
+```
+
+**Server rules (the app does not decide these):**
+- `INWARD` needs the unit's status to be `GENERATED`; it becomes `INWARDED` (+1 to stock).
+- `OUTWARD` needs `INWARDED` / `IN_STOCK` / `AVAILABLE`; it becomes `OUTWARDED` (−1). A unit
+  that was never inwarded **cannot** be outwarded — the scan is rejected.
+- Idempotent on `p_client_txn_id`: a replayed scan returns the first result, no second row.
+
+**Returns** (single JSON object):
+
+```jsonc
+{ "ok": true, "found": true, "already": false,
+  "barcode_id": "uuid", "status": "INWARDED", "code": "ST00000123", "ledger_id": "uuid" }
+```
+
+Branch on the flags, not on `error` (which stays null for these):
+- `found: false` → the barcode isn't registered (generate it on the desktop first).
+- `already: true` → the unit was already in the requested state (a friendly no-op).
+- `ok: false` → rejected; `error` holds a user-facing message (e.g. outward before inward).
 
 ---
 

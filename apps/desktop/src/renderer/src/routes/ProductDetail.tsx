@@ -354,6 +354,7 @@ export function ProductDetail() {
                 />
               </div>
               <Select
+                label="Status"
                 containerClassName="w-40"
                 onChange={setBarcodeStatusFilter}
                 options={BARCODE_STATUS_OPTIONS}

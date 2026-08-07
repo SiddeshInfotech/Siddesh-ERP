@@ -28,6 +28,11 @@ export interface InwardHistoryRow {
   invoice_date: string | null
   purchase_order_no: string | null
   notes: string | null
+  // Scan audit (who / when / where) — populated when units are scanned in/out
+  inwarded_at: string | null
+  outwarded_at: string | null
+  scanned_by: string | null
+  scanned_at_office: string | null
 }
 
 export function useInwardHistory(productId?: string | null) {
@@ -73,7 +78,11 @@ export function useInwardHistory(productId?: string | null) {
         invoice_no: row.invoice_no ?? null,
         invoice_date: row.invoice_date ?? null,
         purchase_order_no: row.purchase_order_no ?? null,
-        notes: row.notes ?? null
+        notes: row.notes ?? null,
+        inwarded_at: row.inwarded_at ?? null,
+        outwarded_at: row.outwarded_at ?? null,
+        scanned_by: row.scanned_by ?? null,
+        scanned_at_office: row.scanned_at_office ?? null
       })) as InwardHistoryRow[]
     }
   })

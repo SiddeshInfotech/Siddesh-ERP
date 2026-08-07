@@ -122,10 +122,10 @@ export function ProductPicker({ picker, emphasiseStock = false, hideScanner = fa
             <p className="font-mono text-mono-id text-on-surface-variant/60">{picked.skuBarcode}</p>
           </div>
 
-          <div className="shrink-0 text-right">
-            <p className="text-label-caps uppercase text-on-surface-variant">Available</p>
+          <div className="flex shrink-0 flex-col items-end">
             {/* DESIGN.md: the storekeeper is looking at a box, not the screen. This is the
-                number they came for, so it is the biggest thing here. */}
+                number they came for, so it is the biggest thing here — the hero, with a
+                caption beneath so the label reads over the whole figure, not just the unit. */}
             <p
               className={cn(
                 'font-semibold leading-none tabular-nums',
@@ -134,9 +134,9 @@ export function ProductPicker({ picker, emphasiseStock = false, hideScanner = fa
               )}
             >
               {picked.qtyAvailable}
-              <span className="ml-1.5 text-body-md font-normal text-on-surface-variant/60">
-                {picked.uom ?? ''}
-              </span>
+            </p>
+            <p className="mt-1.5 text-label-caps uppercase text-on-surface-variant/70">
+              Available{picked.uom ? ` · ${picked.uom}` : ''}
             </p>
           </div>
         </div>

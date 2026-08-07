@@ -26,6 +26,11 @@ export interface OutwardHistoryRow {
   received_by: string | null
   delivery_method: string | null
   notes: string | null
+  // Scan audit (who / when / where) — populated when units are scanned in/out
+  inwarded_at: string | null
+  outwarded_at: string | null
+  scanned_by: string | null
+  scanned_at_office: string | null
 }
 
 /**
@@ -51,7 +56,7 @@ export function useOutwardHistory(productId?: string | null) {
       const { data, error } = await query
       if (error) throw error
 
-      return (data ?? []).map((row) => ({
+      return (data ?? []).map((row: any) => ({
         id: row.id ?? '',
         issued_at: row.issued_at ?? '',
         outward_no: row.outward_no ?? '',
@@ -72,7 +77,11 @@ export function useOutwardHistory(productId?: string | null) {
         handed_over_by: row.handed_over_by ?? null,
         received_by: row.received_by ?? null,
         delivery_method: row.delivery_method ?? null,
-        notes: row.notes ?? null
+        notes: row.notes ?? null,
+        inwarded_at: row.inwarded_at ?? null,
+        outwarded_at: row.outwarded_at ?? null,
+        scanned_by: row.scanned_by ?? null,
+        scanned_at_office: row.scanned_at_office ?? null
       })) as OutwardHistoryRow[]
     }
   })

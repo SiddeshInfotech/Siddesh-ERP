@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { Activity, ScanLine, X } from 'lucide-react'
+import { Activity, X } from 'lucide-react'
 
 import { StatusBadge, formatStamp } from '@/components/barcode/BatchBarcodesSubTable'
-import { cn } from '@/lib/cn'
 import { useBatchBarcodes, type BatchBarcodeRow } from '@/hooks/useBatchBarcodes'
-import { useScanReceive } from '@/hooks/useScanReceive'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { DataTable } from '../ui/DataTable'
@@ -15,33 +13,25 @@ interface BatchBarcodesModalProps {
   productId: string
   productName: string
   batchCode: string
+  /** Which side opened this view; drives the title and which columns are shown. */
   scanContext: 'INWARD' | 'OUTWARD'
+  /** The inward/outward document this batch belongs to. Kept for callers; the view is read-only. */
   documentId: string
   onClose: () => void
 }
 
-type ScanFeedback =
-  | { kind: 'received'; code: string }
-  | { kind: 'already'; code: string }
-  | { kind: 'notfound'; code: string }
-  | { kind: 'error'; message: string }
-  | null
-
-export function BatchBarcodesModal({ productId, productName, batchCode, scanContext, documentId, onClose }: BatchBarcodesModalProps) {
+/**
+ * Batch Records — a READ-ONLY record of a batch's units and their lifecycle.
+ *
+ * Scanning (inward and outward) now happens on the mobile app, so this modal no longer
+ * has a scan-to-receive input; it shows who scanned each unit, when, and at which office.
+ * The Inward view drops the Outwarded column (not relevant to receiving); the Outward view
+ * keeps it.
+ */
+export function BatchBarcodesModal({ productId, productName, batchCode, scanContext, onClose }: BatchBarcodesModalProps) {
   const { data: barcodes, isLoading, isError, error } = useBatchBarcodes(productId, batchCode)
-  const scanReceive = useScanReceive()
 
-  const [scanValue, setScanValue] = useState('')
-  const [feedback, setFeedback] = useState<ScanFeedback>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  // Keyboard-wedge detection: a USB/Bluetooth scanner types the whole code in a
-  // sub-100ms burst, a human does not. We time from the first keystroke to Enter.
-  const firstKeyAt = useRef<number | null>(null)
-
-  // Keep the scanner input focused — receiving is a scan-scan-scan loop, not a click loop.
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+  const isInward = scanContext === 'INWARD'
 
   const received = useMemo(
     () => (barcodes ?? []).filter((b) => b.status !== 'GENERATED' && b.status !== 'VOID').length,
@@ -66,37 +56,6 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
   const total = barcodes?.length ?? 0
   const pending = total - received
 
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key !== 'Enter') {
-      if (firstKeyAt.current === null) firstKeyAt.current = performance.now()
-      return
-    }
-    event.preventDefault()
-    const code = scanValue.trim()
-    const elapsed = firstKeyAt.current !== null ? performance.now() - firstKeyAt.current : Infinity
-    firstKeyAt.current = null
-    setScanValue('')
-    if (code.length === 0) return
-
-    // Fast burst → a real scanner. Slow typing → manual keyboard entry.
-    const deviceSource = code.length >= 4 && elapsed < 100 ? 'USB' : 'MANUAL'
-
-    scanReceive.mutate(
-      { code, deviceSource, scanContext, documentId },
-      {
-        onSuccess: (result) => {
-          if (result.found === false) setFeedback({ kind: 'notfound', code })
-          else if (result.already) setFeedback({ kind: 'already', code })
-          else if (result.ok === false) setFeedback({ kind: 'error', message: result.error || 'Scan rejected by server' })
-          else setFeedback({ kind: 'received', code })
-        },
-        onError: (err) =>
-          setFeedback({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
-      }
-    )
-    inputRef.current?.focus()
-  }
-
   const content = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
@@ -105,7 +64,7 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
         {/* Header */}
         <div className="flex items-start justify-between border-b border-outline-variant/30 bg-surface px-6 py-4">
           <div>
-            <h2 className="text-h2 text-on-surface">Batch Records</h2>
+            <h2 className="text-h2 text-on-surface">{isInward ? 'Inward Batch Records' : 'Outward Batch Records'}</h2>
             <p className="mt-1 text-body-sm text-on-surface-variant/70">
               {productName} · Batch <span className="font-semibold text-primary">{batchCode}</span>
             </p>
@@ -129,7 +88,7 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
                 <p className="text-body-sm text-on-surface-variant/60">Void</p>
               </div>
             </div>
-            {/* Live receiving progress — the "actual quantity" as it is scanned in. */}
+            {/* Receiving progress — the "actual quantity" as units are scanned in on the app. */}
             <div className="text-right">
               <p className="text-h2 tabular-nums text-success">
                 {received}
@@ -146,40 +105,6 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
               <X className="size-5" />
             </button>
           </div>
-        </div>
-
-        {/* Scan-to-receive */}
-        <div className="border-b border-outline-variant/30 bg-surface-variant/10 px-6 py-3">
-          <div className="flex items-center gap-3">
-            <ScanLine className="size-5 shrink-0 text-on-surface-variant" strokeWidth={1.5} />
-            <input
-              ref={inputRef}
-              value={scanValue}
-              onChange={(e) => setScanValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Scan or type a barcode to mark it received, then press Enter"
-              aria-label="Scan barcode to receive"
-              autoComplete="off"
-              spellCheck={false}
-              className="h-10 flex-1 rounded-full border border-outline-variant/40 bg-surface px-4 text-body-md text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-            {scanReceive.isPending ? <Activity className="size-4 animate-spin text-on-surface-variant" /> : null}
-          </div>
-          {feedback ? (
-            <p
-              className={cn(
-                'mt-2 pl-8 text-body-sm',
-                feedback.kind === 'received' && 'text-success',
-                feedback.kind === 'already' && 'text-on-surface-variant',
-                (feedback.kind === 'notfound' || feedback.kind === 'error') && 'text-error'
-              )}
-            >
-              {feedback.kind === 'received' && `Received ${feedback.code}.`}
-              {feedback.kind === 'already' && `${feedback.code} was already received.`}
-              {feedback.kind === 'notfound' && `${feedback.code} is not a barcode in this system.`}
-              {feedback.kind === 'error' && `Could not record scan. ${feedback.message}`}
-            </p>
-          ) : null}
         </div>
 
         {/* Records */}
@@ -211,12 +136,17 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
                     <span className="font-mono text-xs">{formatStamp(row.inwarded_at)}</span>
                   )
                 },
-                {
-                  header: 'Outwarded',
-                  cell: (row) => (
-                    <span className="font-mono text-xs">{formatStamp(row.outwarded_at)}</span>
-                  )
-                },
+                // Outwarded is only meaningful in the Outward view; hidden for Inward.
+                ...(isInward
+                  ? []
+                  : [
+                      {
+                        header: 'Outwarded',
+                        cell: (row: BatchBarcodeRow) => (
+                          <span className="font-mono text-xs">{formatStamp(row.outwarded_at)}</span>
+                        )
+                      }
+                    ]),
                 // Scanned By / At show the ACTUAL scanner + office from barcode_scans,
                 // never the label's creator. Blank until the unit is really scanned —
                 // showing the generator here would misreport who received the stock.

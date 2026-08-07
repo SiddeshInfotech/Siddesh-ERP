@@ -813,3 +813,91 @@ units, and a belt-and-suspenders idempotent ledger reconcile.
 **Apply:** `npx supabase db push` then `npm run db:types`.
 **Files:** supabase/migrations/20260807140000_58_fix_scan_receive_columns.sql,
 supabase/migrations/20260807130000_57_reconcile_ledger_backfill.sql (reverted to as-applied content)
+
+## 07/08/2026 21:30 — FEAT-333 — Standalone mobile scan (scan_mobile) + scan audit on dashboard — Ram
+**Status:** Done (code written; pending migration push + db:types)
+**What:** The phone scanner must post inward/outward from a scan alone (no desktop document), record
+who/when/where, block outward on a never-inwarded unit, and have it all show on the desktop Inward table,
+Outward table, and Dashboard. Root cause found: mig 40 left only the strict 5-arg `scan_receive` (needs
+`p_document_id`), so the phone's 3-arg call fell through to it, was rejected for missing context, and the
+app swallowed the error — then worked around it by writing `product_barcodes.status` directly and inserting
+`barcode_scans` columns that don't exist (both silent no-ops). Net: a phone scan flipped status but never
+posted the ledger and never recorded the audit.
+**Fix:**
+- BACKEND (mig 59): new `public.scan_mobile(p_code, p_client_txn_id, p_direction, p_device_source)` —
+  distinctly named so it never collides with the desktop's document-context `scan_receive`. Direction is
+  the phone's explicit mode. INWARD needs `GENERATED`; OUTWARD needs `INWARDED/IN_STOCK/AVAILABLE` (the
+  "cannot outward what was never inwarded" guard). Posts the ledger (+1/−1), flips status, writes a valid
+  `barcode_scans` row (scanned_by/office/action). Idempotent on client_txn_id. Ref doc derived from the
+  barcode's batch (nullable). Appended `inwarded_at / outwarded_at / scanned_by / scanned_at_office` to
+  `v_inward_history` and `v_outward_history`; added `v_recent_scans` for the dashboard feed.
+- FLUTTER (Final-Barcode): `scanReceive`→`scanMobile(code, direction)`; deleted the direct-write
+  `updateBarcodeStatus` + broken `logUserScanActivity`; `recordInward/Outward` now throw a clear message on
+  rejection, and both entry screens show a red error snackbar instead of faking success.
+- DESKTOP: 4 audit columns on the Inward and Outward tables; a "Recent Scan Activity" table on the Dashboard
+  (`useRecentScans`). Added `orDateTime` helper.
+**Notes:** Contract.md amended with the `scan_mobile` signature — tell the group. Typecheck: my code is clean
+except `v_recent_scans` not yet in generated types (resolves on db:types). A PRE-EXISTING, unrelated error in
+ProductDetail.tsx:356 (Select missing `label`) still fails typecheck — not touched here.
+**Apply:** `npx supabase db push` then `npm run db:types`.
+**Files:** supabase/migrations/20260807150000_59_scan_mobile_standalone.sql;
+apps/desktop/.../routes/{Inward,Outward,Dashboard}.tsx, hooks/{useInwardHistory,useOutwardHistory,useRecentScans}.ts,
+lib/movementForm.ts; (Final-Barcode) lib/services/{api_service,supabase_service}.dart,
+lib/screens/{inward_entry,outward_entry}_screen.dart; Document/Contract.md
+
+## 07/08/2026 22:30 — FEAT-334 — Per-office mobile login (fix NO_OFFICE on scan) — Ram
+**Status:** Done (mig 60 pushed to remote; app updated)
+**What:** After FEAT-333, a phone scan reached scan_mobile but returned NO_OFFICE — the signed-in
+mobile account had `profiles.office_id = null`. Root cause: (1) `offices` was SELECT-able only by
+`authenticated`, so the pre-auth registration screen couldn't load a real office list and shipped
+hardcoded names (['Pune','Dhule','Jalgaon']) that didn't match the actual offices; (2) `registerUser`
+sent the office as a NAME string, but `tg_handle_new_user` only reads `office_id` (uuid) from signup
+metadata — so office_id was always null. `app.current_office_id()` = profiles.office_id, so every
+stock-writing RPC refused the account.
+**Fix:**
+- BACKEND (mig 60): anon SELECT policy on `offices` (names/ids aren't sensitive; no passwords there,
+  per mig 45) so the registration picker can load pre-login; and `tg_handle_new_user` now resolves
+  office_id from EITHER `office_id` metadata OR the `office` NAME (case-insensitive) — backward
+  compatible with older app builds.
+- FLUTTER (Final-Barcode): `fetchOffices()` (anon read of {id,name}); registration now loads the live
+  office list, and `registerUser` sends the real `office_id` + `role: STORE_MANAGER` so the trigger
+  writes profiles.office_id. Login unchanged (office comes from the account).
+**Existing accounts** created before this still have office_id null — assign via SQL, e.g.
+`update public.profiles set office_id = <id> where id = (select id from auth.users where email = ?)`.
+The test account can be pointed at Pune Office (id 175b7ef5-592d-48e5-9fd5-a18dac046f5c, the only office
+with barcodes).
+**Note:** If Supabase public signup is disabled (mig 45 assumes so), office accounts are created in the
+Dashboard instead — the trigger's name/id resolution assigns their office the same way.
+**Apply:** migration already pushed. No db:types needed (policy + app-schema trigger only).
+**Files:** supabase/migrations/20260807160000_60_mobile_office_signup.sql;
+(Final-Barcode) lib/services/supabase_service.dart, lib/screens/register_screen.dart
+
+## 08/08/2026 12:30 — FIX-336 — scan_mobile must have a matching entry + Batch Records read-only — Ram
+**Status:** Done (mig 61 pushed; desktop updated)
+**What / why (count-integrity bug):** scan_mobile derived the inward/outward document from the barcode's
+batch but proceeded even when none existed (ref_id null). So an OUTWARD scan could dispatch a unit that
+had only ever been inwarded — the ledger dropped stock but no outward paperwork existed, so
+v_outward_history never showed it and counts diverged. Operator: "if the entry isn't created in the DB,
+don't allow the inward/outward — show a generic warning."
+**Fix:**
+- BACKEND (mig 61): scan_mobile now REQUIRES a matching entry. INWARD requires an inward_items row for the
+  batch; OUTWARD requires an outward_items row. Missing → rejected with a generic warning, nothing written
+  (no status flip, no ledger). Verified save_outward writes outward_items.batch_id (mig 29), so legitimate
+  outward scans after an outward entry is created still resolve.
+- DESKTOP (BatchBarcodesModal): removed the scan-to-receive input from BOTH views (scanning is on the app
+  now) — the modal is read-only. Title is context-aware ("Inward Batch Records" / "Outward Batch Records"),
+  Inward view hides the Outwarded column. Deleted the now-dead useScanReceive hook.
+**Already working (confirmed, no change):** outward date/time, Scanned By (auth.uid → profile name) and
+Scanned At (office_id → office name) are recorded by scan_mobile + surfaced via v_batch_barcodes.
+**Apply:** migration pushed. No db:types (scan_mobile signature unchanged).
+**Files:** supabase/migrations/20260808120000_61_scan_mobile_require_document.sql;
+apps/desktop/.../components/barcode/BatchBarcodesModal.tsx; deleted hooks/useScanReceive.ts
+
+## 08/08/2026 13:15 — UI-337 — Outward form: fix Available layout + add existing-party picker — Ram
+**What:** (1) The product header's "Available" block right-aligned the label over the unit while the big
+number floated beside it, reading as misaligned. Restructured to number-as-hero with an "Available · PICES"
+caption beneath (ProductPicker, shared by Inward too). (2) The Outward Party section had no way to reuse a
+saved school/customer. Added a "Select Existing Party" dropdown that autofills name/contact/mobile/GST/
+address, mirroring Inward's supplier picker; manual edits clear the selection; reset clears it too.
+**Files:** apps/desktop/.../components/movement/ProductPicker.tsx, routes/Outward.tsx,
+hooks/useCustomers.ts (new)

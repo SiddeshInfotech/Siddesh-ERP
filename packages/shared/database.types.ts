@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       activity_logs: {
@@ -2209,8 +2234,10 @@ export type Database = {
           invoice_no: string | null
           inward_no: string | null
           inward_qty: number | null
+          inwarded_at: string | null
           notes: string | null
           office_id: string | null
+          outwarded_at: string | null
           product_id: string | null
           product_name: string | null
           purchase_order_no: string | null
@@ -2220,6 +2247,8 @@ export type Database = {
           qty_void: number | null
           received_at: string | null
           remaining_qty: number | null
+          scanned_at_office: string | null
+          scanned_by: string | null
           supplier_address: string | null
           supplier_gst: string | null
           supplier_mobile: string | null
@@ -2295,12 +2324,14 @@ export type Database = {
           handed_over_by: string | null
           id: string | null
           invoice_no: string | null
+          inwarded_at: string | null
           issued_at: string | null
           notes: string | null
           office_id: string | null
           outward_no: string | null
           outward_qty: number | null
           outward_type: Database["public"]["Enums"]["outward_type"] | null
+          outwarded_at: string | null
           party_address: string | null
           party_gst: string | null
           party_mobile: string | null
@@ -2310,6 +2341,8 @@ export type Database = {
           received_by: string | null
           remaining_qty: number | null
           sales_order_no: string | null
+          scanned_at_office: string | null
+          scanned_by: string | null
           total_qty: number | null
         }
         Relationships: [
@@ -2417,6 +2450,82 @@ export type Database = {
           total_units: number | null
         }
         Relationships: []
+      }
+      v_recent_scans: {
+        Row: {
+          action: Database["public"]["Enums"]["scan_action"] | null
+          batch_code: string | null
+          batch_id: string | null
+          code: string | null
+          device_source: Database["public"]["Enums"]["scan_source"] | null
+          direction: string | null
+          id: string | null
+          office_id: string | null
+          product_id: string | null
+          product_name: string | null
+          scanned_at: string | null
+          scanned_at_office: string | null
+          scanned_by: string | null
+          scanned_by_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barcode_scans_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "product_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "barcode_scans_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "v_batch_activity"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "barcode_scans_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "v_batch_registry"
+            referencedColumns: ["batch_id"]
+          },
+          {
+            foreignKeyName: "barcode_scans_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "barcode_scans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "barcode_scans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_current_stock"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "barcode_scans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_status"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "barcode_scans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_stock_dashboard"
+            referencedColumns: ["product_id"]
+          },
+        ]
       }
       v_stock_balances_by_batch: {
         Row: {
@@ -2533,6 +2642,15 @@ export type Database = {
             Returns: Json
           }
       scan_lookup: { Args: { p_code: string }; Returns: Json }
+      scan_mobile: {
+        Args: {
+          p_client_txn_id: string
+          p_code: string
+          p_device_source?: Database["public"]["Enums"]["scan_source"]
+          p_direction: string
+        }
+        Returns: Json
+      }
       scan_receive: {
         Args: {
           p_client_txn_id: string
@@ -2746,6 +2864,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["ADMIN", "STORE_MANAGER", "SALES_EXECUTIVE"],

@@ -27,6 +27,7 @@ import {
   findQtyProblem,
   normaliseGst,
   orDash,
+  orDateTime,
   orNull
 } from '@/lib/movementForm'
 
@@ -401,6 +402,10 @@ export function Inward() {
       { header: 'Remaining Qty', align: 'right', cell: (row) => row.remaining_qty },
       { header: 'Total Qty', align: 'right', cell: (row) => row.total_qty },
       { header: 'Brought By', cell: (row) => <span className="whitespace-nowrap">{orDash(row.brought_by)}</span> },
+      { header: 'Inwarded', cell: (row) => <span className="whitespace-nowrap">{orDateTime(row.inwarded_at)}</span> },
+      { header: 'Outwarded', cell: (row) => <span className="whitespace-nowrap">{orDateTime(row.outwarded_at)}</span> },
+      { header: 'Scanned By', cell: (row) => <span className="whitespace-nowrap">{orDash(row.scanned_by)}</span> },
+      { header: 'Scanned At', cell: (row) => <span className="whitespace-nowrap">{orDash(row.scanned_at_office)}</span> },
       {
         header: 'Actions',
         align: 'right',
@@ -515,7 +520,7 @@ export function Inward() {
           </div>
           <DataTable<InwardHistoryRow>
             columns={historyTab === 'stock' ? stockColumns : supplierColumns}
-            data={historyTab === 'stock' ? processedData.filter((r) => r.remaining_qty > 0) : processedData}
+            data={processedData}
             isLoading={historyLoading}
             error={historyError ? toUserMessage(historyError) : undefined}
             emptyMessage="No inward entries yet."

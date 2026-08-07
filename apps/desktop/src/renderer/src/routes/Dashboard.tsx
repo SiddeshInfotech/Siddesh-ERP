@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Inbox,
   PackageX,
+  ScanLine,
   TriangleAlert,
   Warehouse
 } from 'lucide-react'
@@ -15,9 +16,11 @@ import { Alert } from '@/components/ui/Alert'
 import { Card } from '@/components/ui/Card'
 import { SpinnerPane } from '@/components/ui/Spinner'
 import { useDashboard } from '@/hooks/useDashboard'
+import { useRecentScans, type RecentScanRow } from '@/hooks/useRecentScans'
 import { useTodayBatchActivity, type TodayBatchRow } from '@/hooks/useTodayBatchActivity'
 import { cn } from '@/lib/cn'
 import { toUserMessage } from '@/lib/errors'
+import { orDash, orDateTime } from '@/lib/movementForm'
 
 /**
  * Dashboard — the home screen (SRD §12; DSK-401 → DSK-405).
@@ -182,9 +185,80 @@ function TodayBatchTable({ rows, direction, isLoading, expandedKey, onToggle }: 
   )
 }
 
+/**
+ * The latest scan events, one row each, showing who scanned, when, and at which office —
+ * so a phone's standalone Inward/Outward scan is visible on the desktop within seconds.
+ */
+function RecentScansTable({ rows, isLoading }: { rows: RecentScanRow[]; isLoading: boolean }) {
+  if (isLoading) return <SpinnerPane />
+
+  if (rows.length === 0) {
+    return (
+      <div className="flex min-h-32 flex-col items-center justify-center gap-2 p-6 text-center">
+        <Inbox aria-hidden="true" className="size-7 text-outline" strokeWidth={1.5} />
+        <p className="text-body-sm text-on-surface-variant/70">No scans recorded yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-on-surface/[0.03]">
+            {['When', 'Product', 'Code', 'Direction', 'Scanned By', 'Scanned At'].map((h) => (
+              <th
+                key={h}
+                className="px-4 py-2.5 text-left text-label-caps uppercase text-on-surface-variant/70 whitespace-nowrap"
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const isInward = row.direction === 'INWARD'
+            return (
+              <tr key={row.id} className="hairline-b transition-colors hover:bg-on-surface/5">
+                <td className="px-4 py-2.5 text-body-sm text-on-surface-variant whitespace-nowrap">
+                  {orDateTime(row.scannedAt)}
+                </td>
+                <td className="px-4 py-2.5 text-body-sm font-semibold text-on-surface whitespace-nowrap">
+                  {row.productName}
+                </td>
+                <td className="px-4 py-2.5 font-mono text-body-sm text-on-surface-variant whitespace-nowrap">
+                  {orDash(row.code)}
+                </td>
+                <td className="px-4 py-2.5 whitespace-nowrap">
+                  <span
+                    className={cn(
+                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-body-sm font-medium',
+                      isInward ? 'bg-success/10 text-success' : 'bg-tertiary/10 text-tertiary'
+                    )}
+                  >
+                    {isInward ? 'Inward' : 'Outward'}
+                  </span>
+                </td>
+                <td className="px-4 py-2.5 text-body-sm text-on-surface-variant whitespace-nowrap">
+                  {orDash(row.scannedByName)}
+                </td>
+                <td className="px-4 py-2.5 text-body-sm text-on-surface-variant whitespace-nowrap">
+                  {orDash(row.scannedAtOffice)}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export function Dashboard() {
   const { data, isPending, error, refetch } = useDashboard()
   const { data: today, isPending: todayPending } = useTodayBatchActivity()
+  const { data: recentScans, isPending: recentPending } = useRecentScans()
 
   // Which batch row is expanded, keyed by "<direction>:<batchId>" so the two tables don't clash.
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
@@ -325,6 +399,16 @@ export function Dashboard() {
             />
           </Card>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <ScanLine aria-hidden="true" className="size-4 text-outline" strokeWidth={1.5} />
+          <h2 className="text-h3 text-on-surface">Recent Scan Activity</h2>
+        </div>
+        <Card className="overflow-hidden">
+          <RecentScansTable rows={recentScans ?? []} isLoading={recentPending} />
+        </Card>
       </div>
     </div>
   )
