@@ -217,8 +217,11 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
                     <span className="font-mono text-xs">{formatStamp(row.outwarded_at)}</span>
                   )
                 },
-                { header: 'Scanned By', cell: (row) => row.scanned_by_name ?? row.generated_by_name ?? '—' },
-                { header: 'Scanned At', cell: (row) => row.scanned_office_name ?? (row.status === 'GENERATED' ? 'System' : '—') }
+                // Scanned By / At show the ACTUAL scanner + office from barcode_scans,
+                // never the label's creator. Blank until the unit is really scanned —
+                // showing the generator here would misreport who received the stock.
+                { header: 'Scanned By', cell: (row) => row.scanned_by_name ?? '—' },
+                { header: 'Scanned At', cell: (row) => row.scanned_office_name ?? '—' }
               ]}
               data={barcodes || []}
               emptyMessage="No barcodes generated for this batch."

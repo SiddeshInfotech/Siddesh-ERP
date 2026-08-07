@@ -1,0 +1,314 @@
+<title>Siddesh ERP — Stock Flows & the 33-vs-0 Bug</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --ground:#eef1f6; --panel:#ffffff; --panel-2:#f6f8fb;
+    --ink:#141a24; --muted:#5a6474; --faint:#8a93a3;
+    --hairline:#dbe1ea; --hairline-2:#e8ecf3;
+    --blue:#2f6df6; --blue-ink:#1b4fc4;
+    --red:#d6413f; --red-bg:#fbe9e9;
+    --green:#1f9d6b; --green-bg:#e6f5ee;
+    --amber:#b9791f; --amber-bg:#fbf0dd;
+    --mermaid-bg:#ffffff;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#0d1017; --panel:#141a24; --panel-2:#1a212d;
+      --ink:#e8ecf3; --muted:#9aa4b4; --faint:#6b7686;
+      --hairline:#28313f; --hairline-2:#212a37;
+      --blue:#6f9bff; --blue-ink:#9db9ff;
+      --red:#f0736f; --red-bg:#3a1e1e;
+      --green:#4fc596; --green-bg:#132c22;
+      --amber:#e0aa5c; --amber-bg:#31260f;
+      --mermaid-bg:#141a24;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0d1017; --panel:#141a24; --panel-2:#1a212d;
+    --ink:#e8ecf3; --muted:#9aa4b4; --faint:#6b7686;
+    --hairline:#28313f; --hairline-2:#212a37;
+    --blue:#6f9bff; --blue-ink:#9db9ff;
+    --red:#f0736f; --red-bg:#3a1e1e;
+    --green:#4fc596; --green-bg:#132c22;
+    --amber:#e0aa5c; --amber-bg:#31260f;
+    --mermaid-bg:#141a24;
+  }
+  :root[data-theme="light"]{
+    --ground:#eef1f6; --panel:#ffffff; --panel-2:#f6f8fb;
+    --ink:#141a24; --muted:#5a6474; --faint:#8a93a3;
+    --hairline:#dbe1ea; --hairline-2:#e8ecf3;
+    --blue:#2f6df6; --blue-ink:#1b4fc4;
+    --red:#d6413f; --red-bg:#fbe9e9;
+    --green:#1f9d6b; --green-bg:#e6f5ee;
+    --amber:#b9791f; --amber-bg:#fbf0dd;
+    --mermaid-bg:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 22px 80px}
+  .eyebrow{font:600 11px/1 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--blue);margin:0 0 10px}
+  h1{font-size:clamp(26px,4vw,38px);line-height:1.08;margin:0 0 12px;letter-spacing:-.02em;text-wrap:balance}
+  .lede{color:var(--muted);font-size:16px;max-width:64ch;margin:0}
+  h2{font-size:20px;letter-spacing:-.01em;margin:0;display:flex;align-items:baseline;gap:10px}
+  h2 .n{font:700 12px/1 ui-monospace,monospace;color:var(--blue);
+    border:1px solid var(--hairline);border-radius:6px;padding:5px 7px}
+  section{margin-top:34px}
+  .card{background:var(--panel);border:1px solid var(--hairline);border-radius:14px;
+    padding:20px 20px 8px;box-shadow:0 1px 2px rgba(20,26,36,.04)}
+  .contract{font:500 13px/1.45 ui-monospace,monospace;color:var(--muted);
+    background:var(--panel-2);border:1px solid var(--hairline-2);border-radius:8px;
+    padding:9px 12px;margin:12px 0 4px}
+  .contract b{color:var(--ink);font-weight:700}
+  pre.mermaid{background:var(--mermaid-bg);margin:6px 0 14px;text-align:center;overflow-x:auto}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media (max-width:760px){.grid2{grid-template-columns:1fr}}
+  .callout{border-radius:14px;padding:18px 20px;border:1px solid}
+  .callout.bug{background:var(--red-bg);border-color:color-mix(in srgb,var(--red) 40%,transparent)}
+  .callout h3{margin:0 0 6px;font-size:16px}
+  .callout p{margin:6px 0;color:var(--ink);font-size:14.5px}
+  .tag{display:inline-block;font:700 11px/1 ui-monospace,monospace;padding:4px 7px;border-radius:6px;
+    vertical-align:middle}
+  .t-red{background:var(--red);color:#fff}
+  .t-green{background:var(--green);color:#fff}
+  .t-amber{background:var(--amber);color:#fff}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--hairline-2);vertical-align:top}
+  th{font:600 11px/1.2 ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+  td code,.mono{font-family:ui-monospace,monospace;font-size:12.5px}
+  td .num{font-variant-numeric:tabular-nums}
+  .src{border-left:3px solid var(--hairline);padding-left:12px}
+  .src.a{border-color:var(--amber)} .src.b{border-color:var(--green)}
+  ol.fix{margin:8px 0 4px;padding-left:20px} ol.fix li{margin:7px 0;font-size:14.5px}
+  .divide{height:1px;background:var(--hairline);border:0;margin:0}
+  figcaption{color:var(--muted);font-size:13px;margin:2px 0 16px;text-align:center}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 14px;font-size:12.5px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:22px;height:0;border-top-width:2px;border-top-style:solid;display:inline-block}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Siddesh ERP · Inventory internals</p>
+  <h1>Stock flows, and why 33 in stock reads as 0 available</h1>
+  <p class="lede">Every stock activity, on one page — plus the exact place two stock systems fell out of sync. Diagrams reflect the <em>latest</em> migration definitions (save_inward = mig&nbsp;51, scan = mig&nbsp;56, save_outward = mig&nbsp;40).</p>
+
+  <!-- ROOT CAUSE -->
+  <section>
+    <h2><span class="n">✕</span> The bug: two stock truths, one broken bridge</h2>
+    <div class="card" style="margin-top:14px">
+      <div class="legend">
+        <span><i class="sw" style="border-color:var(--amber)"></i> barcode / document truth (what the batch table shows)</span>
+        <span><i class="sw" style="border-color:var(--green)"></i> ledger truth (what AVAILABLE &amp; save_outward use)</span>
+        <span><i class="sw" style="border-color:var(--red);border-top-style:dashed"></i> the write that was dropped</span>
+      </div>
+      <pre class="mermaid">
+flowchart TD
+  RC["Barcode Receive scan<br/>(scan_receive · INWARD)"]
+  RC -->|"sets status = INWARDED"| ST["product_barcodes.status"]
+  RC -.->|"post_ledger +1<br/>DROPPED in mig 44"| LG["stock_ledger"]
+  ST --> REG["v_batch_registry"]
+  REG --> B1["Batch Records modal<br/>“33 in stock ✓”"]
+  II["inward_items.quantity = 33"] --> VH["v_inward_history.remaining_qty<br/>= inward − outward"]
+  VH --> B2["Outward batch table<br/>“Remaining 33 ✓”"]
+  LG --> SB["stock_balances (cache)"]
+  SB --> VCS["v_current_stock.qty_available"]
+  VCS --> B3["Product card<br/>“AVAILABLE 0 ✕”"]
+  VCS --> SO["save_outward guard<br/>refuses: INSUFFICIENT_STOCK"]
+
+  classDef amber stroke:#b9791f,stroke-width:2px;
+  classDef green stroke:#1f9d6b,stroke-width:2px;
+  classDef bad stroke:#d6413f,stroke-width:2px,color:#d6413f;
+  class ST,REG,B1,II,VH,B2 amber;
+  class LG,SB,VCS green;
+  class B3,SO bad;
+      </pre>
+      <figcaption>The 33 units were received while <code>scan_receive</code> had <b>no <code>post_ledger</code> call</b> (mig 44). Status + document math say 33; the ledger never heard about them, so <code>stock_balances</code> = 0. The number the outward screen trusts is the ledger.</figcaption>
+
+      <div class="grid2" style="margin:6px 0 18px">
+        <div class="src a">
+          <p class="mono" style="color:var(--amber);font-weight:700;margin:0 0 4px">SHOWS 33 — barcode/document</p>
+          <p style="margin:0;font-size:13.5px;color:var(--muted)"><code>product_barcodes.status = INWARDED</code> → <code>v_batch_registry</code>. And <code>inward_items.quantity − Σ outward_items.quantity</code> → <code>v_inward_history.remaining_qty</code>. Neither needs a ledger row.</p>
+        </div>
+        <div class="src b">
+          <p class="mono" style="color:var(--green);font-weight:700;margin:0 0 4px">SHOWS 0 — ledger</p>
+          <p style="margin:0;font-size:13.5px;color:var(--muted)"><code>Σ stock_ledger.qty_delta</code> → <code>stock_balances</code> → <code>v_current_stock.qty_available</code>. No INWARD rows were ever posted for these 33, so it is 0 — and <code>save_outward</code> holds the lock, so it wins.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MIGRATION PING-PONG -->
+  <section>
+    <h2><span class="n">⟲</span> How the bridge broke — the ping-pong</h2>
+    <div class="card" style="margin-top:14px">
+      <table>
+        <thead><tr><th>Mig</th><th>Date</th><th>scan_receive → status</th><th>Posts ledger?</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td class="num">43</td><td>08/01</td><td><code>GENERATED→INWARDED</code></td><td><span class="tag t-green">yes</span></td><td>Correct</td></tr>
+          <tr><td class="num">44</td><td>08/06 14:41</td><td><code>GENERATED→INWARDED</code></td><td><span class="tag t-red">NO</span></td><td>Bridge cut — receiving stops touching ledger</td></tr>
+          <tr><td class="num">51</td><td>08/06 16:06</td><td><code>GENERATED→AVAILABLE</code></td><td><span class="tag t-green">yes</span></td><td>Restored, but status target changed</td></tr>
+          <tr><td class="num">56</td><td>08/07 <b>(today)</b></td><td><code>GENERATED→INWARDED</code></td><td><span class="tag t-green">yes</span></td><td>Current &amp; correct — but no backfill of the units received under mig 44</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--muted);font-size:13.5px;padding:6px 10px 2px"><code>save_inward</code> ping-ponged the same way across migs 26→39→40→50→51 (barcode status flipped <code>GENERATED↔AVAILABLE↔INWARDED</code>; ledger posted then skipped), and mig 50 added a ledger backfill that mig 51 then <em>reversed</em>. Net: the DB’s history contradicts itself, and already-received units are stranded.</p>
+    </div>
+  </section>
+
+  <hr class="divide" style="margin:40px 0 0">
+
+  <!-- ACTIVITY DIAGRAMS -->
+  <section>
+    <h2><span class="n">1</span> Inward entry — <code>save_inward</code></h2>
+    <div class="card">
+      <div class="contract"><b>In:</b> product, qty, supplier, batch, barcodes[] &nbsp;·&nbsp; <b>Effect:</b> creates barcodes as <b>GENERATED</b>, <b>no</b> ledger when barcoded — stock accrues only on the Receive scan.</div>
+      <pre class="mermaid">
+flowchart TD
+  A([Save inward]) --> Q{qty > 0?}
+  Q -->|no| E1[/QTY_MUST_BE_POSITIVE/]
+  Q -->|yes| O{office set?}
+  O -->|no| E2[/NOT_IN_OFFICE/]
+  O -->|yes| R{txn already seen?<br/>client_txn_id}
+  R -->|yes| RP[/return replay/]
+  R -->|no| BT[find or create batch by code]
+  BT --> BC["insert barcodes → status GENERATED"]
+  BC --> CNT["batch += total / generated / remaining"]
+  CNT --> SUP[find or create supplier]
+  SUP --> DOC["insert inwards + inward_items(qty)"]
+  DOC --> HB{any barcodes?}
+  HB -->|no| PL["post_ledger +qty → stock_balances"]
+  HB -->|yes| SKIP["SKIP ledger<br/>wait for scan"]
+  PL --> END([return balance])
+  SKIP --> END
+      </pre>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span> Receive a unit — <code>scan_receive</code> · INWARD <span style="font:600 12px ui-monospace">(current, mig 56)</span></h2>
+    <div class="card">
+      <div class="contract"><b>In:</b> barcode code, context=INWARD, document_id &nbsp;·&nbsp; <b>Effect:</b> <b>GENERATED→INWARDED</b>, <b>post_ledger +1</b>, log who/where/when.</div>
+      <pre class="mermaid">
+flowchart TD
+  A([Scan barcode]) --> O{office set?}
+  O -->|no| E0[/NO_OFFICE/]
+  O -->|yes| RP{txn already seen?}
+  RP -->|yes| R1[/return replayed/]
+  RP -->|no| F{barcode found?}
+  F -->|no| NF[/return found:false<br/>offer to create/]
+  F -->|yes| CX{context + document_id present?}
+  CX -->|no| E1[/reject: missing context/]
+  CX -->|yes| AL{status already<br/>INWARDED / AVAILABLE / IN_STOCK?}
+  AL -->|yes| OK1[/return already:true/]
+  AL -->|no| G{status = GENERATED?}
+  G -->|no| E2[/reject: bad status/]
+  G -->|yes| M{batch matches<br/>this inward doc?}
+  M -->|no| E3[/reject: wrong document/]
+  M -->|yes| L["post_ledger +1 → stock_balances"]
+  L --> S["status = INWARDED"]
+  S --> SC["insert barcode_scans<br/>scanned_by · office · action=RECEIVE · at now()"]
+  SC --> END([return ok])
+      </pre>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span> Outward entry — <code>save_outward</code></h2>
+    <div class="card">
+      <div class="contract"><b>In:</b> product, batch allocations[], party, type &nbsp;·&nbsp; <b>Effect:</b> Generic line deducts ledger now; a <b>batch</b> line records the intent but <b>waits for the Issue scan</b> to deduct.</div>
+      <pre class="mermaid">
+flowchart TD
+  A([Save outward]) --> SUM[sum batch line qtys]
+  SUM --> Q{total > 0?}
+  Q -->|no| E1[/QTY_MUST_BE_POSITIVE/]
+  Q -->|yes| P{type=SALE and<br/>no party?}
+  P -->|yes| E2[/PARTY_REQUIRED/]
+  P -->|no| O{office set?}
+  O -->|no| E3[/NOT_IN_OFFICE/]
+  O -->|yes| RP{txn already seen?}
+  RP -->|yes| R1[/return replay/]
+  RP -->|no| CUST[find or create customer]
+  CUST --> DOC[insert outwards]
+  DOC --> LOOP{for each batch line}
+  LOOP --> ITM["insert outward_items(qty, batch)"]
+  ITM --> GEN{batch_id = null<br/>Generic / No Batch?}
+  GEN -->|yes| PL["post_ledger −qty → stock_balances"]
+  GEN -->|no| SKIP["SKIP ledger<br/>requires Issue scan"]
+  PL --> LOOP
+  SKIP --> LOOP
+  LOOP -->|done| END([return balance])
+      </pre>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span> Issue a unit — <code>scan_receive</code> · OUTWARD</h2>
+    <div class="card">
+      <div class="contract"><b>In:</b> barcode code, context=OUTWARD, document_id &nbsp;·&nbsp; <b>Effect:</b> <b>INWARDED→OUTWARDED</b>, <b>post_ledger −1</b>, log who/where/when.</div>
+      <pre class="mermaid">
+flowchart TD
+  A([Scan barcode]) --> AL{status already<br/>OUTWARDED / DISPATCHED?}
+  AL -->|yes| OK1[/return already:true/]
+  AL -->|no| ST{status in<br/>INWARDED / IN_STOCK / AVAILABLE?}
+  ST -->|no| E1[/reject: not in stock/]
+  ST -->|yes| M{batch matches<br/>this outward doc?}
+  M -->|no| E2[/reject: wrong document/]
+  M -->|yes| L["post_ledger −1 → stock_balances"]
+  L --> S["status = OUTWARDED"]
+  S --> SC["insert barcode_scans<br/>scanned_by · office · action=ISSUE · at now()"]
+  SC --> END([return ok])
+      </pre>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span> Where every stock number comes from</h2>
+    <div class="card" style="padding-bottom:16px">
+      <table>
+        <thead><tr><th>UI number</th><th>Source</th><th>Formula</th><th>Truth type</th></tr></thead>
+        <tbody>
+          <tr><td>Product “AVAILABLE”</td><td><code>v_current_stock</code></td><td class="mono">Σ stock_balances.qty_available</td><td><span class="tag t-green">ledger</span></td></tr>
+          <tr><td>save_outward guard</td><td><code>app.post_ledger</code></td><td class="mono">balance + delta ≥ 0 (row lock)</td><td><span class="tag t-green">ledger</span></td></tr>
+          <tr><td>Batch “Remaining”</td><td><code>v_inward_history</code></td><td class="mono">inward_items.qty − Σ outward_items.qty</td><td><span class="tag t-amber">document</span></td></tr>
+          <tr><td>Dashboard “In stock”</td><td><code>v_product_stock_status</code></td><td class="mono">count(status IN INWARDED,IN_STOCK)</td><td><span class="tag t-amber">barcode</span></td></tr>
+          <tr><td>Batch Records modal</td><td><code>v_batch_registry</code></td><td class="mono">count of barcodes per status</td><td><span class="tag t-amber">barcode</span></td></tr>
+          <tr><td>batch remaining_quantity</td><td><code>product_batches</code></td><td class="mono">+= qty on inward, never −=</td><td><span class="tag t-red">dead</span></td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--muted);font-size:13.5px;padding:10px 10px 0">Six numbers, three definitions of “how much stock is there,” one of them never decremented. They agree only while the ledger, the barcode statuses, and the document quantities stay perfectly in step — which the ping-pong migrations guaranteed they wouldn’t.</p>
+    </div>
+  </section>
+
+  <!-- ISSUES -->
+  <section>
+    <h2><span class="n">!</span> Issues found (beyond the headline)</h2>
+    <div class="card" style="padding-bottom:16px">
+      <table>
+        <thead><tr><th>#</th><th>Issue</th><th>Where</th><th>Impact</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td><b>Ledger bridge dropped</b> — units received under mig 44 have status but no ledger rows; migs 51/56 fixed forward but never backfilled.</td><td><code>scan_receive</code> mig 44</td><td><span class="tag t-red">high</span> 33→0</td></tr>
+          <tr><td class="num">2</td><td><b>Duplicate stock logic</b> — 3 independent definitions of remaining/available drift apart.</td><td>views §5 above</td><td><span class="tag t-red">high</span></td></tr>
+          <tr><td class="num">3</td><td><b>Batch outward without scan</b> — “Save outward” records an <code>outward_item</code> for a batch line but skips the ledger; <code>v_inward_history.remaining</code> drops while <code>qty_available</code> doesn’t. Mirror of the same drift.</td><td><code>save_outward</code></td><td><span class="tag t-amber">med</span></td></tr>
+          <tr><td class="num">4</td><td><b>Two conflicting <code>rebuild_stock_balances</code></b> — one sums the ledger, one counts barcodes. Running the wrong one bakes in whichever answer.</td><td>migs 05 vs 40</td><td><span class="tag t-amber">med</span></td></tr>
+          <tr><td class="num">5</td><td><b><code>product_batches.remaining_quantity</code></b> incremented on inward, never decremented — permanently wrong counter.</td><td><code>save_inward</code></td><td><span class="tag t-amber">med</span></td></tr>
+          <tr><td class="num">6</td><td><b>Duplicate migration numbers</b> — two each of 33/34/36/37/38/39/40 with different date prefixes; ordering is by timestamp, not the label.</td><td>migrations/</td><td><span class="tag t-amber">med</span></td></tr>
+          <tr><td class="num">7</td><td><b>Outward batch table lacks received-at / office / scanned-by</b> — the data exists in <code>v_batch_barcodes</code> (inwarded_at, scanned_office_name, scanned_by_name), just isn’t surfaced there.</td><td><code>Outward.tsx</code></td><td><span class="tag t-green">feature</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FIX -->
+  <section>
+    <h2><span class="n">→</span> The fix, as one consolidated migration</h2>
+    <div class="card" style="padding-bottom:18px">
+      <ol class="fix">
+        <li><b>One authoritative definition each</b> of <code>save_inward</code>, <code>scan_receive</code>, <code>save_outward</code>, <code>rebuild_stock_balances</code>, and the stock views — replacing the ping-pong. Pick <b>ledger as the single source of truth</b>; make <code>v_inward_history.remaining</code> read stock-by-batch from the ledger, not document math.</li>
+        <li><b>Backfill the stranded units.</b> For every barcode whose status ∈ {INWARDED, AVAILABLE, IN_STOCK} with no matching INWARD ledger row, post one <code>+1</code> INWARD row — idempotent via <code>uuid_v5(barcode_id)</code> — so the ledger equals physical reality and AVAILABLE reads 33. Append-only rule honoured (no edits, only new rows).</li>
+        <li><b>Add received-at / office / scanned-by</b> columns to the Outward batch-allocation table, sourced from <code>v_batch_barcodes</code>.</li>
+        <li><b>Then</b> run <code>rebuild_stock_balances()</code> once and assert it’s a no-op — the standing test that cache = ledger.</li>
+      </ol>
+    </div>
+  </section>
+</div>

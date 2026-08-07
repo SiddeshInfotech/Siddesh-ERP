@@ -754,3 +754,62 @@ barcode sources are already globally readable, so no data is exposed that wasn't
 **Files:** supabase/migrations/20260806160000_48_product_stock_status.sql,
 apps/desktop/src/renderer/src/hooks/useDashboard.ts, apps/desktop/src/renderer/src/hooks/useTodayBatchActivity.ts,
 apps/desktop/src/renderer/src/hooks/useAllBatches.ts, apps/desktop/src/renderer/src/routes/Dashboard.tsx
+
+## 07/08/2026 18:35 — FIX-330 — Reconcile ledger with received barcodes ("33 in stock / 0 available") — Ram
+**Status:** Done (migration written; not yet applied)
+**What:** Diagnosed why a fully-received batch (33 units, all barcodes INWARDED) read AVAILABLE 0 on the
+Outward screen and was refused by save_outward. Root cause: scan_receive in migration 44
+(20260806144123_40_scan_receive_strict_context.sql) set the barcode to INWARDED and logged a barcode_scans
+row but dropped the app.post_ledger call, so units received in the mig-44→51 window have no INWARD ledger
+rows. Barcode status + document math (inward_items.quantity − outward_items.quantity) still showed 33, while
+the ledger-derived qty_available (v_current_stock ← stock_balances) was 0. scan_receive (mig 56) and
+save_inward (mig 51) are already correct going forward; only the stranded units needed healing.
+**Fix:** migration 57 — for each (office, product, batch) it counts in-stock barcodes
+(status IN_STOCK/INWARDED/AVAILABLE), compares to the current ledger balance, and posts ONE reversing
+ADJUSTMENT for the gap via app.post_ledger (append-only; balances move in the same txn). Idempotent
+(guarded by target<>current). Deliberately does NOT call app.rebuild_stock_balances() — the live mig-40
+version rebuilds from barcode counts and omits AVAILABLE, which would undo the backfill.
+**Not done (out of scope this pass):** whole-schema consolidation into one file — recommended path is
+`supabase db dump --schema public,app` against the live DB, because the 56 migrations do not replay cleanly
+start-to-finish (e.g. mig 12 references renamed columns supplier_name/qty/unit_id). Also deferred: Outward
+batch-table received-at/office/scanned-by columns; unifying the two rival rebuild_stock_balances and the
+three "remaining/available" definitions onto one ledger source of truth.
+**Apply:** `npx supabase db push` then `npm run db:types`. Verify:
+`select product_id, sum(qty_available) from public.v_current_stock group by 1;`
+**Files:** supabase/migrations/20260807130000_57_reconcile_ledger_backfill.sql
+
+## 07/08/2026 19:10 — FIX-331 — scan_receive writes wrong barcode_scans columns (extends FIX-330) — Ram
+**Status:** Done (migration written; not yet applied)
+**What:** Extends FIX-330. Confirmed on live data: barcodes reach status INWARDED with receive_scans=0
+(e.g. ANDR-260807-0034/0035), so Batch Records' Inwarded / Scanned By / Scanned At stay blank and no ledger
+row is posted. Root cause: scan_receive (migs 51 & 56) INSERTs into barcode_scans columns ref_context/ref_id
+which DO NOT EXIST on the live table, and omits NOT NULL product_id. Verified against
+packages/shared/database.types.ts: barcode_scans has barcode_id, product_id(NN), batch_id, office_id(NN),
+action, device_source, client_txn_id, ledger_id, scanned_by, scanned_at — no ref_* columns. Because the
+INSERT is in-transaction, the whole scan_receive rolls back. The view v_batch_barcodes and the modal UI were
+already wired correctly (inwarded_at ← RECEIVE scan; scanned_by_name ← profiles; scanned_office_name ←
+offices) — only the write path was broken.
+**Fix (folded into migration 57):** (1) redefined scan_receive to INSERT the real columns
+(barcode_id, product_id, batch_id, office_id, action, device_source, client_txn_id, ledger_id, scanned_by)
+and post the ledger; (2) backfilled a RECEIVE barcode_scans row for units already INWARDED/AVAILABLE/IN_STOCK
+with none — reconstructed who/when from product_barcodes.updated_by/updated_at and where from the batch's
+inward office (idempotent via uuid_v5 + on conflict do nothing); (3) kept the INWARD ledger backfill from
+FIX-330. Left the legacy 3-arg scan_receive overload in place (mobile may call it) — flagged for later.
+**Apply:** `npx supabase db push` then `npm run db:types`.
+**Files:** supabase/migrations/20260807130000_57_reconcile_ledger_backfill.sql
+
+## 07/08/2026 19:40 — FIX-332 — Repackage scan_receive fix as mig 58 (mig 57 version already burned) — Ram
+**Status:** Done (migration written; pending push)
+**What:** `supabase db push` reported "Remote database is up to date" — migration list showed 20260807130000
+(mig 57) already applied on remote. The CLI tracks migrations by version number, not content, so the later
+in-place rewrite of 57 (scan_receive fix + scan backfill) would never re-run. Confirmed via live data
+(receive_scans=0) that only the ledger-only version of 57 had actually applied.
+**Fix:** Reverted the 57 file to its as-applied content (ledger reconcile only, no rebuild call) so the repo
+matches remote. Moved the scan_receive column fix + who/when/where scan backfill into a NEW migration 58
+(20260807140000), which migration list confirms as pending (remote=""). Mig 58 is self-contained and
+idempotent: corrected scan_receive (real barcode_scans columns), RECEIVE-scan backfill for already-received
+units, and a belt-and-suspenders idempotent ledger reconcile.
+**Lesson:** Never edit a migration that is already applied to remote — add a new one.
+**Apply:** `npx supabase db push` then `npm run db:types`.
+**Files:** supabase/migrations/20260807140000_58_fix_scan_receive_columns.sql,
+supabase/migrations/20260807130000_57_reconcile_ledger_backfill.sql (reverted to as-applied content)
