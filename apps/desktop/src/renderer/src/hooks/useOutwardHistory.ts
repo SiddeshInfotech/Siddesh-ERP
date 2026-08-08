@@ -39,6 +39,47 @@ export interface OutwardHistoryRow {
  * @param productId - when set, filters to that product (the "Selected Product" filter).
  * @returns One row per outward line (Date + Product + Batch), newest first.
  */
+export interface BatchOutwardEntry {
+  id: string
+  outward_no: string
+  outward_qty: number
+  issued_at: string
+  party_name: string | null
+}
+
+/**
+ * The outward entries (documents) that dispatched from one batch, oldest first.
+ *
+ * Used by the Batch Records modal to group a batch's dispatched units by the outward
+ * entry they belong to. The database does not store a per-unit → entry link, so the modal
+ * assigns units to entries FIFO using these quantities; this returns the entries + their
+ * authorised quantity in creation order so that assignment is deterministic.
+ */
+export function useBatchOutwardEntries(productId?: string | null, batchCode?: string | null) {
+  return useQuery({
+    queryKey: ['batch_outward_entries_v1', productId, batchCode],
+    enabled: !!productId && !!batchCode,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('v_outward_history')
+        .select('id, outward_no, outward_qty, issued_at, party_name, created_at')
+        .eq('product_id', productId!)
+        .eq('batch_code', batchCode!)
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+
+      return (data ?? []).map((row: any) => ({
+        id: row.id ?? '',
+        outward_no: row.outward_no ?? '',
+        outward_qty: row.outward_qty ?? 0,
+        issued_at: row.issued_at ?? '',
+        party_name: row.party_name ?? null
+      })) as BatchOutwardEntry[]
+    }
+  })
+}
+
 export function useOutwardHistory(productId?: string | null) {
   return useQuery({
     queryKey: ['outward_history_v1', productId],

@@ -4,9 +4,27 @@ import { Activity, X } from 'lucide-react'
 
 import { StatusBadge, formatStamp } from '@/components/barcode/BatchBarcodesSubTable'
 import { useBatchBarcodes, type BatchBarcodeRow } from '@/hooks/useBatchBarcodes'
+import { useBatchOutwardEntries } from '@/hooks/useOutwardHistory'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { DataTable } from '../ui/DataTable'
+
+/**
+ * Distinct, theme-safe styles cycled per outward entry, so each entry's units are visually
+ * grouped. `row` tints the whole table row; `badge` styles the entry chip; `dot` is the
+ * legend swatch. Kept as literal class strings so Tailwind's compiler keeps them.
+ */
+const ENTRY_STYLES = [
+  { row: 'bg-blue-500/[0.07]', badge: 'bg-blue-500/20 text-on-surface', dot: 'bg-blue-500' },
+  { row: 'bg-emerald-500/[0.07]', badge: 'bg-emerald-500/20 text-on-surface', dot: 'bg-emerald-500' },
+  { row: 'bg-amber-500/[0.08]', badge: 'bg-amber-500/20 text-on-surface', dot: 'bg-amber-500' },
+  { row: 'bg-fuchsia-500/[0.07]', badge: 'bg-fuchsia-500/20 text-on-surface', dot: 'bg-fuchsia-500' },
+  { row: 'bg-sky-500/[0.07]', badge: 'bg-sky-500/20 text-on-surface', dot: 'bg-sky-500' },
+  { row: 'bg-rose-500/[0.07]', badge: 'bg-rose-500/20 text-on-surface', dot: 'bg-rose-500' }
+] as const
+
+/** Cycles through the palette by entry index; the modulo keeps it in range. */
+const styleFor = (index: number) => ENTRY_STYLES[index % ENTRY_STYLES.length]!
 
 
 interface BatchBarcodesModalProps {
@@ -32,6 +50,38 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
   const { data: barcodes, isLoading, isError, error } = useBatchBarcodes(productId, batchCode)
 
   const isInward = scanContext === 'INWARD'
+
+  // Outward entries for this batch (oldest first). Only fetched for the Outward view — the
+  // grouping/colouring applies to dispatched units.
+  const { data: outwardEntries } = useBatchOutwardEntries(
+    isInward ? null : productId,
+    isInward ? null : batchCode
+  )
+
+  // Assign each dispatched unit to an outward entry, FIFO: units are ordered by when they
+  // were outwarded (then by code), and filled into the entries in creation order up to each
+  // entry's quantity. The database stores no per-unit → entry link, so this is a consistent
+  // presentation, not ground-truth attribution — a unit's colour reflects dispatch order.
+  const entryByBarcodeId = useMemo(() => {
+    const map = new Map<string, { index: number; outwardNo: string }>()
+    if (isInward || !barcodes || !outwardEntries?.length) return map
+
+    const dispatched = barcodes
+      .filter((b) => b.status === 'OUTWARD' || b.status === 'OUTWARDED')
+      .sort((a, b) => {
+        const ta = a.outwarded_at ? Date.parse(a.outwarded_at) : Number.POSITIVE_INFINITY
+        const tb = b.outwarded_at ? Date.parse(b.outwarded_at) : Number.POSITIVE_INFINITY
+        return ta !== tb ? ta - tb : a.code.localeCompare(b.code)
+      })
+
+    let u = 0
+    outwardEntries.forEach((entry, index) => {
+      for (let k = 0; k < entry.outward_qty && u < dispatched.length; k++, u++) {
+        map.set(dispatched[u]!.id, { index, outwardNo: entry.outward_no })
+      }
+    })
+    return map
+  }, [isInward, barcodes, outwardEntries])
 
   const received = useMemo(
     () => (barcodes ?? []).filter((b) => b.status !== 'GENERATED' && b.status !== 'VOID').length,
@@ -120,7 +170,26 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
               <p className="font-mono text-sm">{error?.message || String(error)}</p>
             </div>
           ) : (
-            <DataTable<BatchBarcodeRow>
+            <>
+              {!isInward && outwardEntries && outwardEntries.length > 0 && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-outline-variant/20 bg-surface px-4 py-2.5">
+                  <span className="text-body-sm text-on-surface-variant/60">Outward entries:</span>
+                  {outwardEntries.map((entry, index) => {
+                    const style = styleFor(index)
+                    return (
+                      <span className="inline-flex items-center gap-1.5 text-body-sm" key={entry.id}>
+                        <span className={`size-2.5 rounded-full ${style.dot}`} />
+                        <span className="font-semibold text-on-surface">{entry.outward_no}</span>
+                        <span className="text-on-surface-variant/70">
+                          · {entry.outward_qty} pc{entry.outward_qty === 1 ? '' : 's'}
+                          {entry.party_name ? ` · ${entry.party_name}` : ''}
+                        </span>
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+              <DataTable<BatchBarcodeRow>
               columns={[
                 { header: 'Barcode Number', cell: (row) => <span className="font-mono">{row.code}</span> },
                 { header: 'Status', cell: (row) => <StatusBadge status={row.status} /> },
@@ -145,6 +214,21 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
                         cell: (row: BatchBarcodeRow) => (
                           <span className="font-mono text-xs">{formatStamp(row.outwarded_at)}</span>
                         )
+                      },
+                      {
+                        header: 'Outward Entry',
+                        cell: (row: BatchBarcodeRow) => {
+                          const assigned = entryByBarcodeId.get(row.id)
+                          if (!assigned) return <span className="text-on-surface-variant/40">—</span>
+                          const style = styleFor(assigned.index)
+                          return (
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${style.badge}`}
+                            >
+                              {assigned.outwardNo}
+                            </span>
+                          )
+                        }
                       }
                     ]),
                 // Scanned By / At show the ACTUAL scanner + office from barcode_scans,
@@ -155,7 +239,12 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
               ]}
               data={barcodes || []}
               emptyMessage="No barcodes generated for this batch."
-            />
+              rowClassName={(row) => {
+                const assigned = entryByBarcodeId.get(row.id)
+                return assigned ? styleFor(assigned.index).row : ''
+              }}
+              />
+            </>
           )}
         </div>
 

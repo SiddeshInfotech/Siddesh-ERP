@@ -35,12 +35,18 @@ export function Settings() {
   const showAlert = useAlert()
   const wipeMutation = useDeleteAllInventoryData()
 
+  // The wipe is scoped to the login (migration 62): Admin resets every office, a Store
+  // Manager resets only their own. Any other role cannot run it.
+  const canWipe = isAdmin || profile?.role === 'STORE_MANAGER'
+  const officeLabel = profile?.officeName ?? 'your office'
+
   const handleDeleteAllData = async () => {
     const ok = await confirm({
-      title: 'Wipe All Inventory Data',
-      description:
-        'Are you absolutely sure you want to delete ALL inventory data?\n\nEvery product, barcode, batch, category, supplier, customer, and stock movement record will be permanently deleted from the database.\n\nNot a single character will remain in the inventory tables. All sequence counters will be reset to 0.\n\nThis action CANNOT be undone.',
-      confirmText: 'Wipe Everything',
+      title: isAdmin ? 'Wipe Inventory — All Offices' : `Wipe Inventory — ${officeLabel}`,
+      description: isAdmin
+        ? 'Are you absolutely sure you want to delete ALL inventory data for EVERY office?\n\nEvery product, barcode, batch, category, supplier, customer, and stock movement record across all offices will be permanently deleted, and all sequence counters reset to 0.\n\nThis action CANNOT be undone.'
+        : `Are you absolutely sure you want to delete all inventory data for ${officeLabel}?\n\nEvery product, barcode, batch, category, supplier, customer, and stock movement record for this office will be permanently deleted. Other offices are not affected.\n\nThis action CANNOT be undone.`,
+      confirmText: isAdmin ? 'Wipe All Offices' : 'Wipe This Office',
       tone: 'error',
       requireCode: '123Del'
     })
@@ -51,8 +57,9 @@ export function Settings() {
       await wipeMutation.mutateAsync('DELETE-ALL-INVENTORY')
       void showAlert({
         title: 'System Reset Successful',
-        description:
-          'All inventory data has been permanently wiped from the database. All sequences have been reset to zero.\n\nYour Admin profile and office settings remain untouched.',
+        description: isAdmin
+          ? 'All inventory data across every office has been permanently wiped, and sequences reset to zero.\n\nProfiles and office settings remain untouched.'
+          : `All inventory data for ${officeLabel} has been permanently wiped. Other offices are untouched.\n\nYour profile and office settings remain untouched.`,
         tone: 'success'
       })
     } catch (err: any) {
@@ -153,30 +160,40 @@ export function Settings() {
           <div className="mt-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div className="max-w-2xl">
               <h4 className="text-body-lg font-bold text-on-surface">
-                Reset Inventory System (Delete All Data)
+                Reset Inventory System — {isAdmin ? 'All Offices' : officeLabel}
               </h4>
               <p className="mt-1 text-body-md text-on-surface-variant leading-relaxed">
-                Permanently delete all inventory data from the database. This includes all <strong>products, categories, brands, UOMs, barcode batches, individual barcode stickers, stock movements (inwards & outwards), transfer notes, suppliers, customers, and accounting ledger entries</strong>.
+                Permanently delete all inventory data for{' '}
+                <strong>{isAdmin ? 'every office' : officeLabel}</strong>. This includes all <strong>products, categories, brands, UOMs, barcode batches, individual barcode stickers, stock movements (inwards & outwards), transfer notes, suppliers, customers, and accounting ledger entries</strong>.
               </p>
               <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-error/15 px-3 py-2 text-body-sm font-bold text-error border border-error/20">
                 <AlertTriangle className="size-4 shrink-0" />
-                <span>Not a single character will remain in the inventory tables. All sequences reset to 0.</span>
+                <span>
+                  {isAdmin
+                    ? 'Not a single character will remain in any office. All sequences reset to 0.'
+                    : `Only ${officeLabel}'s inventory is cleared — other offices are untouched.`}
+                </span>
               </div>
+              {!canWipe ? (
+                <p className="mt-3 text-body-sm text-on-surface-variant/70">
+                  Only an Admin (all offices) or a Store Manager (their own office) can reset inventory.
+                </p>
+              ) : null}
             </div>
 
             <div className="shrink-0 w-full lg:w-auto flex justify-end">
               <Button
                 variant="primary"
-                className="w-full lg:w-auto bg-error hover:bg-error/90 text-white font-bold px-6 py-3 rounded-full shadow-lg shadow-error/25 transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="w-full lg:w-auto bg-error hover:bg-error/90 text-white font-bold px-6 py-3 rounded-full shadow-lg shadow-error/25 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
                 onClick={handleDeleteAllData}
-                disabled={wipeMutation.isPending}
+                disabled={wipeMutation.isPending || !canWipe}
               >
                 {wipeMutation.isPending ? (
                   <RefreshCw className="size-5 animate-spin" />
                 ) : (
                   <Trash2 className="size-5" />
                 )}
-                <span>Delete All Inventory Data</span>
+                <span>{isAdmin ? 'Delete All Offices’ Data' : 'Delete This Office’s Data'}</span>
               </Button>
             </div>
           </div>
