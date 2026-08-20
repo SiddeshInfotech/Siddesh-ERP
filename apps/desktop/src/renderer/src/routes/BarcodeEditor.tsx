@@ -19,6 +19,13 @@ import { Select, type SelectOption } from '@/components/ui/Select'
 import { SpinnerPane } from '@/components/ui/Spinner'
 import { useProducts, type ProductListItem } from '@/hooks/useProducts'
 import { useBatches, useLastBarcode } from '@/hooks/useBatches'
+import {
+  BARCODE_SYMBOLOGY_LABELS,
+  describeBarcodeProblem,
+  detectSymbology,
+  findBarcodeProblem,
+  type BarcodeSymbology
+} from '@/lib/barcode'
 import { generateCode128Svg } from '@/lib/code128'
 import { toUserMessage } from '@/lib/errors'
 import {
@@ -64,6 +71,9 @@ export function BarcodeEditor() {
   const [selectedFormatId, setSelectedFormatId] = useState<BarcodeFormatId>('SKU_DATE_SEQ')
   const [customPrefix, setCustomPrefix] = useState<string>('SIDD')
   const [customManufacturerBarcode, setCustomManufacturerBarcode] = useState<string>('')
+  // Symbology of the manufacturer code (Option B). Auto-guessed from the code, user-overridable.
+  const [symbology, setSymbology] = useState<BarcodeSymbology>('CODE128')
+  const [symbologyTouched, setSymbologyTouched] = useState<boolean>(false)
   const [startSeq, setStartSeq] = useState<number>(1)
   const [showInfo, setShowInfo] = useState<boolean>(false)
 
@@ -145,27 +155,47 @@ export function BarcodeEditor() {
     }))
   }, [batches])
 
+  const symbologyOptions: SelectOption[] = useMemo(
+    () =>
+      (Object.entries(BARCODE_SYMBOLOGY_LABELS) as [BarcodeSymbology, string][]).map(
+        ([value, label]) => ({ value, label })
+      ),
+    []
+  )
+
   // Format option metadata
   const currentFormatOption = useMemo(
     () => BARCODE_FORMAT_OPTIONS.find((f) => f.id === selectedFormatId) || BARCODE_FORMAT_OPTIONS[0],
     [selectedFormatId]
   )
 
-  // Generated Barcode Sequence list
+  // Option B (manufacturer barcode): the code is registered ONCE as an alias for the product,
+  // never per unit — a manufacturer prints the same code on every box, so quantity/batch/format
+  // do not apply here. Quantity is tracked later, at Inward/Outward.
+  const manufacturerCode = customManufacturerBarcode.trim()
+  const manufacturerProblem = mode === 'B' ? findBarcodeProblem(customManufacturerBarcode) : null
+
+  // Generated Barcode Sequence list (Option A only). For Option B this is just the single code,
+  // used to feed the preview; the save path uses `manufacturerCode` directly.
   const generatedSequence: string[] = useMemo(() => {
-    const validQuantity = typeof quantity === 'number' && quantity > 0 ? quantity : 1
     if (mode === 'B') {
-      const bCode = customManufacturerBarcode.trim() || selectedProduct?.skuBarcode || '8901234567890'
-      return Array(Math.max(1, validQuantity)).fill(bCode)
+      return manufacturerCode ? [manufacturerCode] : []
     }
 
+    const validQuantity = typeof quantity === 'number' && quantity > 0 ? quantity : 1
     return generateCustomBarcodeSequence(selectedFormatId, startSeq, validQuantity, {
       skuCode: selectedProduct?.name ? selectedProduct.name.slice(0, 4) : 'PROD',
       categoryName: selectedProduct?.categoryName || 'GEN',
       customPrefix,
       date: new Date()
     })
-  }, [mode, selectedFormatId, startSeq, quantity, selectedProduct, customManufacturerBarcode, customPrefix])
+  }, [mode, selectedFormatId, startSeq, quantity, selectedProduct, manufacturerCode, customPrefix])
+
+  // Keep the symbology guess in step with the code until the user overrides it by hand.
+  useEffect(() => {
+    if (mode !== 'B' || symbologyTouched) return
+    setSymbology(detectSymbology(customManufacturerBarcode))
+  }, [mode, customManufacturerBarcode, symbologyTouched])
 
   useEffect(() => {
     setHasSaved(false)
@@ -183,10 +213,60 @@ export function BarcodeEditor() {
     }
   }, [previewBarcode])
 
+  const invalidateAfterSave = async (productId: string) => {
+    await queryClient.invalidateQueries({ queryKey: ['batches', productId] })
+    await queryClient.invalidateQueries({ queryKey: ['products'] })
+    await queryClient.invalidateQueries({ queryKey: ['last_barcode', productId] })
+    await queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
+    await queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
+  }
+
+  /**
+   * Registers a manufacturer's printed barcode as an alias for the selected product (SRD §4
+   * Option B). Exactly ONE row: the same code is printed on every unit, so it is product
+   * identity, not a per-unit token — no batch, no quantity, no sequence. Quantity is recorded
+   * later, at Inward/Outward.
+   *
+   * @throws When the code is invalid, or already registered to a product in this office
+   *         (uq_product_barcode_code). The server owns both checks; this only fails fast.
+   */
+  const linkManufacturerBarcode = async () => {
+    if (!selectedProduct) throw new Error('No product selected')
+    const problem = findBarcodeProblem(customManufacturerBarcode)
+    if (problem) throw new Error(describeBarcodeProblem(problem))
+
+    const { error } = await supabase.from('product_barcodes').insert({
+      product_id: selectedProduct.id,
+      code: manufacturerCode,
+      symbology,
+      batch_id: null,
+      // Becomes the primary (printed) code only if the product has none yet; otherwise it is an
+      // additional alias. A second primary would violate uq_product_barcode_primary.
+      is_primary: !selectedProduct.skuBarcode
+    })
+
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error('This barcode is already registered to a product in this office.')
+      }
+      throw error
+    }
+
+    await invalidateAfterSave(selectedProduct.id)
+    setHasSaved(true)
+  }
+
   // Save Barcode & Return to /barcodes (Backend records timestamp automatically)
   const saveBarcodesToDB = async () => {
     if (hasSaved) return
     if (!selectedProduct) throw new Error('No product selected')
+
+    if (mode === 'B') {
+      await linkManufacturerBarcode()
+      return
+    }
+
+    // ── Option A: generate our own unique per-unit codes into a batch ──
     const primaryBarcode = generatedSequence[0]
     if (!primaryBarcode) throw new Error('No barcode generated')
 
@@ -196,7 +276,6 @@ export function BarcodeEditor() {
       if (!batchCode.trim()) {
         throw new Error('Batch code is required when creating a new batch.')
       }
-      // Insert new batch
       const { data: newBatch, error: batchError } = await supabase
         .from('product_batches')
         .insert({
@@ -212,15 +291,13 @@ export function BarcodeEditor() {
       resolvedBatchId = selectedBatchId || null
     }
 
-    // Insert all generated barcodes (deduplicated to prevent duplicate key errors in Option B mode)
-    const uniqueBarcodes = Array.from(new Set(generatedSequence))
     const { error: barcodesError } = await supabase
       .from('product_barcodes')
       .insert(
-        uniqueBarcodes.map((code, idx) => ({
+        generatedSequence.map((code, idx) => ({
           product_id: selectedProduct.id,
           code,
-          batch_id: mode === 'B' ? null : (resolvedBatchId || null), // Option B doesn't use batches
+          batch_id: resolvedBatchId,
           symbology: 'CODE128',
           is_primary: idx === 0 && !selectedProduct.skuBarcode
         }))
@@ -234,13 +311,7 @@ export function BarcodeEditor() {
       throw barcodesError
     }
 
-    // Invalidate React Query caches
-    await queryClient.invalidateQueries({ queryKey: ['batches', selectedProduct.id] })
-    await queryClient.invalidateQueries({ queryKey: ['products'] })
-    await queryClient.invalidateQueries({ queryKey: ['last_barcode', selectedProduct.id] })
-    await queryClient.invalidateQueries({ queryKey: ['batch_registry'] })
-    await queryClient.invalidateQueries({ queryKey: ['batch_barcodes_v5'] })
-    
+    await invalidateAfterSave(selectedProduct.id)
     setHasSaved(true)
   }
 
@@ -325,40 +396,41 @@ export function BarcodeEditor() {
         <form onSubmit={handleSave} className="p-6 space-y-6">
           {/* Target Product & Custom Quantity */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
+            <div className={mode === 'B' ? 'md:col-span-3' : 'md:col-span-2'}>
               <Select
                 label="Target Product"
                 options={productOptions}
                 value={selectedProductId || selectedProduct?.id || ''}
-                onChange={(val) => {
-                  setSelectedProductId(val)
-                  const prod = products.find((p) => p.id === val)
-                  if (prod?.skuBarcode) setCustomManufacturerBarcode(prod.skuBarcode)
-                }}
+                onChange={(val) => setSelectedProductId(val)}
               />
             </div>
 
-            <div>
-              <Field
-                label="Quantity"
-                type="number"
-                min={1}
-                value={quantity}
-                onChange={(e) => {
-                  const val = e.target.value
-                  if (val === '') {
-                    setQuantity('')
-                  } else {
-                    const num = parseInt(val, 10)
-                    setQuantity(isNaN(num) ? '' : num)
-                  }
-                }}
-                placeholder="Enter quantity"
-              />
-            </div>
+            {/* Quantity drives per-unit label generation (Option A only). A manufacturer code is
+                registered once, so it has no quantity here — that is counted at Inward/Outward. */}
+            {mode === 'A' && (
+              <div>
+                <Field
+                  label="Quantity"
+                  type="number"
+                  min={1}
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (val === '') {
+                      setQuantity('')
+                    } else {
+                      const num = parseInt(val, 10)
+                      setQuantity(isNaN(num) ? '' : num)
+                    }
+                  }}
+                  placeholder="Enter quantity"
+                />
+              </div>
+            )}
           </div>
 
-          {/* Batch Selection & Creation */}
+          {/* Batch Selection & Creation — Option A only. A manufacturer barcode is not batched. */}
+          {mode === 'A' && (
           <div className="space-y-4 pt-2 border-t border-border/20">
             <div className="flex items-center gap-6">
               <label className="flex items-center gap-2 text-body-sm font-semibold text-on-surface cursor-pointer select-none">
@@ -395,6 +467,7 @@ export function BarcodeEditor() {
               </div>
             )}
           </div>
+          )}
 
           {/* Mode Selection Tabs */}
           <div className="space-y-4 pt-2">
@@ -496,68 +569,123 @@ export function BarcodeEditor() {
                 )}
               </div>
             ) : (
-              <div className="p-4 rounded-xl bg-surface-variant/20 border border-border/50">
-                <Field
-                  label="Manufacturer Barcode"
-                  value={customManufacturerBarcode}
-                  onChange={(e) => setCustomManufacturerBarcode(e.target.value)}
-                  placeholder="e.g. 8901234567890"
-                />
+              <div className="space-y-3 p-4 rounded-xl bg-surface-variant/20 border border-border/50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field
+                    label="Manufacturer Barcode"
+                    value={customManufacturerBarcode}
+                    onChange={(e) => setCustomManufacturerBarcode(e.target.value)}
+                    placeholder="e.g. 8901234567890"
+                    error={customManufacturerBarcode.length > 0 && manufacturerProblem
+                      ? describeBarcodeProblem(manufacturerProblem)
+                      : undefined}
+                    mono
+                    required
+                  />
+                  <Select
+                    label="Symbology"
+                    options={symbologyOptions}
+                    value={symbology}
+                    onChange={(val) => {
+                      setSymbology(val as BarcodeSymbology)
+                      setSymbologyTouched(true)
+                    }}
+                  />
+                </div>
+                <p className="text-body-sm text-on-surface-variant/70">
+                  Type the barcode exactly as printed on the box. It is registered once as another
+                  name for this product — every unit shares it, so quantity is counted at Inward and
+                  Outward, not here. Nothing is printed.
+                </p>
               </div>
             )}
           </div>
 
-          {/* STICKER PREVIEW & SEQUENCE REVIEW */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {/* Sticker Preview Box */}
-            <div className="p-4 bg-white rounded-xl border border-slate-300 shadow-sm flex flex-col items-center justify-center space-y-2 text-center">
-              <div className="text-slate-500 font-medium text-xs uppercase tracking-wider">
-                {selectedProduct?.brandName || 'SIDDESH ERP'}
+          {/* PREVIEW & REVIEW */}
+          {mode === 'A' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {/* Sticker Preview Box */}
+              <div className="p-4 bg-white rounded-xl border border-slate-300 shadow-sm flex flex-col items-center justify-center space-y-2 text-center">
+                <div className="text-slate-500 font-medium text-xs uppercase tracking-wider">
+                  {selectedProduct?.brandName || 'SIDDESH ERP'}
+                </div>
+                <div className="text-slate-900 font-bold text-sm line-clamp-1">
+                  {selectedProduct?.name || 'Sample Product'}
+                </div>
+                {barcodeSvg ? (
+                  <div className="py-1" dangerouslySetInnerHTML={{ __html: barcodeSvg }} />
+                ) : (
+                  <div className="py-2 text-slate-400 italic text-xs">Invalid barcode preview</div>
+                )}
               </div>
-              <div className="text-slate-900 font-bold text-sm line-clamp-1">
-                {selectedProduct?.name || 'Sample Product'}
-              </div>
-              {barcodeSvg ? (
-                <div className="py-1" dangerouslySetInnerHTML={{ __html: barcodeSvg }} />
-              ) : (
-                <div className="py-2 text-slate-400 italic text-xs">Invalid barcode preview</div>
-              )}
-            </div>
 
-            {/* Generated Sequence List */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-semibold text-on-surface">
-                <span className="flex items-center gap-1.5">
-                  <ListOrdered className="size-3.5 text-primary" />
-                  Sequence Review ({generatedSequence.length} Units)
-                </span>
-              </div>
-              <div className="max-h-36 overflow-y-auto space-y-1 p-2 bg-surface-variant/20 rounded-xl border border-border/60 font-mono text-xs [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {generatedSequence.map((code, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between px-3 py-1 rounded bg-surface text-on-surface"
-                  >
-                    <span className="text-on-surface-variant/60 font-sans text-[11px]">Unit #{idx + 1}</span>
-                    <span className="font-bold text-primary">{code}</span>
-                  </div>
-                ))}
+              {/* Generated Sequence List */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-semibold text-on-surface">
+                  <span className="flex items-center gap-1.5">
+                    <ListOrdered className="size-3.5 text-primary" />
+                    Sequence Review ({generatedSequence.length} Units)
+                  </span>
+                </div>
+                <div className="max-h-36 overflow-y-auto space-y-1 p-2 bg-surface-variant/20 rounded-xl border border-border/60 font-mono text-xs [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {generatedSequence.map((code, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between px-3 py-1 rounded bg-surface text-on-surface"
+                    >
+                      <span className="text-on-surface-variant/60 font-sans text-[11px]">Unit #{idx + 1}</span>
+                      <span className="font-bold text-primary">{code}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            // Option B: no barcode is rendered — a Code 128 picture of an EAN-13 would be a wrong
+            // label, and the real symbol is already on the box. Show what will be linked instead.
+            <div className="pt-2">
+              <div className="rounded-xl border border-border/60 bg-surface-variant/20 p-4">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-on-surface">
+                  <Barcode className="size-3.5 text-primary" />
+                  Will be linked to {selectedProduct?.name || 'the selected product'}
+                </span>
+                <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="font-mono text-h2 font-bold text-primary break-all">
+                    {manufacturerCode || '—'}
+                  </span>
+                  <span className="text-body-sm text-on-surface-variant/70">
+                    {BARCODE_SYMBOLOGY_LABELS[symbology]}
+                  </span>
+                </div>
+                <p className="mt-2 text-body-sm text-on-surface-variant/60">
+                  {selectedProduct?.skuBarcode
+                    ? 'Added as an additional barcode for this product.'
+                    : 'This will become the product’s primary barcode.'}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* FOOTER ACTIONS */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/40">
             <Button variant="ghost" onClick={() => void navigate('/barcodes')} type="button">
               Cancel
             </Button>
-            <Button variant="secondary" onClick={handlePrintBatch} type="button" isLoading={isPrinting}>
-              <Printer className="size-4 mr-2" />
-              Print Labels ({quantity || 1})
-            </Button>
-            <Button variant="primary" type="submit" isLoading={isSaving}>
+            {/* Printing is Option A only — a manufacturer already printed its own labels. */}
+            {mode === 'A' && (
+              <Button variant="secondary" onClick={handlePrintBatch} type="button" isLoading={isPrinting}>
+                <Printer className="size-4 mr-2" />
+                Print Labels ({quantity || 1})
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              type="submit"
+              isLoading={isSaving}
+              disabled={!selectedProduct || (mode === 'B' && manufacturerProblem !== null)}
+            >
               <CheckCircle2 className="size-4 mr-2" />
-              Save & Link Barcode
+              {mode === 'B' ? 'Link manufacturer barcode' : 'Save & Link Barcode'}
             </Button>
           </div>
         </form>

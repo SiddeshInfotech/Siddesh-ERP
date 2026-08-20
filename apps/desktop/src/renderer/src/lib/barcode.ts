@@ -65,6 +65,44 @@ export function describeBarcodeProblem(problem: BarcodeProblem): string {
   return PROBLEM_MESSAGES[problem.kind]
 }
 
+/** The symbologies the database enum accepts (01_foundation.sql: barcode_symbology). */
+export type BarcodeSymbology = 'CODE128' | 'EAN13' | 'UPCA' | 'QR' | 'OTHER'
+
+/** Human labels for the symbology select — the storekeeper does not think in enum values. */
+export const BARCODE_SYMBOLOGY_LABELS: Record<BarcodeSymbology, string> = {
+  EAN13: 'EAN-13 (13-digit retail)',
+  UPCA: 'UPC-A (12-digit retail)',
+  CODE128: 'Code 128 (letters + digits)',
+  QR: 'QR code',
+  OTHER: 'Other'
+}
+
+const ALL_DIGITS = /^\d+$/
+
+/**
+ * Guesses the symbology of a manufacturer barcode from the code itself, so the user does not
+ * have to name it (SRD §4 Option B — the code is given, not generated).
+ *
+ * A manufacturer prints the SAME code on every unit, so this is identity, not a format we own:
+ * 13 digits is EAN-13, 12 is UPC-A, anything else numeric (EAN-8, ITF-14…) has no enum value
+ * and falls to OTHER, and mixed letters/digits are Code 128. The user can override the guess.
+ * QR is never inferred from text alone — only the operator knows a code came off a 2-D symbol.
+ *
+ * @returns The best-guess symbology; never throws. An empty/blank code defaults to CODE128.
+ */
+export function detectSymbology(code: string): BarcodeSymbology {
+  const trimmed = code.trim()
+  if (trimmed.length === 0) return 'CODE128'
+
+  if (ALL_DIGITS.test(trimmed)) {
+    if (trimmed.length === 13) return 'EAN13'
+    if (trimmed.length === 12) return 'UPCA'
+    return 'OTHER'
+  }
+
+  return ENCODABLE.test(trimmed) ? 'CODE128' : 'OTHER'
+}
+
 interface RenderOptions {
   /** Print the human-readable digits under the bars. Labels need this; previews may not. */
   showText?: boolean

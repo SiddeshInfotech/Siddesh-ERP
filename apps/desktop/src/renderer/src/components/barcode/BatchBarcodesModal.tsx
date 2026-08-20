@@ -11,16 +11,17 @@ import { DataTable } from '../ui/DataTable'
 
 /**
  * Distinct, theme-safe styles cycled per outward entry, so each entry's units are visually
- * grouped. `row` tints the whole table row; `badge` styles the entry chip; `dot` is the
- * legend swatch. Kept as literal class strings so Tailwind's compiler keeps them.
+ * grouped. `row` tints the whole table row; `bar` is the left accent that marks the colour
+ * block; `badge` styles the entry chip; `dot` is the legend swatch. Kept as literal class
+ * strings so Tailwind's compiler keeps them.
  */
 const ENTRY_STYLES = [
-  { row: 'bg-blue-500/[0.07]', badge: 'bg-blue-500/20 text-on-surface', dot: 'bg-blue-500' },
-  { row: 'bg-emerald-500/[0.07]', badge: 'bg-emerald-500/20 text-on-surface', dot: 'bg-emerald-500' },
-  { row: 'bg-amber-500/[0.08]', badge: 'bg-amber-500/20 text-on-surface', dot: 'bg-amber-500' },
-  { row: 'bg-fuchsia-500/[0.07]', badge: 'bg-fuchsia-500/20 text-on-surface', dot: 'bg-fuchsia-500' },
-  { row: 'bg-sky-500/[0.07]', badge: 'bg-sky-500/20 text-on-surface', dot: 'bg-sky-500' },
-  { row: 'bg-rose-500/[0.07]', badge: 'bg-rose-500/20 text-on-surface', dot: 'bg-rose-500' }
+  { row: 'bg-blue-500/[0.07]', bar: 'border-l-blue-500', badge: 'bg-blue-500/20 text-on-surface', dot: 'bg-blue-500' },
+  { row: 'bg-emerald-500/[0.07]', bar: 'border-l-emerald-500', badge: 'bg-emerald-500/20 text-on-surface', dot: 'bg-emerald-500' },
+  { row: 'bg-amber-500/[0.08]', bar: 'border-l-amber-500', badge: 'bg-amber-500/20 text-on-surface', dot: 'bg-amber-500' },
+  { row: 'bg-fuchsia-500/[0.07]', bar: 'border-l-fuchsia-500', badge: 'bg-fuchsia-500/20 text-on-surface', dot: 'bg-fuchsia-500' },
+  { row: 'bg-sky-500/[0.07]', bar: 'border-l-sky-500', badge: 'bg-sky-500/20 text-on-surface', dot: 'bg-sky-500' },
+  { row: 'bg-rose-500/[0.07]', bar: 'border-l-rose-500', badge: 'bg-rose-500/20 text-on-surface', dot: 'bg-rose-500' }
 ] as const
 
 /** Cycles through the palette by entry index; the modulo keeps it in range. */
@@ -58,29 +59,63 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
     isInward ? null : batchCode
   )
 
-  // Assign each dispatched unit to an outward entry, FIFO: units are ordered by when they
-  // were outwarded (then by code), and filled into the entries in creation order up to each
-  // entry's quantity. The database stores no per-unit → entry link, so this is a consistent
-  // presentation, not ground-truth attribution — a unit's colour reflects dispatch order.
-  const entryByBarcodeId = useMemo(() => {
-    const map = new Map<string, { index: number; outwardNo: string }>()
-    if (isInward || !barcodes || !outwardEntries?.length) return map
+  // Group a batch's units by the outward entry they belong to and lay them out so each
+  // entry reads as one clean colour block.
+  //
+  // Assignment ("by scan order"): dispatched units are ordered by when they were scanned out
+  // (then code as a stable tiebreak) and filled into the entries in creation order up to each
+  // entry's authorised quantity — so the first unit scanned lands in the first entry, and so
+  // on. The database stores no per-unit → entry link, so this is a consistent presentation of
+  // that rule, not a recorded fact.
+  //
+  // Display order: the entry blocks first (in creation order, each block in its own colour),
+  // then everything still in stock / pending / void in code order. A left accent bar plus a
+  // divider at each block boundary makes the grouping unmistakable, which the flat code-sorted
+  // table could not show.
+  const { entryByBarcodeId, displayRows, rowClassById } = useMemo(() => {
+    const map = new Map<string, { index: number; outwardNo: string; seq: number }>()
+    const classes = new Map<string, string>()
 
-    const dispatched = barcodes
-      .filter((b) => b.status === 'OUTWARD' || b.status === 'OUTWARDED')
-      .sort((a, b) => {
-        const ta = a.outwarded_at ? Date.parse(a.outwarded_at) : Number.POSITIVE_INFINITY
-        const tb = b.outwarded_at ? Date.parse(b.outwarded_at) : Number.POSITIVE_INFINITY
-        return ta !== tb ? ta - tb : a.code.localeCompare(b.code)
-      })
+    // Inward view, or an outward batch with no entries yet: keep the natural code order and
+    // no grouping — there is nothing to colour.
+    if (isInward || !barcodes || !outwardEntries?.length) {
+      return { entryByBarcodeId: map, displayRows: barcodes ?? [], rowClassById: classes }
+    }
+
+    const isDispatched = (b: BatchBarcodeRow) => b.status === 'OUTWARD' || b.status === 'OUTWARDED'
+
+    const dispatched = barcodes.filter(isDispatched).sort((a, b) => {
+      const ta = a.outwarded_at ? Date.parse(a.outwarded_at) : Number.POSITIVE_INFINITY
+      const tb = b.outwarded_at ? Date.parse(b.outwarded_at) : Number.POSITIVE_INFINITY
+      return ta !== tb ? ta - tb : a.code.localeCompare(b.code)
+    })
 
     let u = 0
     outwardEntries.forEach((entry, index) => {
       for (let k = 0; k < entry.outward_qty && u < dispatched.length; k++, u++) {
-        map.set(dispatched[u]!.id, { index, outwardNo: entry.outward_no })
+        map.set(dispatched[u]!.id, { index, outwardNo: entry.outward_no, seq: index + 1 })
       }
     })
-    return map
+
+    // Pending/in-stock/void units after the entry blocks, in code order.
+    const rest = barcodes.filter((b) => !isDispatched(b)).sort((a, b) => a.code.localeCompare(b.code))
+    const ordered = [...dispatched, ...rest]
+
+    // Precompute each row's classes: the entry tint + left accent bar, and a divider on the
+    // first row of every new block so the eye can separate the groups at a glance.
+    let prevGroup: string | null = null
+    ordered.forEach((row) => {
+      const assigned = map.get(row.id)
+      const group = assigned ? `e${assigned.index}` : isDispatched(row) ? 'over' : 'rest'
+      const divider = prevGroup !== null && group !== prevGroup ? ' border-t border-outline-variant/25' : ''
+      const base = assigned
+        ? `${styleFor(assigned.index).row} border-l-4 ${styleFor(assigned.index).bar}`
+        : 'border-l-4 border-l-transparent'
+      classes.set(row.id, `${base}${divider}`)
+      prevGroup = group
+    })
+
+    return { entryByBarcodeId: map, displayRows: ordered, rowClassById: classes }
   }, [isInward, barcodes, outwardEntries])
 
   const received = useMemo(
@@ -173,12 +208,14 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
             <>
               {!isInward && outwardEntries && outwardEntries.length > 0 && (
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-outline-variant/20 bg-surface px-4 py-2.5">
-                  <span className="text-body-sm text-on-surface-variant/60">Outward entries:</span>
+                  <span className="text-body-sm text-on-surface-variant/60">Outward entries (in order):</span>
                   {outwardEntries.map((entry, index) => {
                     const style = styleFor(index)
                     return (
                       <span className="inline-flex items-center gap-1.5 text-body-sm" key={entry.id}>
-                        <span className={`size-2.5 rounded-full ${style.dot}`} />
+                        <span className={`inline-flex size-4 items-center justify-center rounded-full text-[10px] font-bold text-white ${style.dot}`}>
+                          {index + 1}
+                        </span>
                         <span className="font-semibold text-on-surface">{entry.outward_no}</span>
                         <span className="text-on-surface-variant/70">
                           · {entry.outward_qty} pc{entry.outward_qty === 1 ? '' : 's'}
@@ -223,8 +260,11 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
                           const style = styleFor(assigned.index)
                           return (
                             <span
-                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${style.badge}`}
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold ${style.badge}`}
                             >
+                              <span className={`inline-flex size-4 items-center justify-center rounded-full text-[10px] font-bold text-white ${style.dot}`}>
+                                {assigned.seq}
+                              </span>
                               {assigned.outwardNo}
                             </span>
                           )
@@ -237,12 +277,9 @@ export function BatchBarcodesModal({ productId, productName, batchCode, scanCont
                 { header: 'Scanned By', cell: (row) => row.scanned_by_name ?? '—' },
                 { header: 'Scanned At', cell: (row) => row.scanned_office_name ?? '—' }
               ]}
-              data={barcodes || []}
+              data={displayRows}
               emptyMessage="No barcodes generated for this batch."
-              rowClassName={(row) => {
-                const assigned = entryByBarcodeId.get(row.id)
-                return assigned ? styleFor(assigned.index).row : ''
-              }}
+              rowClassName={(row) => rowClassById.get(row.id) ?? ''}
               />
             </>
           )}
