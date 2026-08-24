@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, X, ListOrdered } from 'lucide-react'
+import { Plus, X, ListOrdered, Sparkles, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Select } from '@/components/ui/Select'
@@ -11,6 +11,7 @@ import { useLastBarcode, useBatches } from '@/hooks/useBatches'
 export interface InwardGeneratorResult {
   batchCode: string
   barcodes: string[]
+  manufacturerBarcode?: string
 }
 
 interface Props {
@@ -27,6 +28,8 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
   const { data: lastBarcode } = useLastBarcode(productId, null) // Get very last barcode for this product to find startSeq
   const { data: batches } = useBatches(productId)
 
+  const [optionMode, setOptionMode] = useState<'A' | 'B'>('A')
+  const [manufacturerBarcode, setManufacturerBarcode] = useState<string>(product?.sku_barcode || '')
   const [batchCode, setBatchCode] = useState<string>('')
   const [selectedFormatId, setSelectedFormatId] = useState<BarcodeFormatId>('SKU_DATE_SEQ')
   const [customPrefix, setCustomPrefix] = useState<string>('SIDD')
@@ -63,19 +66,22 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
   }, [lastBarcode])
 
   const generatedSequence = useMemo(() => {
-    return generateCustomBarcodeSequence(selectedFormatId, startSeq, localQty, {
-      skuCode: product?.name ? product.name.slice(0, 4) : 'PROD',
-      categoryName: product?.categoryName || 'GEN',
-      customPrefix,
-      date: new Date()
-    })
-  }, [selectedFormatId, startSeq, localQty, product, customPrefix])
+    return optionMode === 'A'
+      ? generateCustomBarcodeSequence(selectedFormatId, startSeq, localQty, {
+          skuCode: product?.name ? product.name.slice(0, 4) : 'PROD',
+          categoryName: product?.categoryName || 'GEN',
+          customPrefix,
+          date: new Date()
+        })
+      : Array(Math.max(1, localQty)).fill(manufacturerBarcode || product?.sku_barcode || 'ST00000001')
+  }, [optionMode, selectedFormatId, startSeq, localQty, product, customPrefix, manufacturerBarcode])
 
   const handleSave = () => {
     if (!batchCode.trim()) return
     onSave({
       batchCode: batchCode.trim(),
-      barcodes: generatedSequence
+      barcodes: generatedSequence,
+      manufacturerBarcode: optionMode === 'B' ? (manufacturerBarcode || product?.sku_barcode || 'ST00000001') : undefined
     })
   }
 
@@ -98,6 +104,39 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
         </div>
 
         <div className="p-6 overflow-y-auto flex flex-col gap-6">
+          {/* Mode Selection Tabs */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+              Barcode Mode
+            </label>
+            <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-100 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setOptionMode('A')}
+                className={`flex items-center justify-center gap-2 py-2.5 px-4 text-xs font-bold rounded-lg transition-all ${
+                  optionMode === 'A'
+                    ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-indigo-500" />
+                Option A: Software Auto-Generated
+              </button>
+              <button
+                type="button"
+                onClick={() => setOptionMode('B')}
+                className={`flex items-center justify-center gap-2 py-2.5 px-4 text-xs font-bold rounded-lg transition-all ${
+                  optionMode === 'B'
+                    ? 'bg-white text-emerald-600 shadow-sm border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Layers className="w-4 h-4 text-emerald-500" />
+                Option B: Manufacturer Barcode
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-3 gap-4">
             <Field
               label="Batch Number"
@@ -105,13 +144,22 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
               onChange={(e) => setBatchCode(e.target.value)}
               required
             />
-            <Field
-              label="Starting Seq Number"
-              type="number"
-              min={1}
-              value={startSeq}
-              onChange={(e) => setStartSeq(parseInt(e.target.value) || 1)}
-            />
+            {optionMode === 'A' ? (
+              <Field
+                label="Starting Seq Number"
+                type="number"
+                min={1}
+                value={startSeq}
+                onChange={(e) => setStartSeq(parseInt(e.target.value) || 1)}
+              />
+            ) : (
+              <Field
+                label="Manufacturer Barcode"
+                value={manufacturerBarcode}
+                onChange={(e) => setManufacturerBarcode(e.target.value)}
+                required
+              />
+            )}
             <Field
               label="Barcode Quantity"
               type="number"
@@ -122,29 +170,31 @@ export function InwardBarcodeGeneratorModal({ productId, qty, onClose, onSave }:
             />
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-label-caps uppercase text-on-surface-variant font-medium">Barcode Format</h3>
-            
-            <Select
-              label="Sequence Format"
-              value={selectedFormatId}
-              onChange={(v) => setSelectedFormatId(v as BarcodeFormatId)}
-              options={BARCODE_FORMAT_OPTIONS.map((f) => ({
-                value: f.id,
-                label: f.name,
-                description: f.patternDescription
-              }))}
-            />
-
-            {selectedFormatId === 'CUSTOM_PREFIX' && (
-              <Field
-                label="Custom Prefix"
-                value={customPrefix}
-                onChange={(e) => setCustomPrefix(e.target.value)}
-                maxLength={6}
+          {optionMode === 'A' && (
+            <div className="space-y-4">
+              <h3 className="text-label-caps uppercase text-on-surface-variant font-medium">Barcode Format</h3>
+              
+              <Select
+                label="Sequence Format"
+                value={selectedFormatId}
+                onChange={(v) => setSelectedFormatId(v as BarcodeFormatId)}
+                options={BARCODE_FORMAT_OPTIONS.map((f) => ({
+                  value: f.id,
+                  label: f.name,
+                  description: f.patternDescription
+                }))}
               />
-            )}
-          </div>
+
+              {selectedFormatId === 'CUSTOM_PREFIX' && (
+                <Field
+                  label="Custom Prefix"
+                  value={customPrefix}
+                  onChange={(e) => setCustomPrefix(e.target.value)}
+                  maxLength={6}
+                />
+              )}
+            </div>
+          )}
 
           <div className="bg-surface-container-lowest border border-border rounded-xl p-4 mt-2">
             <h3 className="text-label-sm text-on-surface-variant mb-3 flex items-center justify-between">

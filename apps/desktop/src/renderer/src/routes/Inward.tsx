@@ -257,7 +257,8 @@ export function Inward() {
         batchId: batchSelection?.batchId || null,
         batchCode: batchSelection?.batchCode || null,
         barcodes: batchSelection?.barcodes || null,
-        invoiceFilePath: invoiceFilePath || null
+        invoiceFilePath: invoiceFilePath || null,
+        manufacturerBarcode: batchSelection?.manufacturerBarcode || null
       },
       {
         onSuccess: (result) => {

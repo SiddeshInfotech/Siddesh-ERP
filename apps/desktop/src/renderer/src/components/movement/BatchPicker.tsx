@@ -14,6 +14,7 @@ export interface BatchSelection {
   batchId: string | null
   batchCode: string | null
   barcodes: string[]
+  manufacturerBarcode?: string
 }
 
 interface BatchPickerProps {
@@ -91,7 +92,8 @@ export function BatchPicker({ productId, qty, value, onChange, allowCreate = fal
     onChange({
       batchId: null, // It's a new batch, so ID is null, backend will create it
       batchCode: result.batchCode,
-      barcodes: result.barcodes
+      barcodes: result.barcodes,
+      manufacturerBarcode: result.manufacturerBarcode
     })
     setIsGeneratorOpen(false)
     setSelectedBatchId('')

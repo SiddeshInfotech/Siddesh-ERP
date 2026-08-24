@@ -37,6 +37,7 @@ export interface SaveInwardInput {
   batchId?: string | null
   batchCode?: string | null
   barcodes?: string[] | null
+  manufacturerBarcode?: string | null
 }
 
 /**
@@ -69,7 +70,8 @@ export function useSaveInward() {
         ...(input.invoiceFilePath ? { p_invoice_file_path: input.invoiceFilePath } : {}),
         ...(input.batchId ? { p_batch_id: input.batchId } : {}),
         ...(input.batchCode ? { p_batch_code: input.batchCode } : {}),
-        ...(input.barcodes ? { p_barcodes: input.barcodes } : {})
+        ...(input.barcodes ? { p_barcodes: input.barcodes } : {}),
+        ...(input.manufacturerBarcode ? { p_manufacturer_barcode: input.manufacturerBarcode } : {})
       })
 
       if (error) {
