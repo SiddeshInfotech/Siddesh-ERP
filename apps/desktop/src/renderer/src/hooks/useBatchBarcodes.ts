@@ -26,6 +26,7 @@ export interface BatchBarcodeRow {
   /** Office of the login that last changed the status (→ "Scanned at"). */
   scanned_office_name: string | null
   device_source: ScanSource | null
+  manufacturer_barcode?: string | null
 }
 
 /**
@@ -57,7 +58,7 @@ export function useBatchBarcodes(productId?: string | null, batchCode?: string |
       const { data, error } = await supabase
         .from('v_batch_barcodes' as any)
         .select(
-          'id, code, symbology, status, created_at, generated_at, generated_by_name, inwarded_at, outwarded_at, scanned_at, scanned_by_name, scanned_office_name, device_source'
+          'id, code, symbology, status, created_at, generated_at, generated_by_name, inwarded_at, outwarded_at, scanned_at, scanned_by_name, scanned_office_name, device_source, manufacturer_barcode'
         )
         .eq('batch_id', batch.id)
         .order('code', { ascending: true })
@@ -77,7 +78,8 @@ export function useBatchBarcodes(productId?: string | null, batchCode?: string |
         scanned_at: row.scanned_at ?? null,
         scanned_by_name: row.scanned_by_name ?? null,
         scanned_office_name: row.scanned_office_name ?? null,
-        device_source: (row.device_source ?? null) as ScanSource | null
+        device_source: (row.device_source ?? null) as ScanSource | null,
+        manufacturer_barcode: row.manufacturer_barcode ?? null
       })) as BatchBarcodeRow[]
     }
   })
